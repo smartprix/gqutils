@@ -251,6 +251,8 @@ function getGraphQLTypeDefs({ types, queries, mutations }) {
 			id: ID!
 		}
 
+		${types.join('\n')}
+
 		type Query {
 			${queries.join('\n')}
 		}
@@ -258,8 +260,6 @@ function getGraphQLTypeDefs({ types, queries, mutations }) {
 		type Mutation {
 			${mutations.join('\n')}
 		}
-
-		${types.join('\n')}
 	`
 	);
 }
@@ -273,7 +273,8 @@ function makeSchemaFromModules(modules, opts = {}) {
 	modules.forEach(folder => {
 		let mod;
 		if (typeof folder === 'string') {
-			folder = _path2.default.join(opts.baseFolder || '', folder);
+			folder = _path2.default.resolve(opts.baseFolder || '', folder);
+			console.log(folder);
 			mod = require(folder);
 		} else {
 			mod = folder;
@@ -296,6 +297,8 @@ function makeSchemaFromModules(modules, opts = {}) {
 			console.log(e);
 		}
 	};
+
+	console.log(getGraphQLTypeDefs({ types, queries, mutations }));
 
 	return (0, _graphqlTools.makeExecutableSchema)({
 		typeDefs: getGraphQLTypeDefs({ types, queries, mutations }),
