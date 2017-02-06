@@ -1,0 +1,132 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/bin/nodejs', '/usr/bin/npm', 'publish' ]
+2 info using npm@3.10.10
+3 info using node@v6.9.4
+4 verbose publish [ '.' ]
+5 silly cache add args [ '.', null ]
+6 verbose cache add spec .
+7 silly cache add parsed spec Result {
+7 silly cache add   raw: '.',
+7 silly cache add   scope: null,
+7 silly cache add   escapedName: null,
+7 silly cache add   name: null,
+7 silly cache add   rawSpec: '.',
+7 silly cache add   spec: '/smartprix/gql-utils',
+7 silly cache add   type: 'directory' }
+8 verbose addLocalDirectory /home/smpx/.npm/gql-utils/0.1.0/package.tgz not in flight; packing
+9 verbose correctMkdir /home/smpx/.npm correctMkdir not in flight; initializing
+10 info lifecycle gql-utils@0.1.0~prepublish: gql-utils@0.1.0
+11 silly lifecycle gql-utils@0.1.0~prepublish: no script for prepublish, continuing
+12 verbose tar pack [ '/home/smpx/.npm/gql-utils/0.1.0/package.tgz',
+12 verbose tar pack   '/smartprix/gql-utils' ]
+13 verbose tarball /home/smpx/.npm/gql-utils/0.1.0/package.tgz
+14 verbose folder /smartprix/gql-utils
+15 verbose addLocalTarball adding from inside cache /home/smpx/.npm/gql-utils/0.1.0/package.tgz
+16 verbose correctMkdir /home/smpx/.npm correctMkdir not in flight; initializing
+17 silly cache afterAdd gql-utils@0.1.0
+18 verbose afterAdd /home/smpx/.npm/gql-utils/0.1.0/package/package.json not in flight; writing
+19 verbose correctMkdir /home/smpx/.npm correctMkdir not in flight; initializing
+20 verbose afterAdd /home/smpx/.npm/gql-utils/0.1.0/package/package.json written
+21 silly publish { name: 'gql-utils',
+21 silly publish   version: '0.1.0',
+21 silly publish   description: 'Utilities For GraphQL',
+21 silly publish   main: 'dist/index.js',
+21 silly publish   repository:
+21 silly publish    { type: 'git',
+21 silly publish      url: 'git+https://github.com/smartprix/gql-utils.git' },
+21 silly publish   directories: { test: 'test' },
+21 silly publish   scripts:
+21 silly publish    { test: 'npm run lint && npm run test-only',
+21 silly publish      'check-coverage': 'true',
+21 silly publish      lint: 'eslint src',
+21 silly publish      'lint:fix': 'eslint src --fix',
+21 silly publish      'test-only': 'mocha test/*.test.js',
+21 silly publish      build: 'babel src --out-dir dist',
+21 silly publish      '-precommit': 'npm run build && npm test && npm run check-coverage' },
+21 silly publish   author:
+21 silly publish    { name: 'Hitesh Khandelwal',
+21 silly publish      email: 'hitesh@smartprix.com',
+21 silly publish      url: 'http://www.smartprix.com/' },
+21 silly publish   license: 'ISC',
+21 silly publish   dependencies: { graphql: '^0.9.1', 'graphql-tools': '^0.10.0' },
+21 silly publish   devDependencies:
+21 silly publish    { 'babel-cli': '6.22.2',
+21 silly publish      'babel-plugin-transform-es2015-modules-commonjs': '6.22.0',
+21 silly publish      'babel-preset-stage-0': '6.22.0',
+21 silly publish      'babel-register': '6.22.0',
+21 silly publish      chai: '3.5.0',
+21 silly publish      eslint: '3.14.1',
+21 silly publish      'eslint-config-smartprix': '3.1.6',
+21 silly publish      mocha: '3.2.0' },
+21 silly publish   babel:
+21 silly publish    { presets: [ 'stage-0' ],
+21 silly publish      plugins: [ 'transform-es2015-modules-commonjs' ],
+21 silly publish      sourceMaps: true },
+21 silly publish   eslintConfig: { extends: 'smartprix', rules: {} },
+21 silly publish   readme: '# gql-utils\nUtilities for GraphQL\n\n## Functions\n### `makeSchemaFromModules(modules, opts)`\nCreate a graphQL schema from various modules. If the module is a folder, it\'ll automatically require it.\n```js\nconst modules = [\n\t\'employee/Employee\',\n\t\'categories\',\n];\n\nconst schema = makeSchemaFromModules(modules, {\n\tbaseFolder: `${__dirname}/lib`,\n\tallowUndefinedInResolve: false,\n\tresolverValidationOptions: {},\n});\n```\n\nEach module can either export {schema, resolvers} or {types, queries, mutations, resolvers}.\n```\nconst schema = /* GraphQL */`\n\t# @types\n\t# Employee\n\ttype Employee {\n\t\tid: ID!\n\t\tsmartprixId: ID\n\t\tname: String\n\t\temail: String\n\t\tpersonalEmail: String\n\t\tphone: String\n\t\temergencyPhone: String\n\t\tgender: String\n\t\tdateOfBirth: String\n\t\tdateOfJoining: String\n\t\tdesignation: String\n\t\taptitudeMarks: String\n\t\tbankAccountNumber: String\n\t\tpanNumber: String\n\t\tstatus: String\n\t\tcreatedAt: String\n\t\tupdatedAt: String\n\t}\n\n\t@connection(Employee)\n\n\t# @queries\n\temployee(\n\t\tid: ID!\n\t\temail: String\n\t): Employee\n\n\temployees(\n\t\tname: String\n\t\tfirst: Int\n\t\tlast: Int\n\t\tbefore: String\n\t\tafter: String\n\t): EmployeeConnection\n\n\t# @mutations\n\tsaveEmployee(\n\t\tid: ID\n\t\tname: String\n\t\temail: String!\n\t\tpersonalEmail: String\n\t\tphone: String!\n\t): Employee\n\n\tdeleteEmployee(\n\t\tid: ID!\n\t): DeletedItem\n`;\n\nconst resolvers = {\n\tQuery: {\n\t\temployee: getEmployee,\n\t\temployees: getEmployees,\n\t},\n\tMutation: {\n\t\tsaveEmployee,\n\t\tdeleteEmployee,\n\t},\n};\n\nexport {\n\tschema,\n\tresolvers,\n};\n```\n\nIn schema types, queries and mutations can be separated using `# @types`, `# @queries`, `# @mutations` to mark the begninning of each section respectively.\n`@connection(typeName)` can be used to automatically generate type for a relay compatible connection for pagination.\n`@connection(Employee)` will automatically generate the type `EmployeeConnection`\n\n### `getConnectionResolver(query, args)`\nGiven a query (xorm query) and it\'s arguments, it\'ll automatically generate a resolver for a relay connection.\n```js\nasync function getEmployees(root, args) {\n\tconst query = Employee.query();\n\tif (args.name) {\n\t\tquery.where(\'name\', \'like\', `%${args.name}%`);\n\t}\n\n\treturn getConnectionResolver(query, args);\n}\n```\n\n### `parseGraphqlSchema(schema)`\nGiven a schema which uses our custom schema language (having `@connection`, `# @types` etc.), it\'ll return {types, queries, mutations}\nIf you\'re using `makeSchemaFromModules`, you won\'t need to use this function.\n',
+21 silly publish   readmeFilename: 'README.md',
+21 silly publish   gitHead: '04fa7564f554116d213fea9cb2f5f050da6749c4',
+21 silly publish   bugs: { url: 'https://github.com/smartprix/gql-utils/issues' },
+21 silly publish   homepage: 'https://github.com/smartprix/gql-utils#readme',
+21 silly publish   _id: 'gql-utils@0.1.0',
+21 silly publish   _shasum: '643ed36ab778d9e12ddb5c46149d63839570d863',
+21 silly publish   _from: '.' }
+22 verbose getPublishConfig undefined
+23 silly mapToRegistry name gql-utils
+24 silly mapToRegistry using default registry
+25 silly mapToRegistry registry https://registry.npmjs.org/
+26 silly mapToRegistry data Result {
+26 silly mapToRegistry   raw: 'gql-utils',
+26 silly mapToRegistry   scope: null,
+26 silly mapToRegistry   escapedName: 'gql-utils',
+26 silly mapToRegistry   name: 'gql-utils',
+26 silly mapToRegistry   rawSpec: '',
+26 silly mapToRegistry   spec: 'latest',
+26 silly mapToRegistry   type: 'tag' }
+27 silly mapToRegistry uri https://registry.npmjs.org/gql-utils
+28 verbose publish registryBase https://registry.npmjs.org/
+29 silly publish uploading /home/smpx/.npm/gql-utils/0.1.0/package.tgz
+30 verbose request uri https://registry.npmjs.org/gql-utils
+31 verbose request sending authorization for write operation
+32 info attempt registry request try #1 at 3:04:09 PM
+33 verbose request using bearer token for auth
+34 verbose request id e276cda90fb92ddc
+35 http request PUT https://registry.npmjs.org/gql-utils
+36 http 403 https://registry.npmjs.org/gql-utils
+37 verbose headers { 'content-type': 'application/json',
+37 verbose headers   'cache-control': 'max-age=300',
+37 verbose headers   'content-length': '103',
+37 verbose headers   'accept-ranges': 'bytes',
+37 verbose headers   date: 'Mon, 06 Feb 2017 09:34:11 GMT',
+37 verbose headers   via: '1.1 varnish',
+37 verbose headers   connection: 'keep-alive',
+37 verbose headers   'x-served-by': 'cache-cdg8732-CDG',
+37 verbose headers   'x-cache': 'MISS',
+37 verbose headers   'x-cache-hits': '0',
+37 verbose headers   'x-timer': 'S1486373650.732529,VS0,VE1041',
+37 verbose headers   vary: 'Accept-Encoding' }
+38 verbose request invalidating /home/smpx/.npm/registry.npmjs.org/gql-utils on PUT
+39 error publish Failed PUT 403
+40 verbose stack Error: you do not have permission to publish "gql-utils". Are you logged in as the correct user? : gql-utils
+40 verbose stack     at makeError (/usr/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:302:12)
+40 verbose stack     at CachingRegistryClient.<anonymous> (/usr/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:290:14)
+40 verbose stack     at Request._callback (/usr/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:210:14)
+40 verbose stack     at Request.self.callback (/usr/lib/node_modules/npm/node_modules/request/request.js:187:22)
+40 verbose stack     at emitTwo (events.js:106:13)
+40 verbose stack     at Request.emit (events.js:191:7)
+40 verbose stack     at Request.<anonymous> (/usr/lib/node_modules/npm/node_modules/request/request.js:1048:10)
+40 verbose stack     at emitOne (events.js:96:13)
+40 verbose stack     at Request.emit (events.js:188:7)
+40 verbose stack     at IncomingMessage.<anonymous> (/usr/lib/node_modules/npm/node_modules/request/request.js:969:12)
+41 verbose statusCode 403
+42 verbose pkgid gql-utils
+43 verbose cwd /smartprix/gql-utils
+44 error Linux 4.4.0-59-generic
+45 error argv "/usr/bin/nodejs" "/usr/bin/npm" "publish"
+46 error node v6.9.4
+47 error npm  v3.10.10
+48 error code E403
+49 error you do not have permission to publish "gql-utils". Are you logged in as the correct user? : gql-utils
+50 error If you need help, you may report this error at:
+50 error     <https://github.com/npm/npm/issues>
+51 verbose exit [ 1, true ]
