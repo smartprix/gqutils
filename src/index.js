@@ -222,7 +222,6 @@ function makeSchemaFromModules(modules, opts = {}) {
 		let mod;
 		if (typeof folder === 'string') {
 			folder = path.resolve(opts.baseFolder || '', folder);
-			console.log(folder);
 			mod = require(folder);
 		}
 		else {
@@ -246,8 +245,6 @@ function makeSchemaFromModules(modules, opts = {}) {
 			console.log(e);
 		},
 	};
-
-	console.log(getGraphQLTypeDefs({types, queries, mutations}));
 
 	return makeExecutableSchema({
 		typeDefs: getGraphQLTypeDefs({types, queries, mutations}),
