@@ -9,6 +9,10 @@ var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
 
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
 var _graphqlTools = require('graphql-tools');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -269,7 +273,7 @@ function makeSchemaFromModules(modules, opts = {}) {
 	modules.forEach(folder => {
 		let mod;
 		if (typeof folder === 'string') {
-			folder = _path2.default.join(opts.baseFolder, folder);
+			folder = _path2.default.join(opts.baseFolder || '', folder);
 			mod = require(folder);
 		} else {
 			mod = folder;
@@ -284,7 +288,7 @@ function makeSchemaFromModules(modules, opts = {}) {
 		if (mod.types) types.push(parseGraphqlTypes(mod.types));
 		if (mod.queries) queries.push(mod.queries);
 		if (mod.mutations) mutations.push(mod.mutations);
-		if (mod.resolvers) _.merge(resolvers, mod.resolvers);
+		if (mod.resolvers) _lodash2.default.merge(resolvers, mod.resolvers);
 	});
 
 	const logger = {

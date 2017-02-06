@@ -1,6 +1,7 @@
 /* eslint-disable global-require, import/no-dynamic-require, import/prefer-default-export */
 /* eslint-disable no-unused-vars, radix */
 import path from 'path';
+import _ from 'lodash';
 import {makeExecutableSchema} from 'graphql-tools';
 
 function makeRelayConnection(type) {
@@ -220,7 +221,7 @@ function makeSchemaFromModules(modules, opts = {}) {
 	modules.forEach((folder) => {
 		let mod;
 		if (typeof folder === 'string') {
-			folder = path.join(opts.baseFolder, folder);
+			folder = path.join(opts.baseFolder || '', folder);
 			mod = require(folder);
 		}
 		else {
