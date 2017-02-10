@@ -75,6 +75,8 @@ function parseGraphqlSchema(schema) {
 }
 
 function getIdFromCursor(cursor) {
+	const num = parseInt(cursor, 10);
+	if (!isNaN(num) && num > 0 && isFinite(num)) return num;
 	return parseInt(Buffer.from(cursor, 'base64').toString().substring(3)) || 0;
 }
 
@@ -90,7 +92,7 @@ function getPagingParams({ first, last, before, after }) {
 	if (isForwardPaging) {
 		return {
 			limit: first || defaultLimit,
-			offset: after ? getIdFromCursor(after) + 1 : 0
+			offset: after ? getIdFromCursor(after) : 0
 		};
 	} else if (isBackwardPaging) {
 		let limit = last || defaultLimit;
