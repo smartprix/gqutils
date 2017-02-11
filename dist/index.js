@@ -39,10 +39,10 @@ const GraphQLStringOrInt = new _graphql.GraphQLScalarType({
 		return value;
 	},
 	parseLiteral(ast) {
-		if (ast.kind === _language.Kind.Int) {
+		if (ast.kind === _language.Kind.INT) {
 			return parseInt(ast.value, 10);
 		}
-		if (ast.kind === _language.Kind.String) {
+		if (ast.kind === _language.Kind.STRING) {
 			return ast.value;
 		}
 		return null;
