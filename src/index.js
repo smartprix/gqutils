@@ -3,6 +3,25 @@
 import path from 'path';
 import _ from 'lodash';
 import {makeExecutableSchema} from 'graphql-tools';
+import GraphQLJSON from 'graphql-type-json';
+import {GraphQLScalarType} from 'graphql';
+
+const GraphQLStringOrInt = new GraphQLScalarType({
+	name: 'StringOrInt',
+	description: 'Value can be either an integer or a string',
+	serialize(value) {
+		return value;
+	},
+	parseValue(value) {
+		return value;
+	},
+	parseLiteral(ast) {
+		if (ast.kind === Kind.Int || ast.kind === Kind.String) {
+  			return ast.value;
+		}
+		return null;
+	}
+});
 
 function makeRelayConnection(type) {
 	return /* GraphQL */`
@@ -31,12 +50,31 @@ function parseGraphqlTypes(types) {
 	return types;
 }
 
+function parseGraphqlQueries(queries) {
+	let matches;
+	const re = /\)\s*:\s*[a-zA-Z0-9._-]+Connection\s+/i;
+	// eslint-disable-next-line
+	while (matches = re.exec(types)) {
+		types = types.replace(matches[0], makeRelayConnection(matches[1]));
+	}
+
+	return types;
+}
+
 function parseGraphqlSchema(schema) {
 	// console.log(schema);
 	let types = '';
 	let queries = '';
 	let mutations = '';
 	let matches;
+
+	// Convert @paging.params to (first, after, last, before)
+	const re = /\@paging\.params/i;
+	const pagingParams = "first: Int\nafter: StringOrInt\nlast: Int\nbefore:StringOrInt";
+	// eslint-disable-next-line
+	while (matches = re.exec(schema)) {
+		schema = schema.replace(matches[0], pagingParams);
+	}
 
 	matches = schema.match(/#\s*@types([\s\S]*?)((#\s*@(types|queries|mutations)|$))/i);
 	if (matches) {
@@ -180,6 +218,9 @@ function getConnectionResolver(query, args) {
 
 function getGraphQLTypeDefs({types, queries, mutations}) {
 	return /* GraphQL */`
+		scalar JSON
+		scalar StringOrInt
+
 		schema {
 			query: Query
 			mutation: Mutation
@@ -220,6 +261,11 @@ function makeSchemaFromModules(modules, opts = {}) {
 	const mutations = [];
 	const resolvers = {};
 
+	const typeResolvers = {
+		JSON: GraphQLJSON,
+		StringOrInt: GraphQLStringOrInt,
+	};
+
 	modules.forEach((folder) => {
 		let mod;
 		if (typeof folder === 'string') {
@@ -247,6 +293,8 @@ function makeSchemaFromModules(modules, opts = {}) {
 			console.log(e);
 		},
 	};
+
+	console.log(types, queries, mutations);
 
 	return makeExecutableSchema({
 		typeDefs: getGraphQLTypeDefs({types, queries, mutations}),

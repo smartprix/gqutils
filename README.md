@@ -1,6 +1,9 @@
 # gql-utils
 Utilities for GraphQL
 
+### Extra Types
+You can use `JSON`, `StringOrInt` apart from `String`, `Int`, `Float`, `Boolean`, `ID`.
+
 ## Functions
 ### `makeSchemaFromModules(modules, opts)`
 Create a graphQL schema from various modules. If the module is a folder, it'll automatically require it.

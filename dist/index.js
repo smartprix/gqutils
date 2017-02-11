@@ -15,11 +15,34 @@ var _lodash2 = _interopRequireDefault(_lodash);
 
 var _graphqlTools = require('graphql-tools');
 
+var _graphqlTypeJson = require('graphql-type-json');
+
+var _graphqlTypeJson2 = _interopRequireDefault(_graphqlTypeJson);
+
+var _graphql = require('graphql');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; } /* eslint-disable global-require, import/no-dynamic-require, import/prefer-default-export */
 /* eslint-disable no-unused-vars, radix */
 
+
+const GraphQLStringOrInt = new _graphql.GraphQLScalarType({
+	name: 'StringOrInt',
+	description: 'Value can be either an integer or a string',
+	serialize(value) {
+		return value;
+	},
+	parseValue(value) {
+		return value;
+	},
+	parseLiteral(ast) {
+		if (ast.kind === Kind.Int || ast.kind === Kind.String) {
+			return ast.value;
+		}
+		return null;
+	}
+});
 
 function makeRelayConnection(type) {
 	return (/* GraphQL */`
@@ -49,12 +72,31 @@ function parseGraphqlTypes(types) {
 	return types;
 }
 
+function parseGraphqlQueries(queries) {
+	let matches;
+	const re = /\)\s*:\s*[a-zA-Z0-9._-]+Connection\s+/i;
+	// eslint-disable-next-line
+	while (matches = re.exec(types)) {
+		types = types.replace(matches[0], makeRelayConnection(matches[1]));
+	}
+
+	return types;
+}
+
 function parseGraphqlSchema(schema) {
 	// console.log(schema);
 	let types = '';
 	let queries = '';
 	let mutations = '';
 	let matches;
+
+	// Convert @paging.params to (first, after, last, before)
+	const re = /\@paging\.params/i;
+	const pagingParams = "first: Int\nafter: StringOrInt\nlast: Int\nbefore:StringOrInt";
+	// eslint-disable-next-line
+	while (matches = re.exec(schema)) {
+		schema = schema.replace(matches[0], pagingParams);
+	}
 
 	matches = schema.match(/#\s*@types([\s\S]*?)((#\s*@(types|queries|mutations)|$))/i);
 	if (matches) {
@@ -231,6 +273,9 @@ function getConnectionResolver(query, args) {
 
 function getGraphQLTypeDefs({ types, queries, mutations }) {
 	return (/* GraphQL */`
+		scalar JSON
+		scalar StringOrInt
+
 		schema {
 			query: Query
 			mutation: Mutation
@@ -272,6 +317,11 @@ function makeSchemaFromModules(modules, opts = {}) {
 	const mutations = [];
 	const resolvers = {};
 
+	const typeResolvers = {
+		JSON: _graphqlTypeJson2.default,
+		StringOrInt: GraphQLStringOrInt
+	};
+
 	modules.forEach(folder => {
 		let mod;
 		if (typeof folder === 'string') {
@@ -298,6 +348,8 @@ function makeSchemaFromModules(modules, opts = {}) {
 			console.log(e);
 		}
 	};
+
+	console.log(types, queries, mutations);
 
 	return (0, _graphqlTools.makeExecutableSchema)({
 		typeDefs: getGraphQLTypeDefs({ types, queries, mutations }),

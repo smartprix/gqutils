@@ -20,6 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "graphql-tools": "^0.10.0",
+    "graphql-type-json": "^0.1.4",
     "lodash": "^4.17.4"
   },
   "peerDependencies": {
@@ -33,6 +34,7 @@
     "chai": "3.5.0",
     "eslint": "3.14.1",
     "eslint-config-smartprix": "3.1.6",
+    "graphql": "^0.9.1",
     "mocha": "3.2.0"
   },
   "babel": {
