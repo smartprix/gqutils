@@ -17,10 +17,10 @@ const GraphQLStringOrInt = new GraphQLScalarType({
 		return value;
 	},
 	parseLiteral(ast) {
-		if (ast.kind === Kind.Int) {
+		if (ast.kind === Kind.INT) {
 			return parseInt(ast.value, 10);
 		}
-		if (ast.kind === Kind.String) {
+		if (ast.kind === Kind.STRING) {
   			return ast.value;
 		}
 		return null;
