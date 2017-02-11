@@ -55,10 +55,7 @@ const schema = /* GraphQL */`
 
 	employees(
 		name: String
-		first: Int
-		last: Int
-		before: String
-		after: String
+		paging: Default
 	): EmployeeConnection
 
 	# @mutations
@@ -95,6 +92,7 @@ export {
 In schema types, queries and mutations can be separated using `# @types`, `# @queries`, `# @mutations` to mark the begninning of each section respectively.
 `@connection(typeName)` can be used to automatically generate type for a relay compatible connection for pagination.
 `@connection(Employee)` will automatically generate the type `EmployeeConnection`
+`@paging.params` or `paging: Default` will automatically be converted to paging parameters for connection (`first`, `last`, `before`, `after`)
 
 ### `getConnectionResolver(query, args)`
 Given a query (xorm query) and it's arguments, it'll automatically generate a resolver for a relay connection.

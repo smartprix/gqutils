@@ -21,6 +21,8 @@ var _graphqlTypeJson2 = _interopRequireDefault(_graphqlTypeJson);
 
 var _graphql = require('graphql');
 
+var _language = require('graphql/language');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; } /* eslint-disable global-require, import/no-dynamic-require, import/prefer-default-export */
@@ -37,7 +39,11 @@ const GraphQLStringOrInt = new _graphql.GraphQLScalarType({
 		return value;
 	},
 	parseLiteral(ast) {
-		if (ast.kind === Kind.Int || ast.kind === Kind.String) {
+		console.log(ast);
+		if (ast.kind === _language.Kind.Int) {
+			return parseInt(ast.value, 10);
+		}
+		if (ast.kind === _language.Kind.String) {
 			return ast.value;
 		}
 		return null;
@@ -91,7 +97,7 @@ function parseGraphqlSchema(schema) {
 	let matches;
 
 	// Convert @paging.params to (first, after, last, before)
-	const re = /\@paging\.params/i;
+	const re = /(\@paging\.params|paging\s*\:\s*Default)/i;
 	const pagingParams = "first: Int\nafter: StringOrInt\nlast: Int\nbefore:StringOrInt";
 	// eslint-disable-next-line
 	while (matches = re.exec(schema)) {

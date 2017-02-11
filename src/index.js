@@ -5,6 +5,7 @@ import _ from 'lodash';
 import {makeExecutableSchema} from 'graphql-tools';
 import GraphQLJSON from 'graphql-type-json';
 import {GraphQLScalarType} from 'graphql';
+import {Kind} from 'graphql/language';
 
 const GraphQLStringOrInt = new GraphQLScalarType({
 	name: 'StringOrInt',
@@ -16,7 +17,11 @@ const GraphQLStringOrInt = new GraphQLScalarType({
 		return value;
 	},
 	parseLiteral(ast) {
-		if (ast.kind === Kind.Int || ast.kind === Kind.String) {
+		console.log(ast);
+		if (ast.kind === Kind.Int) {
+			return parseInt(ast.value, 10);
+		}
+		if (ast.kind === Kind.String) {
   			return ast.value;
 		}
 		return null;
@@ -69,7 +74,7 @@ function parseGraphqlSchema(schema) {
 	let matches;
 
 	// Convert @paging.params to (first, after, last, before)
-	const re = /\@paging\.params/i;
+	const re = /(\@paging\.params|paging\s*\:\s*Default)/i;
 	const pagingParams = "first: Int\nafter: StringOrInt\nlast: Int\nbefore:StringOrInt";
 	// eslint-disable-next-line
 	while (matches = re.exec(schema)) {
