@@ -17,7 +17,6 @@ const GraphQLStringOrInt = new GraphQLScalarType({
 		return value;
 	},
 	parseLiteral(ast) {
-		console.log(ast);
 		if (ast.kind === Kind.Int) {
 			return parseInt(ast.value, 10);
 		}
@@ -271,6 +270,8 @@ function makeSchemaFromModules(modules, opts = {}) {
 		StringOrInt: GraphQLStringOrInt,
 	};
 
+	_.merge(resolvers, typeResolvers);
+
 	modules.forEach((folder) => {
 		let mod;
 		if (typeof folder === 'string') {
@@ -298,8 +299,6 @@ function makeSchemaFromModules(modules, opts = {}) {
 			console.log(e);
 		},
 	};
-
-	console.log(types, queries, mutations);
 
 	return makeExecutableSchema({
 		typeDefs: getGraphQLTypeDefs({types, queries, mutations}),
