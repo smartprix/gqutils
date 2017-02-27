@@ -94,10 +94,10 @@ function parseGraphqlQueries(queries) {
 	const re = /\)\s*:\s*[a-zA-Z0-9._-]+Connection\s+/i;
 	// eslint-disable-next-line
 	while (matches = re.exec(types)) {
-		types = types.replace(matches[0], makeRelayConnection(matches[1]));
+		queries = queries.replace(matches[0], makeRelayConnection(matches[1]));
 	}
 
-	return types;
+	return queries;
 }
 
 function parseGraphqlSchema(schema) {
@@ -108,8 +108,8 @@ function parseGraphqlSchema(schema) {
 	let matches;
 
 	// Convert @paging.params to (first, after, last, before)
-	const re = /(\@paging\.params|paging\s*\:\s*Default)/i;
-	const pagingParams = "first: Int\nafter: StringOrInt\nlast: Int\nbefore:StringOrInt";
+	const re = /(@paging\.params|paging\s*:\s*Default)/i;
+	const pagingParams = 'first: Int\nafter: StringOrInt\nlast: Int\nbefore:StringOrInt';
 	// eslint-disable-next-line
 	while (matches = re.exec(schema)) {
 		schema = schema.replace(matches[0], pagingParams);

@@ -3,6 +3,14 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
+exports.humanizeError = exports.formatError = undefined;
+
+var _lodash = require('lodash');
+
+var _lodash2 = _interopRequireDefault(_lodash);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function humanizeError(field, error) {
 	let message = error.message;
 
@@ -35,15 +43,15 @@ function formatError(error) {
 	const errorType = originalError.constructor.name;
 
 	if (errorType === 'ValidationError' || errorType === 'UserError') {
-		if (_.isString(message)) {
+		if (_lodash2.default.isString(message)) {
 			error.fields.global = message;
-		} else if (_.isPlainObject(message)) {
-			_.forEach(message, (value, key) => {
-				if (_.isString(value)) {
+		} else if (_lodash2.default.isPlainObject(message)) {
+			_lodash2.default.forEach(message, (value, key) => {
+				if (_lodash2.default.isString(value)) {
 					error.fields[key] = {
 						message: value
 					};
-				} else if (_.isArray(value)) {
+				} else if (_lodash2.default.isArray(value)) {
 					error.fields[key] = humanizeError(key, value[0]);
 				} else {
 					error.fields[key] = value;
@@ -52,7 +60,7 @@ function formatError(error) {
 		}
 
 		error.message = 'Your query has errors';
-	} else if (errorType === 'GraphQLError' && _.isString(message)) {
+	} else if (errorType === 'GraphQLError' && _lodash2.default.isString(message)) {
 		let matches;
 		matches = message.match(/Unknown argument "([a-zA-Z0-9_$.-]+)"/);
 		if (matches) {
@@ -86,7 +94,7 @@ function formatError(error) {
 	}
 
 	return error;
-};
+}
 
 exports.formatError = formatError;
 exports.humanizeError = humanizeError;
