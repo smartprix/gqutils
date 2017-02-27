@@ -110,3 +110,17 @@ async function getEmployees(root, args) {
 ### `parseGraphqlSchema(schema)`
 Given a schema which uses our custom schema language (having `@connection`, `# @types` etc.), it'll return {types, queries, mutations}
 If you're using `makeSchemaFromModules`, you won't need to use this function.
+
+### `formatError`
+Use this function to format the errors sent to the client, so that you can display them in a user friendly way.
+
+It'll add `fields` to each error, which you can use to display errors on front end.
+
+```js
+import {formatError} from 'gqutils';
+
+route.post('/api', apolloKoa({
+	schema: graphqlSchema,
+	formatError: formatError,
+}));
+```
