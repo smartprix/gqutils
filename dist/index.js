@@ -5,6 +5,18 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.makeSchemaFromModules = exports.getGraphQLTypeDefs = exports.parseGraphqlTypes = exports.parseGraphqlSchema = exports.getConnectionResolver = exports.makeRelayConnection = undefined;
 
+var _errors = require('./errors');
+
+Object.keys(_errors).forEach(function (key) {
+	if (key === "default" || key === "__esModule") return;
+	Object.defineProperty(exports, key, {
+		enumerable: true,
+		get: function () {
+			return _errors[key];
+		}
+	});
+});
+
 var _path = require('path');
 
 var _path2 = _interopRequireDefault(_path);
