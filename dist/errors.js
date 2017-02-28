@@ -44,7 +44,7 @@ function formatError(error) {
 
 	if (errorType === 'ValidationError' || errorType === 'UserError') {
 		if (_lodash2.default.isString(message)) {
-			error.fields.global = message;
+			error.fields.global = { message };
 		} else if (_lodash2.default.isPlainObject(message)) {
 			_lodash2.default.forEach(message, (value, key) => {
 				if (_lodash2.default.isString(value)) {
@@ -65,34 +65,39 @@ function formatError(error) {
 		matches = message.match(/Unknown argument "([a-zA-Z0-9_$.-]+)"/);
 		if (matches) {
 			error.fields[matches[1]] = {
-				message: `Unknown Argument ${matches[1]}`
+				message: `Unknown Argument ${matches[1]}`,
+				keyword: 'required'
 			};
 		}
 
 		matches = message.match(/Argument "([a-zA-Z0-9_$.-]+)" has invalid/);
 		if (matches) {
 			error.fields[matches[1]] = {
-				message: 'Invalid Value'
+				message: 'Invalid Value',
+				keyword: 'required'
 			};
 		}
 
 		matches = message.match(/Cannot query field "([a-zA-Z0-9_$.-]+)" on/);
 		if (matches) {
 			error.fields[matches[1]] = {
-				message: `Field ${matches[1]} does not exist`
+				message: `Field ${matches[1]} does not exist`,
+				keyword: 'required'
 			};
 		}
 
 		matches = message.match(/argument "([a-zA-Z0-9_$.-]+)" of type ".*?" is required/);
 		if (matches) {
 			error.fields[matches[1]] = {
-				message: `${matches[1]} is required`
+				message: `${matches[1]} is required`,
+				keyword: 'required'
 			};
 		}
 	} else {
 		error.message = 'Server error';
 		error.fields.global = {
-			message: error.message
+			message: error.message,
+			keyword: 'internal'
 		};
 	}
 

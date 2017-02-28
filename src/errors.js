@@ -35,7 +35,7 @@ function formatError(error) {
 
 	if (errorType === 'ValidationError' || errorType === 'UserError') {
 		if (_.isString(message)) {
-			error.fields.global = message;
+			error.fields.global = {message};
 		}
 		else if (_.isPlainObject(message)) {
 			_.forEach(message, (value, key) => {
@@ -61,6 +61,7 @@ function formatError(error) {
 		if (matches) {
 			error.fields[matches[1]] = {
 				message: `Unknown Argument ${matches[1]}`,
+				keyword: 'required',
 			};
 		}
 
@@ -68,6 +69,7 @@ function formatError(error) {
 		if (matches) {
 			error.fields[matches[1]] = {
 				message: 'Invalid Value',
+				keyword: 'required',
 			};
 		}
 
@@ -75,6 +77,7 @@ function formatError(error) {
 		if (matches) {
 			error.fields[matches[1]] = {
 				message: `Field ${matches[1]} does not exist`,
+				keyword: 'required',
 			};
 		}
 
@@ -82,6 +85,7 @@ function formatError(error) {
 		if (matches) {
 			error.fields[matches[1]] = {
 				message: `${matches[1]} is required`,
+				keyword: 'required',
 			};
 		}
 	}
@@ -89,6 +93,7 @@ function formatError(error) {
 		error.message = 'Server error';
 		error.fields.global = {
 			message: error.message,
+			keyword: 'internal',
 		};
 	}
 
