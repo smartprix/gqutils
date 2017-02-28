@@ -91,6 +91,9 @@ function formatError(error) {
 		}
 	} else {
 		error.message = 'Server error';
+		error.fields.global = {
+			message: error.message
+		};
 	}
 
 	return error;
