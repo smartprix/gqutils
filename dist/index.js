@@ -63,6 +63,23 @@ const GraphQLStringOrInt = new _graphql.GraphQLScalarType({
 	}
 });
 
+const GraphQLStringTrimmed = new _graphql.GraphQLScalarType({
+	name: 'StringTrimmed',
+	description: 'Value should be a string, it will be automatically trimmed',
+	serialize(value) {
+		return value;
+	},
+	parseValue(value) {
+		return value;
+	},
+	parseLiteral(ast) {
+		if (ast.kind === _language.Kind.STRING) {
+			return ast.value.trim();
+		}
+		return null;
+	}
+});
+
 function makeRelayConnection(type) {
 	return (/* GraphQL */`
 		type ${type}Connection {
@@ -298,6 +315,8 @@ function getGraphQLTypeDefs({ types, queries, mutations }) {
 		scalar URL
 		scalar DateTime
 		scalar UUID
+		scalar String
+		scalar StringOriginal
 
 		schema {
 			query: Query
@@ -346,7 +365,9 @@ function makeSchemaFromModules(modules, opts = {}) {
 		Email: _graphqlCustomTypes.GraphQLEmail,
 		URL: _graphqlCustomTypes.GraphQLURL,
 		DateTime: _graphqlCustomTypes.GraphQLDateTime,
-		UUID: _graphqlCustomTypes.GraphQLUUID
+		UUID: _graphqlCustomTypes.GraphQLUUID,
+		String: GraphQLStringTrimmed,
+		StringOriginal: _graphql.GraphQLString
 	};
 
 	_lodash2.default.merge(resolvers, typeResolvers);

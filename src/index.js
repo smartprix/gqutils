@@ -4,7 +4,10 @@ import path from 'path';
 import _ from 'lodash';
 import {makeExecutableSchema} from 'graphql-tools';
 import GraphQLJSON from 'graphql-type-json';
-import {GraphQLScalarType} from 'graphql';
+import {
+	GraphQLScalarType,
+	GraphQLString,
+} from 'graphql';
 import {Kind} from 'graphql/language';
 import {
 	GraphQLEmail,
@@ -30,6 +33,23 @@ const GraphQLStringOrInt = new GraphQLScalarType({
 		}
 		if (ast.kind === Kind.STRING) {
 			return ast.value;
+		}
+		return null;
+	},
+});
+
+const GraphQLStringTrimmed = new GraphQLScalarType({
+	name: 'StringTrimmed',
+	description: 'Value should be a string, it will be automatically trimmed',
+	serialize(value) {
+		return value;
+	},
+	parseValue(value) {
+		return value;
+	},
+	parseLiteral(ast) {
+		if (ast.kind === Kind.STRING) {
+			return ast.value.trim();
 		}
 		return null;
 	},
@@ -236,6 +256,8 @@ function getGraphQLTypeDefs({types, queries, mutations}) {
 		scalar URL
 		scalar DateTime
 		scalar UUID
+		scalar String
+		scalar StringOriginal
 
 		schema {
 			query: Query
@@ -284,6 +306,8 @@ function makeSchemaFromModules(modules, opts = {}) {
 		URL: GraphQLURL,
 		DateTime: GraphQLDateTime,
 		UUID: GraphQLUUID,
+		String: GraphQLStringTrimmed,
+		StringOriginal: GraphQLString,
 	};
 
 	_.merge(resolvers, typeResolvers);
