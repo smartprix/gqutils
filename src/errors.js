@@ -2,21 +2,36 @@ import _ from 'lodash';
 
 function humanizeError(field, error) {
 	let message = error.message;
+	const keyword = error.keyword;
+	const params = error.params;
 
-	if (!error.keyword) {
+	if (!keyword) {
 		return {message};
 	}
 
-	if (error.keyword === 'required') {
+	if (keyword === 'required') {
 		message = `${field} is required`;
 	}
-	else if (error.keyword === 'type') {
-		const type = error.params.type;
+	else if (keyword === 'type') {
+		const type = params.type;
 		message = `${field} should be of type ${type}`;
 	}
-	else if (error.keyword === 'format') {
-		const format = error.params.format;
+	else if (keyword === 'format') {
+		const format = params.format;
 		message = `${field} should be a valid ${format}`;
+	}
+	else if (keyword === 'minLength') {
+		const limit = params.limit;
+		if (limit === 1) {
+			message = `${field} is required`;
+		}
+		else {
+			message = `${field} must be larger than ${limit} chars`;
+		}
+	}
+	else if (keyword === 'maxLength') {
+		const limit = params.limit;
+		message = `${field} must be shorter than ${limit} chars`;
 	}
 
 	return {message};
@@ -25,13 +40,16 @@ function humanizeError(field, error) {
 function formatError(error) {
 	error.fields = {};
 
-	if (process.env.NODE_ENV !== 'production') {
-		error._stack = error.stack;
-	}
+	const isDev = process.env.NODE_ENV !== 'production';
 
 	const originalError = error.originalError || error;
 	const message = originalError.data || originalError.message;
 	const errorType = originalError.constructor.name;
+
+	if (isDev) {
+		error._stack = error.stack;
+		error._type = errorType;
+	}
 
 	if (errorType === 'ValidationError' || errorType === 'UserError') {
 		if (_.isString(message)) {
@@ -51,6 +69,11 @@ function formatError(error) {
 					error.fields[key] = value;
 				}
 			});
+		}
+
+		if (isDev) {
+			error._originalData = originalError.data;
+			error._originalMessage = originalError.message;
 		}
 
 		error.message = 'Your query has errors';
@@ -90,6 +113,10 @@ function formatError(error) {
 		}
 	}
 	else {
+		if (isDev) {
+			error._originalMessage = error.message;
+		}
+
 		error.message = 'Server error';
 		error.fields.global = {
 			message: error.message,
