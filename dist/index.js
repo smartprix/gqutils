@@ -35,6 +35,8 @@ var _graphql = require('graphql');
 
 var _language = require('graphql/language');
 
+var _graphqlCustomTypes = require('graphql-custom-types');
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; } /* eslint-disable global-require, import/no-dynamic-require, import/prefer-default-export */
@@ -292,6 +294,10 @@ function getGraphQLTypeDefs({ types, queries, mutations }) {
 	return (/* GraphQL */`
 		scalar JSON
 		scalar StringOrInt
+		scalar Email
+		scalar URL
+		scalar DateTime
+		scalar UUID
 
 		schema {
 			query: Query
@@ -336,7 +342,11 @@ function makeSchemaFromModules(modules, opts = {}) {
 
 	const typeResolvers = {
 		JSON: _graphqlTypeJson2.default,
-		StringOrInt: GraphQLStringOrInt
+		StringOrInt: GraphQLStringOrInt,
+		Email: _graphqlCustomTypes.GraphQLEmail,
+		URL: _graphqlCustomTypes.GraphQLURL,
+		DateTime: _graphqlCustomTypes.GraphQLDateTime,
+		UUID: _graphqlCustomTypes.GraphQLUUID
 	};
 
 	_lodash2.default.merge(resolvers, typeResolvers);

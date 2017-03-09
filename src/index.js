@@ -6,6 +6,14 @@ import {makeExecutableSchema} from 'graphql-tools';
 import GraphQLJSON from 'graphql-type-json';
 import {GraphQLScalarType} from 'graphql';
 import {Kind} from 'graphql/language';
+import {
+	GraphQLEmail,
+	GraphQLURL,
+	GraphQLDateTime,
+	GraphQLLimitedString,
+	GraphQLPassword,
+	GraphQLUUID,
+} from 'graphql-custom-types';
 
 const GraphQLStringOrInt = new GraphQLScalarType({
 	name: 'StringOrInt',
@@ -224,6 +232,10 @@ function getGraphQLTypeDefs({types, queries, mutations}) {
 	return /* GraphQL */`
 		scalar JSON
 		scalar StringOrInt
+		scalar Email
+		scalar URL
+		scalar DateTime
+		scalar UUID
 
 		schema {
 			query: Query
@@ -268,6 +280,10 @@ function makeSchemaFromModules(modules, opts = {}) {
 	const typeResolvers = {
 		JSON: GraphQLJSON,
 		StringOrInt: GraphQLStringOrInt,
+		Email: GraphQLEmail,
+		URL: GraphQLURL,
+		DateTime: GraphQLDateTime,
+		UUID: GraphQLUUID,
 	};
 
 	_.merge(resolvers, typeResolvers);
