@@ -64,7 +64,7 @@ const GraphQLStringOrInt = new _graphql.GraphQLScalarType({
 });
 
 const GraphQLStringTrimmed = new _graphql.GraphQLScalarType({
-	name: 'StringTrimmed',
+	name: 'String',
 	description: 'Value should be a string, it will be automatically trimmed',
 	serialize(value) {
 		return value;
