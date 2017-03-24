@@ -20,6 +20,7 @@
   "license": "ISC",
   "dependencies": {
     "graphql-custom-types": "^0.7.1",
+    "graphql-subscriptions": "^0.3.1",
     "graphql-tools": "^0.10.1",
     "graphql-type-json": "^0.1.4",
     "lodash": "^4.17.4"

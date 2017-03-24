@@ -3,6 +3,7 @@
 import path from 'path';
 import _ from 'lodash';
 import {makeExecutableSchema} from 'graphql-tools';
+import {SubscriptionManager, PubSub} from 'graphql-subscriptions';
 import GraphQLJSON from 'graphql-type-json';
 import {
 	GraphQLScalarType,
@@ -98,6 +99,7 @@ function parseGraphqlSchema(schema) {
 	let types = '';
 	let queries = '';
 	let mutations = '';
+	let subscriptions = '';
 	let matches;
 
 	// Convert @paging.params to (first, after, last, before)
@@ -108,22 +110,30 @@ function parseGraphqlSchema(schema) {
 		schema = schema.replace(matches[0], pagingParams);
 	}
 
-	matches = schema.match(/#\s*@types([\s\S]*?)((#\s*@(types|queries|mutations)|$))/i);
+	// extract types
+	matches = schema.match(/#\s*@types([\s\S]*?)((#\s*@(types|queries|mutations|subscriptions)|$))/i);
 	if (matches) {
 		types = parseGraphqlTypes(matches[1]);
 	}
 
-	matches = schema.match(/#\s*@queries([\s\S]*?)((#\s*@(types|queries|mutations)|$))/i);
+	// extract queries
+	matches = schema.match(/#\s*@queries([\s\S]*?)((#\s*@(types|queries|mutations|subscriptions)|$))/i);
 	if (matches) {
 		queries = matches[1];
 	}
 
-	matches = schema.match(/#\s*@mutations([\s\S]*?)((#\s*@(types|queries|mutations)|$))/i);
+	// extract mutations
+	matches = schema.match(/#\s*@mutations([\s\S]*?)((#\s*@(types|queries|mutations|subscriptions)|$))/i);
 	if (matches) {
 		mutations = matches[1];
 	}
 
-	return {types, queries, mutations};
+	// extract subscriptions
+	if (matches) {
+		subscriptions = matches[1];
+	}
+
+	return {types, queries, mutations, subscriptions};
 }
 
 function getIdFromCursor(cursor) {
@@ -248,7 +258,37 @@ function getConnectionResolver(query, args) {
 	};
 }
 
-function getGraphQLTypeDefs({types, queries, mutations}) {
+function getGraphQLTypeDefs({types, queries, mutations, subscriptions}) {
+	const schema = [];
+	const schemaDetails = [];
+
+	if (queries && queries.length) {
+		schema.push('query: Query');
+		schemaDetails.push(`
+			type Query {
+				${queries.join('\n')}
+			}
+		`);
+	}
+
+	if (mutations && mutations.length) {
+		schema.push('mutation: Mutation');
+		schemaDetails.push(`
+			type Mutation {
+				${mutations.join('\n')}
+			}
+		`);
+	}
+
+	if (subscriptions && subscriptions.length) {
+		schema.push('subscription: Subscription');
+		schemaDetails.push(`
+			type Subscription {
+				${subscriptions.join('\n')}
+			}
+		`);
+	}
+
 	return /* GraphQL */`
 		scalar JSON
 		scalar StringOrInt
@@ -260,8 +300,7 @@ function getGraphQLTypeDefs({types, queries, mutations}) {
 		scalar StringOriginal
 
 		schema {
-			query: Query
-			mutation: Mutation
+			${schema.join('\n')}
 		}
 
 		enum OrderDirection {
@@ -283,13 +322,7 @@ function getGraphQLTypeDefs({types, queries, mutations}) {
 
 		${types.join('\n')}
 
-		type Query {
-			${queries.join('\n')}
-		}
-
-		type Mutation {
-			${mutations.join('\n')}
-		}
+		${schemaDetails.join('\n')}
 	`;
 }
 
@@ -297,6 +330,7 @@ function makeSchemaFromModules(modules, opts = {}) {
 	const types = [];
 	const queries = [];
 	const mutations = [];
+	const subscriptions = [];
 	const resolvers = {};
 
 	const typeResolvers = {
@@ -327,10 +361,12 @@ function makeSchemaFromModules(modules, opts = {}) {
 			if (parsed.types) types.push(parsed.types);
 			if (parsed.queries) queries.push(parsed.queries);
 			if (parsed.mutations) mutations.push(parsed.mutations);
+			if (parsed.subscriptions) subscriptions.push(parsed.subscriptions);
 		}
 		if (mod.types) types.push(parseGraphqlTypes(mod.types));
 		if (mod.queries) queries.push(mod.queries);
 		if (mod.mutations) mutations.push(mod.mutations);
+		if (mod.subscriptions) subscriptions.push(mod.subscriptions);
 		if (mod.resolvers) _.merge(resolvers, mod.resolvers);
 	});
 
@@ -340,13 +376,48 @@ function makeSchemaFromModules(modules, opts = {}) {
 		},
 	};
 
-	return makeExecutableSchema({
-		typeDefs: getGraphQLTypeDefs({types, queries, mutations}),
+	const setupFunctions = {};
+	if (resolvers.SubscriptionFilter) {
+		_.forEach(resolvers.SubscriptionFilter, (filter, name) => {
+			setupFunctions[name] = (options, args) => ({
+				[name]: {
+					filter: item => !!filter(item, args, options),
+				},
+			});
+		});
+
+		delete resolvers.SubscriptionFilter;
+	}
+
+	if (resolvers.SubscriptionMap) {
+		_.forEach(resolvers.SubscriptionMap, (filter, name) => {
+			setupFunctions[name] = filter;
+		});
+
+		delete resolvers.SubscriptionMap;
+	}
+
+	const schema = makeExecutableSchema({
+		typeDefs: getGraphQLTypeDefs({types, queries, mutations, subscriptions}),
 		resolvers,
 		logger: opts.logger || logger,
 		allowUndefinedInResolve: opts.allowUndefinedInResolve || false,
 		resolverValidationOptions: opts.resolverValidationOptions || {},
 	});
+
+	const pubsub = new PubSub();
+
+	const subscriptionManager = new SubscriptionManager({
+		schema,
+		pubsub,
+		setupFunctions,
+	});
+
+	return {
+		schema,
+		subscriptionManager,
+		pubsub,
+	};
 }
 
 export * from './errors';
