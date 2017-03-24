@@ -16,14 +16,17 @@ const modules = [
 	'categories',
 ];
 
-const schema = makeSchemaFromModules(modules, {
+const {schema} = makeSchemaFromModules(modules, {
 	baseFolder: `${__dirname}/lib`,
 	allowUndefinedInResolve: false,
 	resolverValidationOptions: {},
 });
 ```
 
-Each module can either export {schema, resolvers} or {types, queries, mutations, resolvers}.
+This function returns `{schema, pubsub, subscriptionManager}`, you can ignore
+pubsub and subscriptionManager if you're not using graphql subscriptions.
+
+Each module can either export {schema, resolvers} or {types, queries, mutations, subscriptions, resolvers}.
 ```
 const schema = /* GraphQL */`
 	# @types
@@ -73,6 +76,10 @@ const schema = /* GraphQL */`
 	deleteEmployee(
 		id: ID!
 	): DeletedItem
+
+	# @subscriptions
+	employeeAdded: Employee
+	employeeChanged(id: ID): Employee
 `;
 
 const resolvers = {
@@ -84,6 +91,26 @@ const resolvers = {
 		saveEmployee,
 		deleteEmployee,
 	},
+
+	// You can also declare SubscriptionFilter, SubscriptionMap & Subscription
+	// For Subscription Related Things
+	// SubscriptionFilter: Filter events from pubsub
+	// SubscriptionMap: Map & filter pubsub events to graphql subscriptions
+	// Subscription: Modify pubsub event data before sending to client
+	/*
+	 * SubscriptionFilter: {
+	 *     employeeChanged(employee, args) {
+	 *	       return employee.id === args.id;
+	 *	   },
+	 * },
+	 * 
+	 * Subscription: {
+	 *     employeeAdded(employee) {
+	 *	       if (employee.password) employee.password = '******';
+	 *         return employee;
+	 *     },
+	 * },
+	 */
 };
 
 export {
