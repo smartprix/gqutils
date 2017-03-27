@@ -156,6 +156,7 @@ function parseGraphqlSchema(schema) {
 	}
 
 	// extract subscriptions
+	matches = schema.match(/#\s*@subscriptions([\s\S]*?)((#\s*@(types|queries|mutations|subscriptions)|$))/i);
 	if (matches) {
 		subscriptions = matches[1];
 	}
@@ -472,6 +473,10 @@ function makeSchemaFromModules(modules, opts = {}) {
 		pubsub,
 		setupFunctions
 	});
+
+	pubsub.out = function (key, message) {
+		pubsub.publish('output', { key, message });
+	};
 
 	return {
 		schema,
