@@ -7,6 +7,7 @@ import GraphQLJSON from 'graphql-type-json';
 import {GraphQLScalarType} from 'graphql';
 import {Kind} from 'graphql/language';
 
+// http://dev.apollodata.com/tools/graphql-tools/scalars.html#Own-GraphQLScalarType-instance
 const GraphQLStringOrInt = new GraphQLScalarType({
 	name: 'StringOrInt',
 	description: 'Value can be either an integer or a string',
@@ -189,7 +190,7 @@ function getConnectionResolver(query, args) {
 	const nodesResolver = async root => getNodes();
 	const edgesResolver = async root => getEdges();
 	const countResolver = async (root) => {
-		const obj = await query.clone().count('* as count');
+		const obj = await query.$knex().count('* as count').from(query.clone());
 		return obj[0].count;
 	};
 

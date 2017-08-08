@@ -1,7 +1,7 @@
-# gql-utils
+# gqutils
 Utilities for GraphQL
 
-### Extra Types
+## Extra Types
 You can use `JSON`, `StringOrInt` apart from `String`, `Int`, `Float`, `Boolean`, `ID`.
 
 ## Functions
@@ -90,12 +90,15 @@ export {
 ```
 
 In schema types, queries and mutations can be separated using `# @types`, `# @queries`, `# @mutations` to mark the begninning of each section respectively.
+
 `@connection(typeName)` can be used to automatically generate type for a relay compatible connection for pagination.
+
 `@connection(Employee)` will automatically generate the type `EmployeeConnection`
+
 `@paging.params` or `paging: Default` will automatically be converted to paging parameters for connection (`first`, `last`, `before`, `after`)
 
 ### `getConnectionResolver(query, args)`
-Given a query (xorm query) and it's arguments, it'll automatically generate a resolver for a relay connection.
+Given a query (xorm query) and its arguments, it'll automatically generate a resolver for a relay connection.
 ```js
 async function getEmployees(root, args) {
 	const query = Employee.query();
@@ -109,4 +112,5 @@ async function getEmployees(root, args) {
 
 ### `parseGraphqlSchema(schema)`
 Given a schema which uses our custom schema language (having `@connection`, `# @types` etc.), it'll return {types, queries, mutations}
+
 If you're using `makeSchemaFromModules`, you won't need to use this function.
