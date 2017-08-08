@@ -1,6 +1,6 @@
 {
   "name": "gqutils",
-  "version": "0.1.8",
+  "version": "0.4.3",
   "description": "Utilities For GraphQL",
   "main": "dist/index.js",
   "repository": "smartprix/gqutils",
@@ -19,20 +19,22 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "graphql-tools": "^0.10.0",
+    "graphql-custom-types": "^0.7.1",
+    "graphql-subscriptions": "^0.3.1",
+    "graphql-tools": "^0.10.1",
     "graphql-type-json": "^0.1.4",
     "lodash": "^4.17.4"
   },
   "peerDependencies": {
-    "graphql": "^0.8.0 || ^0.9.0"
+    "graphql": "*"
   },
   "devDependencies": {
-    "babel-cli": "6.22.2",
-    "babel-plugin-transform-es2015-modules-commonjs": "6.22.0",
+    "babel-cli": "6.24.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "6.24.0",
     "babel-preset-stage-0": "6.22.0",
-    "babel-register": "6.22.0",
+    "babel-register": "6.24.0",
     "chai": "3.5.0",
-    "eslint": "3.14.1",
+    "eslint": "3.18.0",
     "eslint-config-smartprix": "3.1.6",
     "graphql": "^0.9.1",
     "mocha": "3.2.0"

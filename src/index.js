@@ -3,9 +3,21 @@
 import path from 'path';
 import _ from 'lodash';
 import {makeExecutableSchema} from 'graphql-tools';
+import {SubscriptionManager, PubSub} from 'graphql-subscriptions';
 import GraphQLJSON from 'graphql-type-json';
-import {GraphQLScalarType} from 'graphql';
+import {
+	GraphQLScalarType,
+	GraphQLString,
+} from 'graphql';
 import {Kind} from 'graphql/language';
+import {
+	GraphQLEmail,
+	GraphQLURL,
+	GraphQLDateTime,
+	GraphQLLimitedString,
+	GraphQLPassword,
+	GraphQLUUID,
+} from 'graphql-custom-types';
 
 // http://dev.apollodata.com/tools/graphql-tools/scalars.html#Own-GraphQLScalarType-instance
 const GraphQLStringOrInt = new GraphQLScalarType({
@@ -22,10 +34,27 @@ const GraphQLStringOrInt = new GraphQLScalarType({
 			return parseInt(ast.value, 10);
 		}
 		if (ast.kind === Kind.STRING) {
-  			return ast.value;
+			return ast.value;
 		}
 		return null;
-	}
+	},
+});
+
+const GraphQLStringTrimmed = new GraphQLScalarType({
+	name: 'String',
+	description: 'Value should be a string, it will be automatically trimmed',
+	serialize(value) {
+		return value;
+	},
+	parseValue(value) {
+		return value;
+	},
+	parseLiteral(ast) {
+		if (ast.kind === Kind.STRING) {
+			return ast.value.trim();
+		}
+		return null;
+	},
 });
 
 function makeRelayConnection(type) {
@@ -60,10 +89,10 @@ function parseGraphqlQueries(queries) {
 	const re = /\)\s*:\s*[a-zA-Z0-9._-]+Connection\s+/i;
 	// eslint-disable-next-line
 	while (matches = re.exec(types)) {
-		types = types.replace(matches[0], makeRelayConnection(matches[1]));
+		queries = queries.replace(matches[0], makeRelayConnection(matches[1]));
 	}
 
-	return types;
+	return queries;
 }
 
 function parseGraphqlSchema(schema) {
@@ -71,32 +100,42 @@ function parseGraphqlSchema(schema) {
 	let types = '';
 	let queries = '';
 	let mutations = '';
+	let subscriptions = '';
 	let matches;
 
 	// Convert @paging.params to (first, after, last, before)
-	const re = /(\@paging\.params|paging\s*\:\s*Default)/i;
-	const pagingParams = "first: Int\nafter: StringOrInt\nlast: Int\nbefore:StringOrInt";
+	const re = /(@paging\.params|paging\s*:\s*Default)/i;
+	const pagingParams = 'first: Int\nafter: StringOrInt\nlast: Int\nbefore:StringOrInt';
 	// eslint-disable-next-line
 	while (matches = re.exec(schema)) {
 		schema = schema.replace(matches[0], pagingParams);
 	}
 
-	matches = schema.match(/#\s*@types([\s\S]*?)((#\s*@(types|queries|mutations)|$))/i);
+	// extract types
+	matches = schema.match(/#\s*@types([\s\S]*?)((#\s*@(types|queries|mutations|subscriptions)|$))/i);
 	if (matches) {
 		types = parseGraphqlTypes(matches[1]);
 	}
 
-	matches = schema.match(/#\s*@queries([\s\S]*?)((#\s*@(types|queries|mutations)|$))/i);
+	// extract queries
+	matches = schema.match(/#\s*@queries([\s\S]*?)((#\s*@(types|queries|mutations|subscriptions)|$))/i);
 	if (matches) {
 		queries = matches[1];
 	}
 
-	matches = schema.match(/#\s*@mutations([\s\S]*?)((#\s*@(types|queries|mutations)|$))/i);
+	// extract mutations
+	matches = schema.match(/#\s*@mutations([\s\S]*?)((#\s*@(types|queries|mutations|subscriptions)|$))/i);
 	if (matches) {
 		mutations = matches[1];
 	}
 
-	return {types, queries, mutations};
+	// extract subscriptions
+	matches = schema.match(/#\s*@subscriptions([\s\S]*?)((#\s*@(types|queries|mutations|subscriptions)|$))/i);
+	if (matches) {
+		subscriptions = matches[1];
+	}
+
+	return {types, queries, mutations, subscriptions};
 }
 
 function getIdFromCursor(cursor) {
@@ -128,9 +167,9 @@ function getPagingParams({first, last, before, after}) {
 		let limit = last || defaultLimit;
 		let offset = getIdFromCursor(before) - last;
 
-        // Check to see if our before-page is underflowing past the 0th item
+		// Check to see if our before-page is underflowing past the 0th item
 		if (offset < 0) {
-            // Adjust the limit with the underflow value
+			// Adjust the limit with the underflow value
 			limit = Math.max(last + offset, 0);
 			offset = 0;
 		}
@@ -221,14 +260,49 @@ function getConnectionResolver(query, args) {
 	};
 }
 
-function getGraphQLTypeDefs({types, queries, mutations}) {
+function getGraphQLTypeDefs({types, queries, mutations, subscriptions}) {
+	const schema = [];
+	const schemaDetails = [];
+
+	if (queries && queries.length) {
+		schema.push('query: Query');
+		schemaDetails.push(`
+			type Query {
+				${queries.join('\n')}
+			}
+		`);
+	}
+
+	if (mutations && mutations.length) {
+		schema.push('mutation: Mutation');
+		schemaDetails.push(`
+			type Mutation {
+				${mutations.join('\n')}
+			}
+		`);
+	}
+
+	if (subscriptions && subscriptions.length) {
+		schema.push('subscription: Subscription');
+		schemaDetails.push(`
+			type Subscription {
+				${subscriptions.join('\n')}
+			}
+		`);
+	}
+
 	return /* GraphQL */`
 		scalar JSON
 		scalar StringOrInt
+		scalar Email
+		scalar URL
+		scalar DateTime
+		scalar UUID
+		scalar String
+		scalar StringOriginal
 
 		schema {
-			query: Query
-			mutation: Mutation
+			${schema.join('\n')}
 		}
 
 		enum OrderDirection {
@@ -250,13 +324,7 @@ function getGraphQLTypeDefs({types, queries, mutations}) {
 
 		${types.join('\n')}
 
-		type Query {
-			${queries.join('\n')}
-		}
-
-		type Mutation {
-			${mutations.join('\n')}
-		}
+		${schemaDetails.join('\n')}
 	`;
 }
 
@@ -264,11 +332,18 @@ function makeSchemaFromModules(modules, opts = {}) {
 	const types = [];
 	const queries = [];
 	const mutations = [];
+	const subscriptions = [];
 	const resolvers = {};
 
 	const typeResolvers = {
 		JSON: GraphQLJSON,
 		StringOrInt: GraphQLStringOrInt,
+		Email: GraphQLEmail,
+		URL: GraphQLURL,
+		DateTime: GraphQLDateTime,
+		UUID: GraphQLUUID,
+		String: GraphQLStringTrimmed,
+		StringOriginal: GraphQLString,
 	};
 
 	_.merge(resolvers, typeResolvers);
@@ -288,10 +363,12 @@ function makeSchemaFromModules(modules, opts = {}) {
 			if (parsed.types) types.push(parsed.types);
 			if (parsed.queries) queries.push(parsed.queries);
 			if (parsed.mutations) mutations.push(parsed.mutations);
+			if (parsed.subscriptions) subscriptions.push(parsed.subscriptions);
 		}
 		if (mod.types) types.push(parseGraphqlTypes(mod.types));
 		if (mod.queries) queries.push(mod.queries);
 		if (mod.mutations) mutations.push(mod.mutations);
+		if (mod.subscriptions) subscriptions.push(mod.subscriptions);
 		if (mod.resolvers) _.merge(resolvers, mod.resolvers);
 	});
 
@@ -301,15 +378,55 @@ function makeSchemaFromModules(modules, opts = {}) {
 		},
 	};
 
-	return makeExecutableSchema({
-		typeDefs: getGraphQLTypeDefs({types, queries, mutations}),
+	const setupFunctions = {};
+	if (resolvers.SubscriptionFilter) {
+		_.forEach(resolvers.SubscriptionFilter, (filter, name) => {
+			setupFunctions[name] = (options, args) => ({
+				[name]: {
+					filter: item => !!filter(item, args, options),
+				},
+			});
+		});
+
+		delete resolvers.SubscriptionFilter;
+	}
+
+	if (resolvers.SubscriptionMap) {
+		_.forEach(resolvers.SubscriptionMap, (filter, name) => {
+			setupFunctions[name] = filter;
+		});
+
+		delete resolvers.SubscriptionMap;
+	}
+
+	const schema = makeExecutableSchema({
+		typeDefs: getGraphQLTypeDefs({types, queries, mutations, subscriptions}),
 		resolvers,
 		logger: opts.logger || logger,
 		allowUndefinedInResolve: opts.allowUndefinedInResolve || false,
 		resolverValidationOptions: opts.resolverValidationOptions || {},
 	});
+
+	const pubsub = new PubSub();
+
+	const subscriptionManager = new SubscriptionManager({
+		schema,
+		pubsub,
+		setupFunctions,
+	});
+
+	pubsub.out = function (key, message) {
+		pubsub.publish('output', {key, message});
+	};
+
+	return {
+		schema,
+		subscriptionManager,
+		pubsub,
+	};
 }
 
+export * from './errors';
 export {
 	makeRelayConnection,
 	getConnectionResolver,

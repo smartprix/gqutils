@@ -1,8 +1,16 @@
 # gqutils
 Utilities for GraphQL
 
+<<<<<<< HEAD
 ## Extra Types
 You can use `JSON`, `StringOrInt` apart from `String`, `Int`, `Float`, `Boolean`, `ID`.
+=======
+### Extra Types
+You can use `JSON`, `StringOrInt`, `Email`, `URL`, `DateTime`, `UUID`, `StringOriginal` apart from `String`, `Int`, `Float`, `Boolean`, `ID`.
+
+`String` is automatically trimmed of whitespaces. If you want an untrimmed
+string use `StringOriginal`.
+>>>>>>> 876017a10be69033650f526d6a1b17f10bd8d6ac
 
 ## Functions
 ### `makeSchemaFromModules(modules, opts)`
@@ -13,14 +21,17 @@ const modules = [
 	'categories',
 ];
 
-const schema = makeSchemaFromModules(modules, {
+const {schema} = makeSchemaFromModules(modules, {
 	baseFolder: `${__dirname}/lib`,
 	allowUndefinedInResolve: false,
 	resolverValidationOptions: {},
 });
 ```
 
-Each module can either export {schema, resolvers} or {types, queries, mutations, resolvers}.
+This function returns `{schema, pubsub, subscriptionManager}`, you can ignore
+pubsub and subscriptionManager if you're not using graphql subscriptions.
+
+Each module can either export {schema, resolvers} or {types, queries, mutations, subscriptions, resolvers}.
 ```
 const schema = /* GraphQL */`
 	# @types
@@ -70,6 +81,10 @@ const schema = /* GraphQL */`
 	deleteEmployee(
 		id: ID!
 	): DeletedItem
+
+	# @subscriptions
+	employeeAdded: Employee
+	employeeChanged(id: ID): Employee
 `;
 
 const resolvers = {
@@ -81,6 +96,26 @@ const resolvers = {
 		saveEmployee,
 		deleteEmployee,
 	},
+
+	// You can also declare SubscriptionFilter, SubscriptionMap & Subscription
+	// For Subscription Related Things
+	// SubscriptionFilter: Filter events from pubsub
+	// SubscriptionMap: Map & filter pubsub events to graphql subscriptions
+	// Subscription: Modify pubsub event data before sending to client
+	/*
+	 * SubscriptionFilter: {
+	 *     employeeChanged(employee, args) {
+	 *	       return employee.id === args.id;
+	 *	   },
+	 * },
+	 * 
+	 * Subscription: {
+	 *     employeeAdded(employee) {
+	 *	       if (employee.password) employee.password = '******';
+	 *         return employee;
+	 *     },
+	 * },
+	 */
 };
 
 export {
@@ -114,3 +149,17 @@ async function getEmployees(root, args) {
 Given a schema which uses our custom schema language (having `@connection`, `# @types` etc.), it'll return {types, queries, mutations}
 
 If you're using `makeSchemaFromModules`, you won't need to use this function.
+
+### `formatError`
+Use this function to format the errors sent to the client, so that you can display them in a user friendly way.
+
+It'll add `fields` to each error, which you can use to display errors on front end.
+
+```js
+import {formatError} from 'gqutils';
+
+route.post('/api', apolloKoa({
+	schema: graphqlSchema,
+	formatError: formatError,
+}));
+```
