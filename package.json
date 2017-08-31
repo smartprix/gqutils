@@ -19,9 +19,9 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "graphql-custom-types": "^0.7.1",
-    "graphql-subscriptions": "^0.3.1",
-    "graphql-tools": "^0.10.1",
+    "graphql-custom-types": "^1.1.0",
+    "graphql-subscriptions": "^0.4.4",
+    "graphql-tools": "^1.2.2",
     "graphql-type-json": "^0.1.4",
     "lodash": "^4.17.4"
   },
@@ -29,15 +29,15 @@
     "graphql": "*"
   },
   "devDependencies": {
-    "babel-cli": "6.24.0",
-    "babel-plugin-transform-es2015-modules-commonjs": "6.24.0",
-    "babel-preset-stage-0": "6.22.0",
-    "babel-register": "6.24.0",
-    "chai": "3.5.0",
-    "eslint": "3.18.0",
-    "eslint-config-smartprix": "3.1.6",
-    "graphql": "^0.9.1",
-    "mocha": "3.2.0"
+    "babel-cli": "6.26.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "6.26.0",
+    "babel-preset-stage-0": "6.24.1",
+    "babel-register": "6.26.0",
+    "chai": "4.1.1",
+    "eslint": "4.5.0",
+    "eslint-config-smartprix": "3.2.5",
+    "graphql": "^0.11.2",
+    "mocha": "3.5.0"
   },
   "babel": {
     "presets": [
