@@ -278,7 +278,8 @@ function getConnectionResolver(query, args) {
 	})();
 	const countResolver = (() => {
 		var _ref5 = _asyncToGenerator(function* (root) {
-			const obj = yield query.$knex().count('* as count').from(query.clone());
+			const knex = query.modelClass().knex();
+			const obj = yield knex.count('* as count').from(knex.raw('(' + query.toString() + ') as __q'));
 			return obj[0].count;
 		});
 
@@ -439,24 +440,14 @@ function makeSchemaFromModules(modules, opts = {}) {
 	};
 
 	const setupFunctions = {};
-	if (resolvers.SubscriptionFilter) {
-		_lodash2.default.forEach(resolvers.SubscriptionFilter, (filter, name) => {
-			setupFunctions[name] = (options, args) => ({
-				[name]: {
-					filter: item => !!filter(item, args, options)
-				}
-			});
+	if (!_lodash2.default.isEmpty(resolvers.Subscription)) {
+		_lodash2.default.forEach(resolvers.Subscription, (subscriptionResolver, name) => {
+			// change filter to utilize withFilter
+			if (subscriptionResolver.filter) {
+				subscriptionResolver.subscribe = (0, _graphqlSubscriptions.withFilter)(subscriptionResolver.subscribe, subscriptionResolver.filter);
+				delete subscriptionResolver.filter;
+			}
 		});
-
-		delete resolvers.SubscriptionFilter;
-	}
-
-	if (resolvers.SubscriptionMap) {
-		_lodash2.default.forEach(resolvers.SubscriptionMap, (filter, name) => {
-			setupFunctions[name] = filter;
-		});
-
-		delete resolvers.SubscriptionMap;
 	}
 
 	const schema = (0, _graphqlTools.makeExecutableSchema)({
@@ -469,19 +460,12 @@ function makeSchemaFromModules(modules, opts = {}) {
 
 	const pubsub = new _graphqlSubscriptions.PubSub();
 
-	const subscriptionManager = new _graphqlSubscriptions.SubscriptionManager({
-		schema,
-		pubsub,
-		setupFunctions
-	});
-
 	pubsub.out = function (key, message) {
 		pubsub.publish('output', { key, message });
 	};
 
 	return {
 		schema,
-		subscriptionManager,
 		pubsub
 	};
 }

@@ -229,7 +229,9 @@ function getConnectionResolver(query, args) {
 	const nodesResolver = async root => getNodes();
 	const edgesResolver = async root => getEdges();
 	const countResolver = async (root) => {
-		const obj = await query.$knex().count('* as count').from(query.clone());
+		const knex = query.modelClass().knex();
+		const obj = await knex.count('* as count')
+			.from(knex.raw('(' + query.toString() + ') as __q'));
 		return obj[0].count;
 	};
 
