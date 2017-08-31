@@ -1,16 +1,11 @@
 # gqutils
 Utilities for GraphQL
 
-<<<<<<< HEAD
-## Extra Types
-You can use `JSON`, `StringOrInt` apart from `String`, `Int`, `Float`, `Boolean`, `ID`.
-=======
 ### Extra Types
 You can use `JSON`, `StringOrInt`, `Email`, `URL`, `DateTime`, `UUID`, `StringOriginal` apart from `String`, `Int`, `Float`, `Boolean`, `ID`.
 
 `String` is automatically trimmed of whitespaces. If you want an untrimmed
 string use `StringOriginal`.
->>>>>>> 876017a10be69033650f526d6a1b17f10bd8d6ac
 
 ## Functions
 ### `makeSchemaFromModules(modules, opts)`
@@ -28,8 +23,7 @@ const {schema} = makeSchemaFromModules(modules, {
 });
 ```
 
-This function returns `{schema, pubsub, subscriptionManager}`, you can ignore
-pubsub and subscriptionManager if you're not using graphql subscriptions.
+This function returns `{schema, pubsub}`, you can ignore pubsub if you're not using graphql subscriptions.
 
 Each module can either export {schema, resolvers} or {types, queries, mutations, subscriptions, resolvers}.
 ```
@@ -92,30 +86,46 @@ const resolvers = {
 		employee: getEmployee,
 		employees: getEmployees,
 	},
+
 	Mutation: {
 		saveEmployee,
 		deleteEmployee,
 	},
 
-	// You can also declare SubscriptionFilter, SubscriptionMap & Subscription
+	// You can also declare Subscription
 	// For Subscription Related Things
-	// SubscriptionFilter: Filter events from pubsub
-	// SubscriptionMap: Map & filter pubsub events to graphql subscriptions
-	// Subscription: Modify pubsub event data before sending to client
-	/*
-	 * SubscriptionFilter: {
-	 *     employeeChanged(employee, args) {
-	 *	       return employee.id === args.id;
-	 *	   },
-	 * },
-	 * 
-	 * Subscription: {
-	 *     employeeAdded(employee) {
-	 *	       if (employee.password) employee.password = '******';
-	 *         return employee;
-	 *     },
-	 * },
-	 */
+	// Every resolver can contain {subscribe, filter, resolve}
+	// Only subscribe is required. Rest are optional.
+	// subscribe: return an async iterator that will contain data to be returned to the client
+	// filter: Filter events from pubsub async iterator
+	// resolve: Modify event data before sending to client
+	Subscription: {
+		employeeAdded: {
+			subscribe() {
+				return pubsub.asyncIterator('employeeAdded');
+			},
+			
+			resolve(employee) {
+				if (employee.password) employee.password = '******';
+				return employee;
+			},
+		},
+
+		employeeChanged: {
+			subscribe() {
+				return pubsub.asyncIterator('employeeChanged');
+			},
+
+			filter(employee, args) {
+				return employee.id === args.id;
+			},
+
+			resolve(employee) {
+				if (employee.password) employee.password = '******';
+				return employee;
+			},
+		},
+	},
 };
 
 export {

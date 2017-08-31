@@ -3,7 +3,7 @@
 import path from 'path';
 import _ from 'lodash';
 import {makeExecutableSchema} from 'graphql-tools';
-import {SubscriptionManager, PubSub} from 'graphql-subscriptions';
+import {PubSub, withFilter} from 'graphql-subscriptions';
 import GraphQLJSON from 'graphql-type-json';
 import {
 	GraphQLScalarType,
@@ -379,24 +379,14 @@ function makeSchemaFromModules(modules, opts = {}) {
 	};
 
 	const setupFunctions = {};
-	if (resolvers.SubscriptionFilter) {
-		_.forEach(resolvers.SubscriptionFilter, (filter, name) => {
-			setupFunctions[name] = (options, args) => ({
-				[name]: {
-					filter: item => !!filter(item, args, options),
-				},
-			});
+	if (!_.isEmpty(resolvers.Subscription)) {
+		_.forEach(resolvers.Subscription, (subscriptionResolver, name) => {
+			// change filter to utilize withFilter
+			if (subscriptionResolver.filter) {
+				subscriptionResolver.subscribe = withFilter(subscriptionResolver.subscribe, subscriptionResolver.filter);
+				delete subscriptionResolver.filter;
+			}
 		});
-
-		delete resolvers.SubscriptionFilter;
-	}
-
-	if (resolvers.SubscriptionMap) {
-		_.forEach(resolvers.SubscriptionMap, (filter, name) => {
-			setupFunctions[name] = filter;
-		});
-
-		delete resolvers.SubscriptionMap;
 	}
 
 	const schema = makeExecutableSchema({
@@ -409,19 +399,12 @@ function makeSchemaFromModules(modules, opts = {}) {
 
 	const pubsub = new PubSub();
 
-	const subscriptionManager = new SubscriptionManager({
-		schema,
-		pubsub,
-		setupFunctions,
-	});
-
 	pubsub.out = function (key, message) {
 		pubsub.publish('output', {key, message});
 	};
 
 	return {
 		schema,
-		subscriptionManager,
 		pubsub,
 	};
 }
