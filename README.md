@@ -223,6 +223,7 @@ const Employee = {
 
 ### Input Types
 Defined with `graphql: input`
+
 Its denition is mostly same as type.
 ```js
 const EmployeeInput = {
@@ -360,6 +361,7 @@ const Color = {
 
 ### Scalar
 Defined with `graphql: scalar`
+
 You need to give either `resolve` or `serialize, parseValue, parseLiteral`
 ```js
 const URL = {
@@ -394,9 +396,9 @@ const URL = {
 ```
 
 ### Query / Mutation / Subscription
-Defined as `graphql: query` => for Query
-Defined as `graphql: mutation` => for Mutation
-Defined as `graphql: subscription` => for Subscription
+* Defined as `graphql: query` => for Query
+* Defined as `graphql: mutation` => for Mutation
+* Defined as `graphql: subscription` => for Subscription
 ```js
 const getEmployees = {
 	// graphql = query means it's a graphql query
