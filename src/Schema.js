@@ -473,7 +473,11 @@ class Schema {
 		const parsedFields = {};
 
 		_.forEach(fields, (field, fieldName) => {
-			const resolve = parentName && this.resolvers[parentName][fieldName];
+			const resolve = (
+				parentName &&
+				this.resolvers[parentName] &&
+				this.resolvers[parentName][fieldName]
+			);
 			const parsedField = this.parseGraphqlField(schema, field, resolve);
 			if (!parsedField) return;
 
