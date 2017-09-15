@@ -1,6 +1,6 @@
 {
   "name": "gqutils",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Utilities For GraphQL",
   "main": "dist/index.js",
   "repository": "smartprix/gqutils",
