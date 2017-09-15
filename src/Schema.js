@@ -431,7 +431,7 @@ class Schema {
 			let typeFields = schema.types[typeName].fields;
 			// if the type is a connection
 			// then also consider the fields of the connection type in $default
-			const matches = /(.+)Connection$/.match(typeName);
+			const matches = typeName.match(/(.+)Connection$/);
 			if (matches) {
 				const connectionTypeName = matches[1];
 				typeFields = _.assign({}, typeFields, schema.types[connectionTypeName].fields);
