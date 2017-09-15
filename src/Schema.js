@@ -428,7 +428,14 @@ class Schema {
 			// since we are modifying args, clone it first
 			args = _.cloneDeep(args);
 
-			const typeFields = schema.types[typeName].fields;
+			let typeFields = schema.types[typeName].fields;
+			// if the type is a connection
+			// then also consider the fields of the connection type in $default
+			const matches = /(.+)Connection$/.match(typeName);
+			if (matches) {
+				const connectionTypeName = matches[1];
+				typeFields = _.assign({}, typeFields, schema.types[connectionTypeName].fields);
+			}
 
 			_.forEach(args.$default, (argName) => {
 				// handle paging args
