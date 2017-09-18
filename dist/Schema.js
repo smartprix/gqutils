@@ -542,7 +542,7 @@ class Schema {
 			name: schemaItem.name,
 			description: schemaItem.description,
 			fields: () => this.parseGraphqlFields(schema, schemaItem.fields, schemaItem.name),
-			resolveType: schemaItem.resolveType
+			resolveType: schemaItem.resolveType || (() => {})
 		});
 	}
 
@@ -589,7 +589,7 @@ class Schema {
 			name: union.name,
 			description: union.description,
 			types: () => this.parseTypes(schema, union.types),
-			resolveType: union.resolveType
+			resolveType: union.resolveType || (() => {})
 		});
 	}
 
