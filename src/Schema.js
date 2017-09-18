@@ -170,7 +170,7 @@ class Schema {
 			type = schema.types[typeName];
 		}
 		else if (typeName in schema.unions) {
-			type = schema.types[typeName];
+			type = schema.unions[typeName];
 		}
 		else if (typeName in defaultTypes) {
 			type = {_graphql: defaultTypes[typeName]};
@@ -428,47 +428,55 @@ class Schema {
 			// since we are modifying args, clone it first
 			args = _.cloneDeep(args);
 
-			let typeFields = schema.types[typeName].fields;
-			// if the type is a connection
-			// then also consider the fields of the connection type in $default
-			const matches = typeName.match(/(.+)Connection$/);
-			if (matches) {
-				const connectionTypeName = matches[1];
-				typeFields = _.assign({}, typeFields, schema.types[connectionTypeName].fields);
-			}
+			const type = schema.types[typeName] || schema.interfaces[typeName];
+			if (type) {
+				let typeFields = type.fields;
 
-			_.forEach(args.$default, (argName) => {
-				// handle paging args
-				if (argName === '$paging') {
-					_.defaults(args, defaultArgs.pagingArgs);
-					return;
-				}
+				// if the type is a connection
+				// then also consider the fields of the connection type in $default
+				const matches = typeName.match(/(.+)Connection$/);
+				if (matches) {
+					const connectionTypeName = matches[1];
+					const connectionType = schema.types[connectionTypeName] || schema.interfaces[connectionTypeName];
 
-				// handle order args
-				if (argName === '$order') {
-					_.defaults(args, defaultArgs.orderArgs);
-					return;
-				}
-
-				if (argName in args) return;
-				if (!(argName in typeFields)) return;
-
-				let field = typeFields[argName];
-				if (typeof field === 'string') {
-					// remove required
-					field = field.replace(/!$/, '');
-				}
-				else {
-					field = _.clone(field);
-
-					// remove required
-					if (typeof field.type === 'string') {
-						field.type = field.type.replace(/!$/, '');
+					if (connectionType) {
+						typeFields = _.assign({}, typeFields, connectionType.fields);
 					}
 				}
 
-				args[argName] = field;
-			});
+				_.forEach(args.$default, (argName) => {
+					// handle paging args
+					if (argName === '$paging') {
+						_.defaults(args, defaultArgs.pagingArgs);
+						return;
+					}
+
+					// handle order args
+					if (argName === '$order') {
+						_.defaults(args, defaultArgs.orderArgs);
+						return;
+					}
+
+					if (argName in args) return;
+					if (!(argName in typeFields)) return;
+
+					let field = typeFields[argName];
+					if (typeof field === 'string') {
+						// remove required
+						field = field.replace(/!$/, '');
+					}
+					else {
+						field = _.clone(field);
+
+						// remove required
+						if (typeof field.type === 'string') {
+							field.type = field.type.replace(/!$/, '');
+						}
+					}
+
+					args[argName] = field;
+				});
+			}
 
 			delete args.$default;
 		}
