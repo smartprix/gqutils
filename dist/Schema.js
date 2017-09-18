@@ -183,7 +183,7 @@ class Schema {
 
 	// eslint-disable-next-line
 	getTypeName(type) {
-		const regex = /^[a-zA-Z0-9_]+$/;
+		const regex = /[a-zA-Z0-9_]+$/;
 		const matches = type.match(regex);
 		return matches && matches[0];
 	}

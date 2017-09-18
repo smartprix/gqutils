@@ -185,7 +185,7 @@ class Schema {
 
 	// eslint-disable-next-line
 	getTypeName(type) {
-		const regex = /^[a-zA-Z0-9_]+$/;
+		const regex = /[a-zA-Z0-9_]+$/;
 		const matches = type.match(regex);
 		return matches && matches[0];
 	}
@@ -437,7 +437,8 @@ class Schema {
 				const matches = typeName.match(/(.+)Connection$/);
 				if (matches) {
 					const connectionTypeName = matches[1];
-					const connectionType = schema.types[connectionTypeName] || schema.interfaces[connectionTypeName];
+					const connectionType = schema.types[connectionTypeName] ||
+						schema.interfaces[connectionTypeName];
 
 					if (connectionType) {
 						typeFields = _.assign({}, typeFields, connectionType.fields);
