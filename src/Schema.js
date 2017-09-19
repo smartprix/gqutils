@@ -457,6 +457,9 @@ class Schema {
 			// since we are modifying args, clone it first
 			args = _.cloneDeep(args);
 
+			const isRequired = typeName.includes('!');
+			typeName = typeName.replace('!', '');
+
 			const type = schema.types[typeName] || schema.interfaces[typeName];
 			if (type) {
 				let typeFields = type.fields;
@@ -492,15 +495,32 @@ class Schema {
 
 					let field = typeFields[argName];
 					if (typeof field === 'string') {
-						// remove required
-						field = field.replace(/!$/, '');
+						if (isRequired) {
+							// add required if not there
+							if (!field.includes('!')) {
+								field += '!';
+							}
+						}
+						else {
+							// remove required
+							field = field.replace(/!$/, '');
+						}
 					}
 					else {
 						field = _.clone(field);
 
 						// remove required
 						if (typeof field.type === 'string') {
-							field.type = field.type.replace(/!$/, '');
+							if (isRequired) {
+								// add required if not there
+								if (!field.type.includes('!')) {
+									field.type += '!';
+								}
+							}
+							else {
+								// remove required
+								field.type = field.type.replace(/!$/, '');
+							}
 						}
 					}
 

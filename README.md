@@ -477,9 +477,11 @@ const Employee = {
 			args: {
 				// $default is special
 				// fields defined in $default will be taken from parent's (TeamConnection's) fields
+				// fields in $default will not have required condition even if mentioned in the type
+				// to enforce required condition add `!` to the field's name
 				// $paging is used for paging parameters (first, after, last, before)
 				// $order is used for order parameters (orderBy & orderDirection)
-				$default: ['id', '$paging', '$order'],
+				$default: ['id', 'phone!', '$paging', '$order'],
 
 				// rest of the parameters are defined in same way as field definition
 				search: 'String',
