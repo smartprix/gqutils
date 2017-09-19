@@ -49,12 +49,11 @@ var _lodash = require('lodash');
 
 var _lodash2 = _interopRequireDefault(_lodash);
 
-var _graphqlTools = require('graphql-tools');
-
 var _graphqlSubscriptions = require('graphql-subscriptions');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+/* eslint-disable global-require, import/no-dynamic-require, import/prefer-default-export */
 function makeSchemaFromModules(modules, opts = {}) {
 	const schemas = [];
 	const resolvers = {};
@@ -78,17 +77,6 @@ function makeSchemaFromModules(modules, opts = {}) {
 		}
 	};
 
-	const setupFunctions = {};
-	if (!_lodash2.default.isEmpty(resolvers.Subscription)) {
-		_lodash2.default.forEach(resolvers.Subscription, (subscriptionResolver, name) => {
-			// change filter to utilize withFilter
-			if (subscriptionResolver.filter) {
-				subscriptionResolver.subscribe = (0, _graphqlSubscriptions.withFilter)(subscriptionResolver.subscribe, subscriptionResolver.filter);
-				delete subscriptionResolver.filter;
-			}
-		});
-	}
-
 	const defaultSchemaName = opts.defaultSchemaName || 'default';
 
 	const graphqlSchemas = (0, _Schema.makeSchemas)(schemas, resolvers, {
@@ -111,6 +99,6 @@ function makeSchemaFromModules(modules, opts = {}) {
 		defaultSchema: graphqlSchemas[defaultSchemaName],
 		pubsub
 	};
-} /* eslint-disable global-require, import/no-dynamic-require, import/prefer-default-export */
-/* eslint-disable no-unused-vars, radix */
+}
+
 exports.makeSchemaFromModules = makeSchemaFromModules;

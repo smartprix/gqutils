@@ -13,6 +13,8 @@ var _graphql = require('graphql');
 
 var _graphqlTools = require('graphql-tools');
 
+var _graphqlSubscriptions = require('graphql-subscriptions');
+
 var _defaultScalars = require('./defaultScalars');
 
 var _defaultScalars2 = _interopRequireDefault(_defaultScalars);
@@ -362,14 +364,39 @@ class Schema {
 		const schemaContainsField = this.shouldSchemaContain(schema, field, { includeByDefault: true });
 		if (!schemaContainsField) return false;
 
+		let fieldResolve = resolve || field.resolve;
+		if (fieldResolve) {
+			// In case of subscriptions resolve might be an object, we need to handle for that case
+			if (typeof fieldResolve === 'function') {
+				fieldResolve = { resolve: fieldResolve };
+			} else if (typeof fieldResolve !== 'object') {
+				throw new Error('resolver must be an object or a function');
+			}
+
+			// handle filter in case of subscriptions
+			if (fieldResolve.subscribe && fieldResolve.filter) {
+				// since we are changing fieldResolve, we need to clone it
+				fieldResolve = _lodash2.default.clone(fieldResolve);
+
+				fieldResolve.subscribe = (0, _graphqlSubscriptions.withFilter)(fieldResolve.subscribe, fieldResolve.filter);
+
+				delete fieldResolve.filter;
+			}
+		}
+
 		if (typeof field === 'string') {
 			const graphqlType = this.parseType(schema, field);
 			if (!graphqlType) return null;
 
-			return {
-				type: graphqlType,
-				resolve
+			const graphqlField = {
+				type: graphqlType
 			};
+
+			if (fieldResolve) {
+				Object.assign(graphqlField, fieldResolve);
+			}
+
+			return graphqlField;
 		}
 
 		const graphqlType = this.parseType(schema, field.type);
@@ -391,10 +418,8 @@ class Schema {
 			graphqlField.deprecationReason = field.deprecationReason;
 		}
 
-		if (resolve) {
-			graphqlField.resolve = resolve;
-		} else if (field.resolve) {
-			graphqlField.resolve = field.resolve;
+		if (fieldResolve) {
+			Object.assign(graphqlField, fieldResolve);
 		}
 
 		if (field.args) {
