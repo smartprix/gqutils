@@ -435,9 +435,6 @@ class Schema {
 			// since we are modifying args, clone it first
 			args = _lodash2.default.cloneDeep(args);
 
-			const isRequired = typeName.includes('!');
-			typeName = typeName.replace('!', '');
-
 			const type = schema.types[typeName] || schema.interfaces[typeName];
 			if (type) {
 				let typeFields = type.fields;
@@ -466,6 +463,9 @@ class Schema {
 						_lodash2.default.defaults(args, _defaultArgs2.default.orderArgs);
 						return;
 					}
+
+					const isRequired = argName.includes('!');
+					argName = argName.replace('!', '');
 
 					if (argName in args) return;
 					if (!(argName in typeFields)) return;

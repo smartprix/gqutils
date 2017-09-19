@@ -457,9 +457,6 @@ class Schema {
 			// since we are modifying args, clone it first
 			args = _.cloneDeep(args);
 
-			const isRequired = typeName.includes('!');
-			typeName = typeName.replace('!', '');
-
 			const type = schema.types[typeName] || schema.interfaces[typeName];
 			if (type) {
 				let typeFields = type.fields;
@@ -489,6 +486,10 @@ class Schema {
 						_.defaults(args, defaultArgs.orderArgs);
 						return;
 					}
+
+					const isRequired = argName.includes('!');
+					argName = argName.replace('!', '');
+
 
 					if (argName in args) return;
 					if (!(argName in typeFields)) return;
