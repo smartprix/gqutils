@@ -538,11 +538,13 @@ class Schema {
 	}
 
 	parseGraphqlInterface(schema, schemaItem) {
+		const resolveType = this.resolvers[schemaItem.name] && this.resolvers[schemaItem.name].__resolveType;
+
 		schemaItem._graphql = new _graphql.GraphQLInterfaceType({
 			name: schemaItem.name,
 			description: schemaItem.description,
 			fields: () => this.parseGraphqlFields(schema, schemaItem.fields, schemaItem.name),
-			resolveType: schemaItem.resolveType || (() => {})
+			resolveType: resolveType || schemaItem.resolveType
 		});
 	}
 
@@ -555,6 +557,8 @@ class Schema {
 	}
 
 	parseGraphqlType(schema, type) {
+		const isTypeOf = this.resolvers[type.name] && this.resolvers[type.name].__isTypeOf;
+
 		const graphqlType = {
 			name: type.name,
 			description: type.description,
@@ -572,7 +576,7 @@ class Schema {
 
 				return fields;
 			},
-			isTypeOf: type.isTypeOf
+			isTypeOf: isTypeOf || type.isTypeOf
 		};
 
 		let interfaces = type.interface || type.interfaces || type.implements;
@@ -585,11 +589,13 @@ class Schema {
 	}
 
 	parseGraphqlUnion(schema, union) {
+		const resolveType = this.resolvers[union.name] && this.resolvers[union.name].__resolveType;
+
 		union._graphql = new _graphql.GraphQLUnionType({
 			name: union.name,
 			description: union.description,
 			types: () => this.parseTypes(schema, union.types),
-			resolveType: union.resolveType || (() => {})
+			resolveType: resolveType || union.resolveType
 		});
 	}
 
