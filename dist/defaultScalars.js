@@ -32,15 +32,31 @@ const GraphQLStringTrimmed = new _graphql.GraphQLScalarType({
 
 const GraphQLStringOrInt = new _graphql.GraphQLScalarType({
 	name: 'StringOrInt',
-	description: 'Value can be either an integer or a string',
+	description: 'Value can be either be an integer or a string',
 	serialize: value => value,
 	parseValue: value => value,
 	parseLiteral(ast) {
 		if (ast.kind === _language.Kind.INT) {
-			return parseInt(ast.value, 10);
+			return Number.parseInt(ast.value, 10);
 		}
 		if (ast.kind === _language.Kind.STRING) {
 			return ast.value;
+		}
+		return null;
+	}
+});
+
+const GraphQLIntID = new _graphql.GraphQLScalarType({
+	name: 'IntID',
+	description: 'Value can be either be an integer or a numeric string that represents an integer. Value will be casted as an integer',
+	serialize: value => value,
+	parseValue: value => value,
+	parseLiteral(ast) {
+		if (ast.kind === _language.Kind.INT) {
+			return Number.parseInt(ast.value, 10);
+		}
+		if (ast.kind === _language.Kind.STRING) {
+			return Number.parseInt(ast.value, 10) || 0;
 		}
 		return null;
 	}
@@ -50,6 +66,7 @@ _graphql.GraphQLString.name = 'StringOriginal';
 
 exports.default = {
 	id: _graphql.GraphQLID,
+	intid: GraphQLIntID,
 	int: _graphql.GraphQLInt,
 	float: _graphql.GraphQLFloat,
 	string: GraphQLStringTrimmed,

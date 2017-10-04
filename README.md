@@ -2,9 +2,19 @@
 Utilities for GraphQL
 
 ### Extra Types
-You can use `JSON`, `StringOrInt`, `Email`, `URL`, `DateTime`, `UUID`, `StringOriginal` apart from `String`, `Int`, `Float`, `Boolean`, `ID`.
+* `String`, `Int`, `Float`, `Boolean`, `ID`
+* `JSON`
+* `StringOrInt`
+* `Email`
+* `URL`
+* `DateTime`
+* `UUID`
+* `StringOriginal`
+* `IntID`: this can be used where input is either an integer or a numeric string. value is casted as an integer.
 
 `String` is automatically trimmed of whitespaces. If you want an untrimmed string use `StringOriginal`.
+
+`IntID` 
 
 ## Functions
 ### `makeSchemasFromModules(modules, opts)`
