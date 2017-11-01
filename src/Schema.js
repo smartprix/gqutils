@@ -425,6 +425,7 @@ class Schema {
 		if (!graphqlType) return null;
 
 		const graphqlField = {
+			...field,
 			type: graphqlType,
 		};
 
