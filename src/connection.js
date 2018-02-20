@@ -62,26 +62,31 @@ function getConnectionResolver(query, args) {
 	let edges = null;
 	const getNodes = async () => {
 		if (!nodes) {
-			nodes = await query.clone()
+			nodes = query.clone()
 				.offset(offset)
-				.limit(limit);
+				.limit(limit)
+				.then(result => result);
 		}
 
 		return nodes;
 	};
 
+	const getEdgesQuery = async () => {
+		const items = await getNodes();
+
+		let i = 0;
+		return items.map((item) => {
+			i++;
+			return {
+				cursor: getCursorFromId(offset + i),
+				node: item,
+			};
+		});
+	};
+
 	const getEdges = async () => {
 		if (!edges) {
-			const items = await getNodes();
-
-			let i = 0;
-			edges = items.map((item) => {
-				i++;
-				return {
-					cursor: getCursorFromId(offset + i),
-					node: item,
-				};
-			});
+			edges = getEdgesQuery();
 		}
 
 		return edges;

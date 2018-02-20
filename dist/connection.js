@@ -66,7 +66,9 @@ function getConnectionResolver(query, args) {
 	const getNodes = (() => {
 		var _ref = _asyncToGenerator(function* () {
 			if (!nodes) {
-				nodes = yield query.clone().offset(offset).limit(limit);
+				nodes = query.clone().offset(offset).limit(limit).then(function (result) {
+					return result;
+				});
 			}
 
 			return nodes;
@@ -77,61 +79,71 @@ function getConnectionResolver(query, args) {
 		};
 	})();
 
-	const getEdges = (() => {
+	const getEdgesQuery = (() => {
 		var _ref2 = _asyncToGenerator(function* () {
-			if (!edges) {
-				const items = yield getNodes();
+			const items = yield getNodes();
 
-				let i = 0;
-				edges = items.map(function (item) {
-					i++;
-					return {
-						cursor: getCursorFromId(offset + i),
-						node: item
-					};
-				});
+			let i = 0;
+			return items.map(function (item) {
+				i++;
+				return {
+					cursor: getCursorFromId(offset + i),
+					node: item
+				};
+			});
+		});
+
+		return function getEdgesQuery() {
+			return _ref2.apply(this, arguments);
+		};
+	})();
+
+	const getEdges = (() => {
+		var _ref3 = _asyncToGenerator(function* () {
+			if (!edges) {
+				edges = getEdgesQuery();
 			}
 
 			return edges;
 		});
 
 		return function getEdges() {
-			return _ref2.apply(this, arguments);
+			return _ref3.apply(this, arguments);
 		};
 	})();
 
 	const nodesResolver = (() => {
-		var _ref3 = _asyncToGenerator(function* () {
+		var _ref4 = _asyncToGenerator(function* () {
 			return getNodes();
 		});
 
 		return function nodesResolver() {
-			return _ref3.apply(this, arguments);
+			return _ref4.apply(this, arguments);
 		};
 	})();
 	const edgesResolver = (() => {
-		var _ref4 = _asyncToGenerator(function* () {
+		var _ref5 = _asyncToGenerator(function* () {
 			return getEdges();
 		});
 
 		return function edgesResolver() {
-			return _ref4.apply(this, arguments);
+			return _ref5.apply(this, arguments);
 		};
 	})();
 	const countResolver = (() => {
-		var _ref5 = _asyncToGenerator(function* () {
+		var _ref6 = _asyncToGenerator(function* () {
 			const knex = query.modelClass().knex();
 			const obj = yield knex.count('* as count').from(knex.raw('(' + query.toString() + ') as __q'));
 			return obj[0].count;
 		});
 
 		return function countResolver() {
-			return _ref5.apply(this, arguments);
+			return _ref6.apply(this, arguments);
 		};
 	})();
 
 	const pageInfoResolver = (() => {
-		var _ref6 = _asyncToGenerator(function* () {
+		var _ref7 = _asyncToGenerator(function* () {
 			if (!edges) yield getEdges();
 
 			const edgeCount = edges.length;
@@ -151,7 +163,7 @@ function getConnectionResolver(query, args) {
 		});
 
 		return function pageInfoResolver() {
-			return _ref6.apply(this, arguments);
+			return _ref7.apply(this, arguments);
 		};
 	})();
 
