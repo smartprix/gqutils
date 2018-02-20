@@ -3,12 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
 	value: true
 });
-
-function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
-
 function getIdFromCursor(cursor) {
 	const num = Number(cursor);
-	if (!isNaN(num) && num > 0 && isFinite(num)) return num;
+	if (!Number.isNaN(num) && num > 0 && Number.isFinite(num)) return num;
 	return Number(Buffer.from(cursor, 'base64').toString().substring(3)) || 0;
 }
 
@@ -63,109 +60,61 @@ function getConnectionResolver(query, args) {
 
 	let nodes = null;
 	let edges = null;
-	const getNodes = (() => {
-		var _ref = _asyncToGenerator(function* () {
-			if (!nodes) {
-				nodes = query.clone().offset(offset).limit(limit).then(function (result) {
-					return result;
-				});
-			}
+	const getNodes = async () => {
+		if (!nodes) {
+			nodes = query.clone().offset(offset).limit(limit).then(result => result);
+		}
 
-			return nodes;
-		});
+		return nodes;
+	};
 
-		return function getNodes() {
-			return _ref.apply(this, arguments);
-		};
-	})();
+	const getEdgesQuery = async () => {
+		const items = await getNodes();
 
-	const getEdgesQuery = (() => {
-		var _ref2 = _asyncToGenerator(function* () {
-			const items = yield getNodes();
-
-			let i = 0;
-			return items.map(function (item) {
-				i++;
-				return {
-					cursor: getCursorFromId(offset + i),
-					node: item
-				};
-			});
-		});
-
-		return function getEdgesQuery() {
-			return _ref2.apply(this, arguments);
-		};
-	})();
-
-	const getEdges = (() => {
-		var _ref3 = _asyncToGenerator(function* () {
-			if (!edges) {
-				edges = getEdgesQuery();
-			}
-
-			return edges;
-		});
-
-		return function getEdges() {
-			return _ref3.apply(this, arguments);
-		};
-	})();
-
-	const nodesResolver = (() => {
-		var _ref4 = _asyncToGenerator(function* () {
-			return getNodes();
-		});
-
-		return function nodesResolver() {
-			return _ref4.apply(this, arguments);
-		};
-	})();
-	const edgesResolver = (() => {
-		var _ref5 = _asyncToGenerator(function* () {
-			return getEdges();
-		});
-
-		return function edgesResolver() {
-			return _ref5.apply(this, arguments);
-		};
-	})();
-	const countResolver = (() => {
-		var _ref6 = _asyncToGenerator(function* () {
-			const knex = query.modelClass().knex();
-			const obj = yield knex.count('* as count').from(knex.raw('(' + query.toString() + ') as __q'));
-			return obj[0].count;
-		});
-
-		return function countResolver() {
-			return _ref6.apply(this, arguments);
-		};
-	})();
-
-	const pageInfoResolver = (() => {
-		var _ref7 = _asyncToGenerator(function* () {
-			if (!edges) yield getEdges();
-
-			const edgeCount = edges.length;
-			const firstEdge = edges[0];
-			const lastEdge = edges[edgeCount - 1];
-
-			const hasPreviousPage = offset > 0;
-			const hasNextPage = edgeCount === limit;
-
+		let i = 0;
+		return items.map(item => {
+			i++;
 			return {
-				startCursor: firstEdge ? firstEdge.cursor : null,
-				endCursor: lastEdge ? lastEdge.cursor : null,
-				hasPreviousPage,
-				hasNextPage,
-				edgeCount
+				cursor: getCursorFromId(offset + i),
+				node: item
 			};
 		});
+	};
 
-		return function pageInfoResolver() {
-			return _ref7.apply(this, arguments);
+	const getEdges = async () => {
+		if (!edges) {
+			edges = getEdgesQuery();
+		}
+
+		return edges;
+	};
+
+	const nodesResolver = async () => getNodes();
+	const edgesResolver = async () => getEdges();
+	const countResolver = async () => {
+		const knex = query.modelClass().knex();
+		const obj = await knex.count('* as count').from(knex.raw('(' + query.toString() + ') as __q'));
+		return obj[0].count;
+	};
+
+	const pageInfoResolver = async () => {
+		const allEdges = await getEdges();
+
+		const edgeCount = allEdges.length;
+		const firstEdge = allEdges[0];
+		const lastEdge = allEdges[edgeCount - 1];
+
+		const hasPreviousPage = offset > 0;
+		const hasNextPage = edgeCount === limit;
+
+		return {
+			startCursor: firstEdge ? firstEdge.cursor : null,
+			endCursor: lastEdge ? lastEdge.cursor : null,
+			hasPreviousPage,
+			hasNextPage,
+			edgeCount
 		};
-	})();
+	};
 
 	return {
 		nodes: nodesResolver,

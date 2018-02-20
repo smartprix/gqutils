@@ -55,6 +55,4 @@ function makeSchemaFromModules(modules, opts = {}) {
 export * from './errors';
 export * from './connection';
 export * from './Schema';
-export {
-	makeSchemaFromModules,
-};
+export {makeSchemaFromModules};

@@ -1,6 +1,6 @@
 function getIdFromCursor(cursor) {
 	const num = Number(cursor);
-	if (!isNaN(num) && num > 0 && isFinite(num)) return num;
+	if (!Number.isNaN(num) && num > 0 && Number.isFinite(num)) return num;
 	return Number(Buffer.from(cursor, 'base64').toString().substring(3)) || 0;
 }
 
@@ -102,11 +102,11 @@ function getConnectionResolver(query, args) {
 	};
 
 	const pageInfoResolver = async () => {
-		if (!edges) await getEdges();
+		const allEdges = await getEdges();
 
-		const edgeCount = edges.length;
-		const firstEdge = edges[0];
-		const lastEdge = edges[edgeCount - 1];
+		const edgeCount = allEdges.length;
+		const firstEdge = allEdges[0];
+		const lastEdge = allEdges[edgeCount - 1];
 
 		const hasPreviousPage = offset > 0;
 		const hasNextPage = edgeCount === limit;
