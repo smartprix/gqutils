@@ -331,34 +331,53 @@ class Schema {
 
 	// eslint-disable-next-line
 	makeRelayConnection(schema, schemaItem) {
-		if (!schemaItem.relayConnection) return;
+		const relayConnection = schemaItem.relayConnection;
+		if (!relayConnection) return;
 
 		const typeName = schemaItem.name;
 
 		const connectionName = `${typeName}Connection`;
 		const edgeName = `${typeName}Edge`;
 
+		const edgeFields = {
+			cursor: 'String!',
+			node: typeName,
+		};
+
+		// relayConnection.edgeFields can be an object
+		// in case we want to add extra fields to the edge schema
+		// eg. to add extra field to edge => relayConnection: {edgeFields: {title: 'String!'}}
+		if (relayConnection.edgeFields) {
+			_.merge(edgeFields, schemaItem.relayConnection.edgeFields);
+		}
+
 		if (!(edgeName in schema.types)) {
 			schema.types[edgeName] = {
 				name: edgeName,
 				description: 'An edge in a connection',
-				fields: {
-					cursor: 'String!',
-					node: typeName,
-				},
+				fields: edgeFields,
 			};
+		}
+
+		const connectionFields = {
+			edges: `[${edgeName}]`,
+			nodes: `[${typeName}]`,
+			pageInfo: 'PageInfo!',
+			totalCount: 'Int!',
+		};
+
+		// relayConnection.fields can be an object
+		// in case we want to add extra fields to the edge schema
+		// eg. to add extra field to edge => relayConnection: {fields: {timeTaken: 'Int'}}
+		if (relayConnection.fields) {
+			_.merge(connectionFields, schemaItem.relayConnection.fields);
 		}
 
 		if (!(connectionName in schema.types)) {
 			schema.types[connectionName] = {
 				name: connectionName,
 				description: `A list of ${typeName}`,
-				fields: {
-					edges: `[${edgeName}]`,
-					nodes: `[${typeName}]`,
-					pageInfo: 'PageInfo!',
-					totalCount: 'Int!',
-				},
+				fields: connectionFields,
 			};
 		}
 	}

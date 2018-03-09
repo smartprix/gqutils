@@ -14,7 +14,7 @@ Utilities for GraphQL
 
 `String` is automatically trimmed of whitespaces. If you want an untrimmed string use `StringOriginal`.
 
-`IntID` 
+`IntID`
 
 ## Functions
 ### `makeSchemasFromModules(modules, opts)`
@@ -216,6 +216,12 @@ const Employee = {
 
 	// relayConnection (optional, default=false): generate a relay connection type automatically
 	// if this is true, a connection type (EmployeeConnection here) will be added to the schema
+	// relayConnection can also be an object with fields {edgeFields, fields}
+	// edgeFields and fields will be merged with EmployeeEdge and EmployeeConnection respectively
+	// eg. relayConnection: {
+	//     edgeFields: {title: 'String!'},
+	//     fields: {timeTaken: 'Int!'}
+	// }
 	relayConnection: true,
 
 	// schema (required): schemas that this type is available in
@@ -506,8 +512,10 @@ const Employee = {
 }
 ```
 
-### `getConnectionResolver(query, args)`
+### `getConnectionResolver(query, args, options = {})`
 Given a query (xorm query) and its arguments, it'll automatically generate a resolver for a relay connection.
+
+options can be `{resolvers: { fields }}` if you want to override default resolvers or specify any extra resolver.
 ```js
 async function getEmployees(root, args) {
 	const query = Employee.query();
@@ -516,6 +524,22 @@ async function getEmployees(root, args) {
 	}
 
 	return getConnectionResolver(query, args);
+}
+
+async function getReviews(root, args) {
+	const query = Review.query();
+	if (args.name) {
+		query.where('name', 'like', `%${args.name}%`);
+	}
+
+	return getConnectionResolver(query, args, {
+		resolvers: {
+			totalCount: 0,
+			edges: {
+				format: (node, i, {offset}) => `${offset + i}. ${node.title}`,
+			}
+		}
+	});
 }
 ```
 
