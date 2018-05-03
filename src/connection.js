@@ -139,8 +139,10 @@ function getConnectionResolver(query, args, options = {}) {
 	if (!countResolver) {
 		countResolver = async () => {
 			const allNodes = await getNodes();
-			if (!allNodes) return 0;
-			if (allNodes.length < limit) return allNodes.length;
+			if (!offset) {
+				if (!allNodes) return 0;
+				if (allNodes.length < limit) return allNodes.length;
+			}
 
 			const knex = query.modelClass().knex();
 			const obj = await knex.count('* as count')
