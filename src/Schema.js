@@ -389,7 +389,7 @@ class Schema {
 			if (this.shouldSchemaContain(schema, schemaItem)) {
 				schema[name][schemaItem.name] = schemaItem;
 
-				if (name === 'types') {
+				if (name === 'types' || name === 'interfaces') {
 					this.makeRelayConnection(schema, schemaItem);
 				}
 			}
