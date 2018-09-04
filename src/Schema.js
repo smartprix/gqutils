@@ -717,7 +717,7 @@ class Schema {
 	}
 
 	parseGraphqlUnions(schema, unions) {
-		_.forEach(unions, union => this.parseGraphqlType(schema, union));
+		_.forEach(unions, union => this.parseGraphqlUnion(schema, union));
 	}
 
 	parseGraphqlSchema(schema) {
