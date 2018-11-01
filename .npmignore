@@ -7,4 +7,8 @@ test
 garbage
 docs
 yarn.lock
+package-lock.json
 .editorconfig
+jsdoc.json
+index2.d.ts
+out

@@ -20,39 +20,54 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "graphql-custom-types": "^1.3.0",
-    "graphql-subscriptions": "^0.5.7",
-    "graphql-tools": "^2.21.0",
-    "graphql-type-json": "^0.1.4",
-    "lodash": "^4.17.5"
+    "graphql-custom-types": "^1.5.0",
+    "graphql-type-json": "^0.2.1",
+    "lodash": "^4.17.11"
   },
   "peerDependencies": {
-    "graphql": "*"
+    "graphql": "*",
+    "graphql-tools": "*",
+    "graphql-subscriptions": "*"
   },
   "devDependencies": {
-    "babel-cli": "6.26.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "6.26.0",
-    "babel-plugin-transform-export-extensions": "^6.22.0",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-register": "6.26.0",
-    "chai": "4.1.2",
-    "eslint": "4.18.0",
-    "eslint-config-smartprix": "3.3.1",
-    "graphql": "^0.13.1",
-    "mocha": "5.0.1"
+    "@babel/cli": "^7.1.2",
+    "@babel/core": "^7.1.2",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/preset-env": "^7.1.0",
+    "@babel/register": "^7.0.0",
+    "chai": "4.2.0",
+    "eslint": "5.8.0",
+    "eslint-config-smartprix": "3.4.2",
+    "graphql": "^14.0.2",
+    "mocha": "5.2.0"
   },
   "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          },
+          "modules": "commonjs",
+          "shippedProposals": true
+        }
+      ]
+    ],
     "plugins": [
-      "transform-export-extensions",
-      "transform-class-properties",
-      "transform-object-rest-spread",
-      "transform-es2015-modules-commonjs"
+      [
+        "@babel/plugin-proposal-class-properties",
+        {
+          "loose": true
+        }
+      ]
     ],
     "sourceMaps": true
   },
   "eslintConfig": {
     "extends": "smartprix",
-    "rules": {}
+    "rules": {
+      "vue/script-indent": 0
+    }
   }
 }
