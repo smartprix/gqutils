@@ -745,12 +745,12 @@ class Schema {
 			assertResolveFunctionsPresent(graphqlSchema, this.options.resolverValidationOptions);
 		}
 
-		if (this.options.logger) {
-			addErrorLoggingToSchema(graphqlSchema, this.options.logger);
-		}
-
 		if (!this.options.allowUndefinedInResolve) {
 			addCatchUndefinedToSchema(graphqlSchema);
+		}
+
+		if (this.options.logger) {
+			addErrorLoggingToSchema(graphqlSchema, this.options.logger);
 		}
 
 		return graphqlSchema;
