@@ -17,8 +17,8 @@ declare module 'gqutils' {
 
 	interface GQUtilsBaseSchema {
 		/**
-		 * if name is not given it'll be taken from the object where it is exported
-		 * eg. export {schema: {Employee}}
+		 * if name is not given it'll be taken from the object where it is d
+		 * eg. {schema: {Employee}}
 		 */
 		name?: string;
 		/**
@@ -65,7 +65,7 @@ declare module 'gqutils' {
 
 	}
 	
-	export interface GQUtilsTypeSchema extends GQUtilsBaseSchema {
+	interface GQUtilsTypeSchema extends GQUtilsBaseSchema {
 		grapqhl: 'type';
 		/**
 		 * (default=false): generate a relay connection type automatically
@@ -88,7 +88,7 @@ declare module 'gqutils' {
 		fields: GQUtilsFields;
 	}
 
-	export interface GQUtilsInputSchema extends GQUtilsBaseSchema {
+	interface GQUtilsInputSchema extends GQUtilsBaseSchema {
 		grapqhl: 'input';
 		/**
 		 * fields of the type
@@ -96,7 +96,7 @@ declare module 'gqutils' {
 		fields: GQUtilsFields;
 	}
 
-	export interface GQUTilsUnionSchema extends GQUtilsBaseSchema {
+	interface GQUTilsUnionSchema extends GQUtilsBaseSchema {
 		grapqhl: 'union';
 		/**  types (required): types that this union contains */
 		types: string[];
@@ -104,7 +104,7 @@ declare module 'gqutils' {
 		resolveType?: (value: any, info: any) => string;
 	}
 
-	export interface GQUtilsInterfaceSchema extends GQUtilsBaseSchema {
+	interface GQUtilsInterfaceSchema extends GQUtilsBaseSchema {
 		graphql: 'interface';
 		/**
 		 * fields of the interface
@@ -115,7 +115,7 @@ declare module 'gqutils' {
 		resolveType?: (value: any, info: any) => string;
 	}
 
-	export interface GQUtilsEnumSchema extends GQUtilsBaseSchema {
+	interface GQUtilsEnumSchema extends GQUtilsBaseSchema {
 		graphql: 'enum';
 		values: {
 			[key:string]: string | number | boolean | {
@@ -129,7 +129,7 @@ declare module 'gqutils' {
 		resolveType?: (value: any, info: any) => string;
 	}
 
-	export interface GQUtilsScalarSchema extends GQUtilsBaseSchema {
+	interface GQUtilsScalarSchema extends GQUtilsBaseSchema {
 		/** Define either resolve or (serialize, parseValue, parseLiteral) */
 		graphql: 'scalar';
 		values: {
@@ -156,7 +156,7 @@ declare module 'gqutils' {
 		parseLiteral?: (ast: any) => any,
 	}
 
-	export interface GQUtilsQuerySchema extends GQUtilsBaseSchema {
+	interface GQUtilsQuerySchema extends GQUtilsBaseSchema {
 		graphql: 'query' | 'mutation' | 'subscription';
 		/** type (required): type that this query returns */
 		type: string;
@@ -169,7 +169,7 @@ declare module 'gqutils' {
 		args?: GQUtilsFields;
 	}
 
-	export type GQUtilsSchemaType = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsQuerySchema;
+	type GQUtilsSchemaType = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsQuerySchema;
 
 	interface commonOptions {
 		defaultSchemaName?: string;
@@ -180,7 +180,7 @@ declare module 'gqutils' {
 		resolverValidationOptions?: any;
 	}
 
-	export function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?:  commonOptions & {
+	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?:  commonOptions & {
 		baseFolder?: string;
 		generateTypes?: boolean;
 		outputPath?: string;
@@ -195,12 +195,12 @@ declare module 'gqutils' {
 		pubsub: PubSub; 
 	}>;
 
-	export function formatError(error: Error): Error & {fields: {
+	function formatError(error: Error): Error & {fields: {
 		[key: string]: {message: string, keyword: string}
 	}};
-	export function humanizeError(field: string, error: any): {message: string};
+	function humanizeError(field: string, error: any): {message: string};
 
-	export function getConnectionResolver<M, T extends {[key: string]: any}>(query: Promise<M>, args, options?: {resolvers?: T}): T & {
+	function getConnectionResolver<M, T extends {[key: string]: any}>(query: Promise<M>, args, options?: {resolvers?: T}): T & {
 		nodes: () => Promise<M>,
 		edges: () => Promise<{cursor: string, node: M}>,
 		totalCount: () => Promise<number>,
@@ -212,12 +212,12 @@ declare module 'gqutils' {
 			edgeCount: number,
 		}>,
 	};
-	export function getIdFromCursor(cursor: number | string): number;
-	export function getCursorFromId(id: number | string): string;
+	function getIdFromCursor(cursor: number | string): number;
+	function getCursorFromId(id: number | string): string;
 
-	export function makeSchemas(schemas: {[key: string]: GQUtilsSchemaType}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions): {[key:string]: GraphQLSchema};
+	function makeSchemas(schemas: {[key: string]: GQUtilsSchemaType}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions): {[key:string]: GraphQLSchema};
 
-	export class Schema {
+	class Schema {
 		constructor(schemas: {[key: string]: GQUtilsSchemaType}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions)
 
 		parseGraphqlSchemas(): {[key: string]: GraphQLSchema};
