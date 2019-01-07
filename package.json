@@ -7,6 +7,7 @@
   "directories": {
     "test": "test"
   },
+  "bin": "dist/bin/gql.js",
   "scripts": {
     "test": "npm run lint && npm run test-only",
     "check-coverage": "true",
@@ -22,6 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^10.12.18",
+    "commander": "^2.19.0",
     "graphql-custom-types": "^1.5.0",
     "graphql-schema-typescript": "^1.2.8",
     "graphql-type-json": "^0.2.1",
