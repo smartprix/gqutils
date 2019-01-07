@@ -23,6 +23,7 @@
   "dependencies": {
     "@types/node": "^10.12.18",
     "graphql-custom-types": "^1.5.0",
+    "graphql-schema-typescript": "^1.2.8",
     "graphql-type-json": "^0.2.1",
     "lodash": "^4.17.11"
   },

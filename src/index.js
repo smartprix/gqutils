@@ -1,10 +1,10 @@
-/* eslint-disable global-require, import/no-dynamic-require, import/prefer-default-export */
 import path from 'path';
 import _ from 'lodash';
 import {PubSub} from 'graphql-subscriptions';
+import {generateTypeScriptTypes} from 'graphql-schema-typescript';
 import {makeSchemas} from './Schema';
 
-function makeSchemaFromModules(modules, opts = {}) {
+async function makeSchemaFromModules(modules, opts = {}) {
 	const schemas = [];
 	const resolvers = {};
 
@@ -43,6 +43,23 @@ function makeSchemaFromModules(modules, opts = {}) {
 	pubsub.out = function (key, message) {
 		pubsub.publish('output', {key, message});
 	};
+
+	if (opts.generateTypes) {
+		const folder = opts.outputPath || `${process.cwd()}/typings/graphql`;
+		await Promise.all(Object.keys(graphqlSchemas).map(async (schemaName) => {
+			await generateTypeScriptTypes(
+				graphqlSchemas[schemaName],
+				path.join(folder, `${schemaName}.d.ts`),
+				{
+					global: true,
+					tabSpaces: 4,
+					namespace: `GraphQl.${schemaName}`,
+					contextType: opts.contextType || 'Routes.context',
+					// asyncResult: true
+				},
+			);
+		}));
+	}
 
 	return {
 		schemas: graphqlSchemas,

@@ -188,12 +188,12 @@ declare module 'gqutils' {
 		 * Type name for context, shopuld be declared elsewhere
 		 */
 		contextType?: string;
-	}): {
+	}): Promise<{
 		schema: {[key: string]: GraphQLSchema};
 		schemas: {[key: string]: GraphQLSchema};
 		defaultSchema: GraphQLSchema;
 		pubsub: PubSub; 
-	};
+	}>;
 
 	export function formatError(error: Error): Error & {fields: {
 		[key: string]: {message: string, keyword: string}
