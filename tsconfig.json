@@ -1,0 +1,11 @@
+{
+	"compilerOptions": {
+		"lib": [
+			"es2016",
+			"esnext.asynciterable"
+		]
+	},
+	"include": [
+		"index.d.ts"
+	]
+}
