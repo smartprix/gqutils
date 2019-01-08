@@ -1,5 +1,6 @@
 import {PubSub} from 'graphql-subscriptions';
 import {GraphQLSchema} from 'graphql';
+import {IResolverValidationOptions} from 'graphql-tools';
 
 declare module 'gqutils' {
 	type schemaType = string[] | string;
@@ -180,23 +181,25 @@ declare module 'gqutils' {
 		schemas?: string[];
 		logger?: Partial<Console>;
 		allowUndefinedInResolve?: boolean;
-		resolverValidationOptions?: any;
+		resolverValidationOptions?: IResolverValidationOptions;
 	}
 
-	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?:  commonOptions & {
-		baseFolder?: string;
-		generateTypes?: boolean;
-		outputPath?: string;
-		/**
-		 * Type name for context, shopuld be declared elsewhere
-		 */
-		contextType?: string;
-	}): Promise<{
-		schema: {[key: string]: GraphQLSchema};
-		schemas: {[key: string]: GraphQLSchema};
+	type schemaMap = {[key: string]: GraphQLSchema};
+
+	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?:  commonOptions): {
+		schema: schemaMap;
+		schemas: schemaMap;
 		defaultSchema: GraphQLSchema;
 		pubsub: PubSub; 
-	}>;
+	};
+
+	/**
+	 * Generate type definitions from module ''graphql-schema-typescript'
+	 * @see https://github.com/dangcuuson/graphql-schema-typescript#readme
+	 * @param graphqlSchemas Map of generated schemas
+	 * @param opts provide options for generated types lik
+	 */
+	function generateTypesFromSchema(graphqlSchemas: schemaMap, opts?: {contextType?: string, outputPath?: string, schema?: string | string[]}): Promise<void>
 
 	function formatError(error: Error): Error & {fields: {
 		[key: string]: {message: string, keyword: string}
@@ -223,7 +226,7 @@ declare module 'gqutils' {
 	class Schema {
 		constructor(schemas: {[key: string]: GQUtilsSchemaType}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions)
 
-		parseGraphqlSchemas(): {[key: string]: GraphQLSchema};
+		parseGraphqlSchemas(): schemaMap;
 		parseGraphqlSchema(schema: string): GraphQLSchema;
 	}
 }
