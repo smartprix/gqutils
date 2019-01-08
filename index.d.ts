@@ -36,36 +36,38 @@ declare module 'gqutils' {
 	 * key is field's name, value is field's type
 	 * You can use ! for non null, and [] for list same as graphql in value
 	 */
-	interface GQUtilsFields {
-		[key: string]: string | {
-			/** type (required): type of the field */
-			type: string;
-			description?: string;
-			default?: any;
-			schema?: schemaType;
-			deprecationReason?: string;
-			resolve?: resolveType;
+	interface GQUtilsFieldsBase {
+		/** type (required): type of the field */
+		type: string;
+		description?: string;
+		default?: any;
+		schema?: schemaType;
+		deprecationReason?: string;
+		resolve?: resolveType;
+	}
 
+	type GQUtilsFields = {
+		[key: string]: string | (GQUtilsFieldsBase & {
 			/**
 			 * args (optional): arguments that this field takes
 			 * NOTE: args are defined as the same way fields are
 			 */
-			// TODO: change to GQUtilsFields & {}
 			args?: {
-				/**
-				 * $default is special
-				 * fields defined in $default will be taken from parent's (TeamConnection's) fields
-				 * fields in $default will not have required condition even if mentioned in the type
-				 * to enforce required condition add `!` to the field's name
-				 * $paging is used for paging parameters (first, after, last, before)
-				 * $order is used for order parameters (orderBy & orderDirection)
-				 */
-				$default?: (pagingArg | orderArg | string)[];
-			};
-		}
-
+					[keys:string]: string | (GQUtilsFieldsBase & {
+					/**
+					 * $default is special
+					 * fields defined in $default will be taken from parent's (TeamConnection's) fields
+					 * fields in $default will not have required condition even if mentioned in the type
+					 * to enforce required condition add `!` to the field's name
+					 * $paging is used for paging parameters (first, after, last, before)
+					 * $order is used for order parameters (orderBy & orderDirection)
+					 */
+					$default?: (pagingArg | orderArg | string)[];
+				});
+			}
+		})
 	}
-	
+
 	interface GQUtilsTypeSchema extends GQUtilsBaseSchema {
 		grapqhl: 'type';
 		/**
