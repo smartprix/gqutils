@@ -4,7 +4,7 @@ import {PubSub} from 'graphql-subscriptions';
 import {generateTypeScriptTypes} from 'graphql-schema-typescript';
 import {makeSchemas} from './Schema';
 
-async function makeSchemaFromModules(modules, opts = {}) {
+function makeSchemaFromModules(modules, opts = {}) {
 	const schemas = [];
 	const resolvers = {};
 
@@ -44,23 +44,6 @@ async function makeSchemaFromModules(modules, opts = {}) {
 		pubsub.publish('output', {key, message});
 	};
 
-	if (opts.generateTypes) {
-		const folder = opts.outputPath || `${process.cwd()}/typings/graphql`;
-		await Promise.all(Object.keys(graphqlSchemas).map(async (schemaName) => {
-			await generateTypeScriptTypes(
-				graphqlSchemas[schemaName],
-				path.join(folder, `${schemaName}.d.ts`),
-				{
-					global: true,
-					tabSpaces: 4,
-					namespace: `GraphQl.${schemaName}`,
-					contextType: opts.contextType || 'Routes.context',
-					// asyncResult: true
-				},
-			);
-		}));
-	}
-
 	return {
 		schemas: graphqlSchemas,
 		schema: graphqlSchemas,
@@ -69,7 +52,29 @@ async function makeSchemaFromModules(modules, opts = {}) {
 	};
 }
 
+async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', outputPath, schema} = {}) {
+	const folder = outputPath || `${process.cwd()}/typings/graphql`;
+
+	schema = _.castArray(schema);
+
+	return Promise.all(Object.keys(graphqlSchemas).map(async (schemaName) => {
+		if (schema.length && !schema.includes(schemaName)) return;
+
+		await generateTypeScriptTypes(
+			graphqlSchemas[schemaName],
+			path.join(folder, `${schemaName}.d.ts`),
+			{
+				global: true,
+				tabSpaces: 4,
+				namespace: `GraphQl.${schemaName}`,
+				contextType,
+				// asyncResult: true
+			},
+		);
+	}));
+}
+
 export * from './errors';
 export * from './connection';
 export * from './Schema';
-export {makeSchemaFromModules};
+export {makeSchemaFromModules, generateTypesFromSchema};

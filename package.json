@@ -7,7 +7,7 @@
   "directories": {
     "test": "test"
   },
-  "bin": "dist/bin/gql.js",
+  "bin": "dist/bin/gqutils.js",
   "scripts": {
     "test": "npm run lint && npm run test-only",
     "check-coverage": "true",

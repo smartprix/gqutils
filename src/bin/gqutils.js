@@ -3,9 +3,9 @@ import _ from 'lodash';
 import program from 'commander';
 
 import {version} from '../../package.json';
-import {makeSchemaFromModules} from '../index';
+import {makeSchemaFromModules, generateTypesFromSchema} from '../index';
 
-const confFile = `${process.cwd()}/gql`;
+const confFile = `${process.cwd()}/gqutils`;
 const packageFile = `${process.cwd()}/package.json`;
 
 let logger;
@@ -58,16 +58,18 @@ async function runAndExit() {
 	}
 
 	try {
-		await makeSchemaFromModules(conf.modules, {
+		const {schemas} = makeSchemaFromModules(conf.modules, {
 			baseFolder: conf.baseFolder,
 			schema: _.castArray(schema || conf.schema || conf.schemas),
 			allowUndefinedInResolve: conf.allowUndefinedInResolve,
 			defaultSchemaName: conf.defaultSchemaName,
 			resolverValidationOptions: conf.resolverValidationOptions || {},
-			// types related config
-			generateTypes: true,
+		});
+
+		await generateTypesFromSchema(schemas, {
 			outputPath: program.dest,
 			contextType: conf.contextType,
+			schema,
 		});
 		getLogger().info('[gqutils] Types generated');
 		process.exit(0);
