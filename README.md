@@ -599,7 +599,11 @@ moudles.exports = {
     ],
     baseFolder: 'dist/lib',
     schema: ['schemaNames', 'to', 'generate' 'types', 'for'],
-    contextType: 'any', // Or a custom type you have declared globally in a .d.ts file
+	contextType: 'any', // Or a custom type you have declared globally in a .d.ts file
+	// Options of 'graphql-schema-typescript' (https://github.com/dangcuuson/graphql-schema-typescript/blob/master/src/types.ts)
+	generateTypeOptions: {
+		tabSpaces: 4,
+	},
   }
 ```
 

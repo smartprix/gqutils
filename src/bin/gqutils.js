@@ -81,6 +81,7 @@ async function runAndExit() {
 			outputPath: program.dest,
 			contextType: conf.contextType,
 			schema,
+			options: conf.generateTypeOptions || {},
 		});
 		getLogger().info('[gqutils] Types generated');
 		process.exit(0);
