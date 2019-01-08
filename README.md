@@ -197,7 +197,7 @@ graphql option reference
 * `mutation`: for root mutation
 * `subscription`: for root subscription
 
-These are available in the type definitions, so can be imported as 'GQUtilsSchemaType' and type checked.
+These are available in the type definitions, so can be imported as 'GQUtilsSchema' and type checked.
 
 ### Types
 Defined with `graphql: type`
