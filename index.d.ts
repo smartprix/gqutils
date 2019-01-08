@@ -7,7 +7,7 @@ declare module 'gqutils' {
 	 * resolve (optional): resolver for this field
 	 * this can also be defined in resolvers
 	 */
-	type resolveType = (root: any, args: any, ctx: any, info: any) => {};
+	type resolveType = (root: any, args: any, ctx: any, info: any) => any;
 
 	/** $paging is used for paging parameters (first, after, last, before) */
 	type pagingArg = '$paging';
@@ -50,7 +50,8 @@ declare module 'gqutils' {
 			 * args (optional): arguments that this field takes
 			 * NOTE: args are defined as the same way fields are
 			 */
-			args?: GQUtilsFields & {
+			// TODO: change to GQUtilsFields & {}
+			args?: {
 				/**
 				 * $default is special
 				 * fields defined in $default will be taken from parent's (TeamConnection's) fields
@@ -115,16 +116,18 @@ declare module 'gqutils' {
 		resolveType?: (value: any, info: any) => string;
 	}
 
+	interface valuesType {
+		[key: string]: string | number | boolean | {
+			value: any;
+			description?: string;
+			deprecationReason?: string;
+			schema?: string[];
+		};
+	}
+
 	interface GQUtilsEnumSchema extends GQUtilsBaseSchema {
 		graphql: 'enum';
-		values: {
-			[key:string]: string | number | boolean | {
-				value: any;
-				description?: string;
-				deprecationReason?: string;
-				schema?: string[];
-			};
-		}
+		values: valuesType;
 		/** resolveType (optional): function for determining which type is actually used when the value is resolved */
 		resolveType?: (value: any, info: any) => string;
 	}
@@ -132,14 +135,7 @@ declare module 'gqutils' {
 	interface GQUtilsScalarSchema extends GQUtilsBaseSchema {
 		/** Define either resolve or (serialize, parseValue, parseLiteral) */
 		graphql: 'scalar';
-		values: {
-			[key:string]: string | number | boolean | {
-				value: any;
-				description?: string;
-				deprecationReason?: string;
-				schema?: string[];
-			};
-		}
+		values: valuesType;
 		/** 
 		 * resolve (required/optional): Already defined graphql scalar you can resolve it with
 		 * if resolve is not given then, serialize, parseValue, parseLiteral must be given
