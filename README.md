@@ -571,7 +571,7 @@ Or use the cli after creating gqutils config or adding to package.json
 ### CLI
 
 ```sh
-Usage: gql types [options]
+Usage: gqutils types [options]
 
 
 Use to generate types from graphql schema
