@@ -173,7 +173,7 @@ declare module 'gqutils' {
 		args?: GQUtilsArgs;
 	}
 
-	type GQUtilsSchemaType = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsQuerySchema;
+	type GQUtilsSchema = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsQuerySchema;
 
 	interface commonOptions {
 		defaultSchemaName?: string;
@@ -221,10 +221,10 @@ declare module 'gqutils' {
 	function getIdFromCursor(cursor: number | string): number;
 	function getCursorFromId(id: number | string): string;
 
-	function makeSchemas(schemas: {[key: string]: GQUtilsSchemaType}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions): {[key:string]: GraphQLSchema};
+	function makeSchemas(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions): {[key:string]: GraphQLSchema};
 
 	class Schema {
-		constructor(schemas: {[key: string]: GQUtilsSchemaType}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions)
+		constructor(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions)
 
 		parseGraphqlSchemas(): schemaMap;
 		parseGraphqlSchema(schema: string): GraphQLSchema;
