@@ -75,18 +75,21 @@ declare module 'gqutils' {
 	}
 
 	interface GQUtilsTypeSchema extends GQUtilsBaseSchema {
-		grapqhl: 'type';
+		graphql: 'type';
 		/**
 		 * (default=false): generate a relay connection type automatically
-		 * if this is true, a connection type (EmployeeConnection here) will be added to the schema
+		 * if this is true, a connection type will be added to the schema
 		 * relayConnection can also be an object with fields {edgeFields, fields}
-		 * edgeFields and fields will be merged with EmployeeEdge and EmployeeConnection respectively
+		 * edgeFields and fields will be merged with Edge and Connection respectively
 		 * eg. relayConnection: {
 		 *     edgeFields: {title: 'String!'},
 		 *     fields: {timeTaken: 'Int!'}
 		 * }
 		 */
-		relayConnection?: boolean;
+		relayConnection?: boolean | {
+			edgeFields: GQUtilsFields;
+			fields: GQUtilsFields;
+		};
 		/**
 		 * interfaces this type implements
 		 */
@@ -98,7 +101,7 @@ declare module 'gqutils' {
 	}
 
 	interface GQUtilsInputSchema extends GQUtilsBaseSchema {
-		grapqhl: 'input';
+		graphql: 'input';
 		/**
 		 * fields of the type
 		 */
@@ -106,7 +109,7 @@ declare module 'gqutils' {
 	}
 
 	interface GQUTilsUnionSchema extends GQUtilsBaseSchema {
-		grapqhl: 'union';
+		graphql: 'union';
 		/**  types (required): types that this union contains */
 		types: string[];
 		/** resolveType (optional): function for determining which type is actually used when the value is resolved */
@@ -149,6 +152,12 @@ declare module 'gqutils' {
 		 * if resolve is not given then, serialize, parseValue, parseLiteral must be given
 		*/
 		resolve?: (value: any, info: any) => string;
+	}
+
+	interface GQUtilsScalarSchemaAlternate extends GQUtilsBaseSchema {
+		/** Define either resolve or (serialize, parseValue, parseLiteral) */
+		graphql: 'scalar';
+		values: valuesType;
 
 		/** serialize (optional, default=identity function): send value to client */
 		serialize?: (value: any) => any,
@@ -159,6 +168,7 @@ declare module 'gqutils' {
 		/** parseLiteral (required/optional): parse ast tree built after value coming from client */
 		parseLiteral?: (ast: any) => any,
 	}
+
 
 	interface GQUtilsQuerySchema extends GQUtilsBaseSchema {
 		graphql: 'query' | 'mutation' | 'subscription';
@@ -173,7 +183,7 @@ declare module 'gqutils' {
 		args?: GQUtilsArgs;
 	}
 
-	type GQUtilsSchema = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsQuerySchema;
+	type GQUtilsSchema = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsScalarSchemaAlternate | GQUtilsQuerySchema;
 
 	interface commonOptions {
 		defaultSchemaName?: string;
