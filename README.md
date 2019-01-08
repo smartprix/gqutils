@@ -562,12 +562,11 @@ route.post('/api', apolloKoa({
 
 ## Generate type definitions from schema
 
-Using https://github.com/dangcuuson/graphql-schema-typescript#readme to generate types
+Using https://github.com/dangcuuson/graphql-schema-typescript#readme to generate types. Read more about them here https://medium.com/@pongsatt/how-to-generate-typescript-types-from-graphql-schemas-8d63ed6cda2e
 
 Pass the generated schema to `generateTypesFromSchema` and it will output type definitions in 'typings/graphql' folder.
 
 Or use the cli after creating gqutils config or adding to package.json
-
 ### CLI
 
 ```sh
@@ -586,3 +585,22 @@ Options:
   -d, --dest [dir]     Specify Destination Directory (default: typings/graphql) (default: "typings/graphql")
   -h, --help           output usage information
 ```
+
+### Config
+
+Have a file 'gqutils.js' in the projects root directory which exports the following options:
+
+```js
+moudles.exports = {
+	modules: [
+		'Array',
+		'of',
+		'modules',
+    ],
+    baseFolder: 'dist/lib',
+    schema: ['schemaNames', 'to', 'generate' 'types', 'for'],
+    contextType: 'any', // Or a custom type you have declared globally in a .d.ts file
+  }
+```
+
+Or provide these properties in your package.json under the key 'gqutils'.
