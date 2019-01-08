@@ -196,6 +196,9 @@ graphql option reference
 * `query`: for root query
 * `mutation`: for root mutation
 * `subscription`: for root subscription
+
+These are available in the type definitions, so can be imported as 'GQUtilsSchemaType' and type checked.
+
 ### Types
 Defined with `graphql: type`
 ```js
@@ -555,4 +558,31 @@ route.post('/api', apolloKoa({
 	schema: graphqlSchema,
 	formatError: formatError,
 }));
+```
+
+## Generate type definitions from schema
+
+Using https://github.com/dangcuuson/graphql-schema-typescript#readme to generate types
+
+Pass the generated schema to `generateTypesFromSchema` and it will output type definitions in 'typings/graphql' folder.
+
+Or use the cli after creating gqutils config or adding to package.json
+
+### CLI
+
+```sh
+Usage: gql types [options]
+
+
+Use to generate types from graphql schema
+	$ gqutils types
+Only build specific schema:
+	$ gqutils types --schema admin
+	
+
+Options:
+  -v, --version        output the version number
+  -s, --schema [name]  Specify schema (default: all)
+  -d, --dest [dir]     Specify Destination Directory (default: typings/graphql) (default: "typings/graphql")
+  -h, --help           output usage information
 ```
