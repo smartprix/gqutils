@@ -46,25 +46,30 @@ declare module 'gqutils' {
 		resolve?: resolveType;
 	}
 
+	type GQUtilsArgs = {
+		/**
+		 * Should be string or object, except when key is '$default' then it is string array
+		 */
+		[keys: string]: string | string[] | GQUtilsFieldsBase;
+	} & {
+		/**
+		 * $default is special
+		 * fields defined in $default will be taken from parent's (TeamConnection's) fields
+		 * fields in $default will not have required condition even if mentioned in the type
+		 * to enforce required condition add `!` to the field's name
+		 * $paging is used for paging parameters (first, after, last, before)
+		 * $order is used for order parameters (orderBy & orderDirection)
+		 */
+		$default?: (pagingArg | orderArg | string)[];
+	};
+
 	type GQUtilsFields = {
 		[key: string]: string | (GQUtilsFieldsBase & {
 			/**
 			 * args (optional): arguments that this field takes
 			 * NOTE: args are defined as the same way fields are
 			 */
-			args?: {
-					[keys:string]: string | (GQUtilsFieldsBase & {
-					/**
-					 * $default is special
-					 * fields defined in $default will be taken from parent's (TeamConnection's) fields
-					 * fields in $default will not have required condition even if mentioned in the type
-					 * to enforce required condition add `!` to the field's name
-					 * $paging is used for paging parameters (first, after, last, before)
-					 * $order is used for order parameters (orderBy & orderDirection)
-					 */
-					$default?: (pagingArg | orderArg | string)[];
-				});
-			}
+			args?: GQUtilsArgs;
 		})
 	}
 
@@ -164,7 +169,7 @@ declare module 'gqutils' {
 		 */
 		resolve?: resolveType;
 
-		args?: GQUtilsFields;
+		args?: GQUtilsArgs;
 	}
 
 	type GQUtilsSchemaType = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsQuerySchema;
