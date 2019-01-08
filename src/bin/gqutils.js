@@ -41,6 +41,11 @@ Only build specific schema:
 async function runAndExit() {
 	let conf = {};
 	const schema = (String(program.schema || '')).trim();
+	let option;
+
+	if (program.args && program.args.length > 0) {
+		option = program.args[0];
+	}
 
 	try {
 		conf = require(confFile); // eslint-disable-line
@@ -55,6 +60,12 @@ async function runAndExit() {
 			process.exit(1);
 			conf = {};
 		}
+	}
+
+	if (option !== 'types') {
+		getLogger().error('Invalid option');
+		program.outputHelp();
+		process.exit(1);
 	}
 
 	try {
