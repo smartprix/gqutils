@@ -1,7 +1,7 @@
-/* eslint-disable global-require, import/no-dynamic-require, import/prefer-default-export */
 import path from 'path';
 import _ from 'lodash';
 import {PubSub} from 'graphql-subscriptions';
+import {generateTypeScriptTypes} from 'graphql-schema-typescript';
 import {makeSchemas} from './Schema';
 
 function makeSchemaFromModules(modules, opts = {}) {
@@ -52,7 +52,33 @@ function makeSchemaFromModules(modules, opts = {}) {
 	};
 }
 
+async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', outputPath, schema, options = {}} = {}) {
+	const folder = outputPath || `${process.cwd()}/typings/graphql`;
+
+	schema = _.castArray(schema);
+
+	return Promise.all(Object.keys(graphqlSchemas).map(async (schemaName) => {
+		if (schema.length && !schema.includes(schemaName)) return;
+		
+		/** @type {import('graphql-schema-typescript').GenerateTypescriptOptions} */
+		const defaultOptions = {
+			global: true,
+			tabSpaces: 4,
+			// https://github.com/dangcuuson/graphql-schema-typescript/issues/17
+			// asyncResult: true
+		};
+		await generateTypeScriptTypes(
+			graphqlSchemas[schemaName],
+			path.join(folder, `${schemaName}.d.ts`),
+			_.merge(defaultOptions, options, {
+				namespace: `GraphQl.${schemaName}`,
+				contextType,
+			}),
+		);
+	}));
+}
+
 export * from './errors';
 export * from './connection';
 export * from './Schema';
-export {makeSchemaFromModules};
+export {makeSchemaFromModules, generateTypesFromSchema};
