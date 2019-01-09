@@ -1,7 +1,6 @@
 import path from 'path';
 import _ from 'lodash';
 import {PubSub} from 'graphql-subscriptions';
-import {generateTypeScriptTypes} from 'graphql-schema-typescript';
 import {makeSchemas} from './Schema';
 
 function makeSchemaFromModules(modules, opts = {}) {
@@ -53,6 +52,16 @@ function makeSchemaFromModules(modules, opts = {}) {
 }
 
 async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', outputPath, schema, options = {}} = {}) {
+	let generateTypeScriptTypes;
+	try {
+		// This is done this way so that those who don't need the cli don't need to install typescript
+		// eslint-disable-next-line
+		({generateTypeScriptTypes} = require('graphql-schema-typescript'));
+	}
+	catch (err) {
+		throw new Error('You need to install \'typescript\' as a dependency');
+	}
+
 	const folder = outputPath || `${process.cwd()}/typings/graphql`;
 
 	schema = _.castArray(schema);
