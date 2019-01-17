@@ -14,7 +14,7 @@ function getLogger() {
 	try {
 		// eslint-disable-next-line global-require
 		const {Oak} = require('@smpx/oak');
-		logger = Oak;
+		logger = new Oak('gqutils');
 	}
 	catch (err) {
 		logger = console;
