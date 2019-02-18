@@ -36,7 +36,7 @@ declare module 'gqutils' {
 		 * permissions, allow only these roles / permissions to access this
 		 * NOTE: this is not currently implemented in gqutils, so your app has to implement it itself
 		 */
-		permissions: string[];
+		permissions?: string[];
 	}
 
 	/**
