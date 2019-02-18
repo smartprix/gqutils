@@ -211,6 +211,7 @@ declare module 'gqutils' {
 	type gqlConfig = commonOptions & {
 		contextType?: string,
 		generateTypeOptions?: GenerateTypescriptOptions,
+		schemaDirectory?: string,
 	};
 
 	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?: commonOptions): gqlSchemas;

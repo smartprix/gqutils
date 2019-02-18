@@ -72,13 +72,20 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 
 	const terms = '(schema|resolvers)';
 	const ws = '\\s*';
+	const quote = '("|\')';
 	const regex = new RegExp([
 		`^export${ws}\\{${ws}${terms}${ws}(:|,)`,
 		`^export${ws}${terms}${ws}from`,
 		`^module\\.exports${ws}=${ws}\\{${ws}${terms}${ws}(:|,)`,
+		`^exports\\.${terms}${ws}=`,
+		// babel output
+		`^Object\\.defineProperty${ws}\\(${ws}exports${ws},${ws}${quote}${terms}${quote}${ws},`,
 	].map(r => `(${r})`).join('|'), 'm');
 
 	const processFile = (file) => {
+		// ignore non-js file
+		if (!file.endsWith('.js')) return;
+
 		let contents;
 		try {
 			contents = fs.readFileSync(file);
@@ -99,6 +106,8 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 		//   export {schema}
 		//   export schema from
 		//   module.exports = {schema}
+		//   exports.schema =
+		//   Object.defineProperty(exports, "schema",
 		if (!regex.test(contents)) return;
 
 		// eslint-disable-next-line global-require, import/no-dynamic-require
@@ -108,6 +117,8 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 	};
 
 	const files = fs.readdirSync(directory);
+	files.sort();
+
 	files.forEach((file) => {
 		file = path.join(directory, file);
 		const stat = fs.statSync(file);
@@ -145,6 +156,10 @@ function makeSchemaFromConfig(opts = {}) {
 	const conf = getConfig();
 	const finalOpts = _.merge({}, conf, opts);
 	finalOpts.schemas = _.castArray(opts.schema || opts.schemas || conf.schema || conf.schemas);
+	// convert relative path to absolute
+	if (finalOpts.schemaDirectory && !finalOpts.schemaDirectory.startsWith('/')) {
+		finalOpts.schemaDirectory = path.join(process.cwd(), finalOpts.schemaDirectory);
+	}
 
 	if (finalOpts.modules) {
 		return makeSchemaFromModules(finalOpts.modules, finalOpts);
