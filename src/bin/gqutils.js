@@ -3,10 +3,7 @@ import _ from 'lodash';
 import program from 'commander';
 
 import {version} from '../../package.json';
-import {makeSchemaFromModules, generateTypesFromSchema} from '../index';
-
-const confFile = `${process.cwd()}/gqutils`;
-const packageFile = `${process.cwd()}/package.json`;
+import {getConfig, generateTypesFromSchema, makeSchemaFromConfig} from '../index';
 
 let logger;
 function getLogger() {
@@ -39,27 +36,12 @@ Only build specific schema:
 	.parse(process.argv);
 
 async function runAndExit() {
-	let conf = {};
+	const conf = getConfig();
 	const schemaInput = (String(program.schema || '')).trim();
-	let option;
 
+	let option;
 	if (program.args && program.args.length > 0) {
 		option = program.args[0];
-	}
-
-	try {
-		conf = require(confFile); // eslint-disable-line
-	}
-	catch (e) {
-		try {
-			conf = require(packageFile)['gqutils']; // eslint-disable-line
-			if (!conf || _.isEmpty(conf)) throw new Error('No config in package.json');
-		}
-		catch (err) {
-			getLogger().log('[gqutils] Conf not found or error in config', e, err);
-			process.exit(1);
-			conf = {};
-		}
 	}
 
 	if (option !== 'types') {
@@ -69,14 +51,9 @@ async function runAndExit() {
 	}
 
 	const schema = _.castArray(schemaInput || conf.schema || conf.schemas);
-
 	try {
-		const {schemas} = makeSchemaFromModules(conf.modules, {
-			baseFolder: conf.baseFolder,
+		const {schemas} = makeSchemaFromConfig({
 			schema,
-			allowUndefinedInResolve: conf.allowUndefinedInResolve,
-			defaultSchemaName: conf.defaultSchemaName,
-			resolverValidationOptions: conf.resolverValidationOptions || {},
 		});
 
 		await generateTypesFromSchema(schemas, {
@@ -85,6 +62,7 @@ async function runAndExit() {
 			schema,
 			options: conf.generateTypeOptions || {},
 		});
+
 		getLogger().info('[gqutils] Types generated');
 		process.exit(0);
 	}

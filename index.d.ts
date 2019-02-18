@@ -32,6 +32,11 @@ declare module 'gqutils' {
 		 * if schema is not given, it won't be available in any schema
 		 */
 		schema: schemaType;
+		/**
+		 * permissions, allow only these roles / permissions to access this
+		 * NOTE: this is not currently implemented in gqutils, so your app has to implement it itself
+		 */
+		permissions: string[];
 	}
 
 	/**
@@ -148,7 +153,7 @@ declare module 'gqutils' {
 		/** Define either resolve or (serialize, parseValue, parseLiteral) */
 		graphql: 'scalar';
 		values: valuesType;
-		/** 
+		/**
 		 * resolve (required/optional): Already defined graphql scalar you can resolve it with
 		 * if resolve is not given then, serialize, parseValue, parseLiteral must be given
 		*/
@@ -195,14 +200,23 @@ declare module 'gqutils' {
 		resolverValidationOptions?: IResolverValidationOptions;
 	}
 
-	type schemaMap = {[key: string]: GraphQLSchema};
-
-	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?:  commonOptions): {
+	interface gqlSchemas {
 		schema: schemaMap;
 		schemas: schemaMap;
 		defaultSchema: GraphQLSchema;
-		pubsub: PubSub; 
+		pubsub: PubSub;
+	}
+
+	type schemaMap = {[key: string]: GraphQLSchema};
+	type gqlConfig = commonOptions & {
+		contextType?: string,
+		generateTypeOptions?: GenerateTypescriptOptions,
 	};
+
+	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?: commonOptions): gqlSchemas;
+	function makeSchemaFromDirectory(directory: string, opts?: commonOptions): gqlSchemas;
+	function makeSchemaFromConfig(opts?: commonOptions): gqlSchemas;
+	function getConfig(): gqlConfig;
 
 	/**
 	 * Generate type definitions from module ''graphql-schema-typescript'
