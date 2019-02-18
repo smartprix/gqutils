@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 function getIdFromCursor(cursor) {
 	const num = Number(cursor);
 	if (!Number.isNaN(num) && num > 0 && Number.isFinite(num)) return num;
@@ -23,7 +25,7 @@ function getPagingParams({first, last, before, after}) {
 			offset: after ? getIdFromCursor(after) : 0,
 		};
 	}
-	else if (isBackwardPaging) {
+	if (isBackwardPaging) {
 		let limit = last || defaultLimit;
 		let offset = getIdFromCursor(before) - last;
 
