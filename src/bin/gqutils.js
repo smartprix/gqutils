@@ -14,7 +14,7 @@ function getLogger() {
 	try {
 		// eslint-disable-next-line global-require
 		const {Oak} = require('@smpx/oak');
-		logger = Oak;
+		logger = new Oak('gqutils');
 	}
 	catch (err) {
 		logger = console;
@@ -40,7 +40,7 @@ Only build specific schema:
 
 async function runAndExit() {
 	let conf = {};
-	const schema = (String(program.schema || '')).trim();
+	const schemaInput = (String(program.schema || '')).trim();
 	let option;
 
 	if (program.args && program.args.length > 0) {
@@ -68,10 +68,12 @@ async function runAndExit() {
 		process.exit(1);
 	}
 
+	const schema = _.castArray(schemaInput || conf.schema || conf.schemas);
+
 	try {
 		const {schemas} = makeSchemaFromModules(conf.modules, {
 			baseFolder: conf.baseFolder,
-			schema: _.castArray(schema || conf.schema || conf.schemas),
+			schema,
 			allowUndefinedInResolve: conf.allowUndefinedInResolve,
 			defaultSchemaName: conf.defaultSchemaName,
 			resolverValidationOptions: conf.resolverValidationOptions || {},
