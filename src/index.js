@@ -92,8 +92,8 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 		}
 		catch (e) {
 			// file does not exist
-			if (file.includes('index.js')) {
-				// forgive index.js files, as they might not exist inside directories
+			if (file.includes('index.js') || file.includes('graphql.js')) {
+				// forgive index.js & graphql.js files, as they might not exist inside directories
 				return;
 			}
 
@@ -127,6 +127,9 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 			// file is a directory
 			// read the index.js file
 			processFile(path.join(file, 'index.js'));
+			// also read the graphql.js & graphql/index.js file
+			processFile(path.join(file, 'graphql.js'));
+			processFile(path.join(file, 'graphql/index.js'));
 		}
 		else {
 			processFile(file);
