@@ -453,7 +453,12 @@ class Schema {
 		}
 
 		if (field.default) {
-			graphqlField.defaultValue = field.default;
+			if (_.isFunction(field.default)) {
+				graphqlField.defaultValue = field.default();
+			}
+			else {
+				graphqlField.defaultValue = field.default;
+			}
 		}
 
 		if (field.deprecationReason) {
