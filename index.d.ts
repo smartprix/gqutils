@@ -93,8 +93,8 @@ declare module 'gqutils' {
 		 * }
 		 */
 		relayConnection?: boolean | {
-			edgeFields: GQUtilsFields;
-			fields: GQUtilsFields;
+			edgeFields?: GQUtilsFields;
+			fields?: GQUtilsFields;
 		};
 		/**
 		 * interfaces this type implements
