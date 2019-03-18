@@ -141,6 +141,7 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 
 function getConfig() {
 	const confFile = `${process.cwd()}/gqutils`;
+	const smartprixConfFile = `${process.cwd()}/sm-config`;
 	const packageFile = `${process.cwd()}/package.json`;
 
 	let conf;
@@ -148,8 +149,20 @@ function getConfig() {
 		conf = require(confFile); // eslint-disable-line
 	}
 	catch (e) {
-		conf = require(packageFile)['gqutils']; // eslint-disable-line
-		if (!conf || _.isEmpty(conf)) throw new Error('No config in package.json');
+		try {
+			conf = require(smartprixConfFile)['gqutils']; // eslint-disable-line
+			if (!conf || _.isEmpty(conf)) throw new Error('No config or empty config found in common \'sm-config\'');
+		}
+		catch (e2) {
+			try {
+				conf = require(packageFile)['gqutils']; // eslint-disable-line
+				if (!conf || _.isEmpty(conf)) throw new Error('No config or empty config found in package.json');
+			}
+			catch (e3) {
+				console.error('No config found or error in config', e.message, e2.message, e3.message);
+				throw new Error('No config found or error in config');
+			}
+		}
 	}
 
 	return conf;
