@@ -233,9 +233,9 @@ declare module 'gqutils' {
 	}};
 	function humanizeError(field: string, error: any): {message: string};
 
-	function getConnectionResolver<M, T extends {[key: string]: any}>(query: Promise<M>, args, options?: {resolvers?: T}): T & {
-		nodes: () => Promise<M>,
-		edges: () => Promise<{cursor: string, node: M}>,
+	interface connectionResolvers<M> {
+		nodes: () => Promise<M[]>,
+		edges: () => Promise<{cursor: string, node: M}[]>,
 		totalCount: () => Promise<number>,
 		pageInfo: () => Promise<{
 			startCursor: string | null,
@@ -244,7 +244,16 @@ declare module 'gqutils' {
 			hasNextPage: boolean,
 			edgeCount: number,
 		}>,
-	};
+	}
+
+	interface pagingParams {
+		first?: number;
+		last?: number;
+		before?: number;
+		after?: number;
+	}
+
+	function getConnectionResolver<M, T extends connectionResolvers<M>>(query: Promise<M>, args: pagingParams, options?: {resolvers?: Partial<T>}): T;
 	function getIdFromCursor(cursor: number | string): number;
 	function getCursorFromId(id: number | string): string;
 
