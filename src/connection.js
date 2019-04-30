@@ -14,10 +14,9 @@ function getCursorFromId(id) {
 		.replace(/=+$/, '');
 }
 
-function getPagingParams({first, last, before, after}) {
+function getPagingParams({first, last, before, after}, {defaultLimit = 20} = {}) {
 	const isForwardPaging = !!first || !!after;
 	const isBackwardPaging = !!last || !!before;
-	const defaultLimit = 20;
 
 	if (isForwardPaging) {
 		return {
@@ -193,6 +192,7 @@ function getConnectionResolver(query, args, options = {}) {
 }
 
 export {
+	getPagingParams,
 	getConnectionResolver,
 	getIdFromCursor,
 	getCursorFromId,
