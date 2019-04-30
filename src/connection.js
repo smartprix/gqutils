@@ -27,7 +27,7 @@ function getPagingParams({first, last, before, after}) {
 	}
 	if (isBackwardPaging) {
 		let limit = last || defaultLimit;
-		let offset = getIdFromCursor(before) - last;
+		let offset = before ? (getIdFromCursor(before) - limit) : 0;
 
 		// Check to see if our before-page is underflowing past the 0th item
 		if (offset < 0) {
