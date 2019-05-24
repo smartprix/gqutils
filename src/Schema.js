@@ -452,7 +452,7 @@ class Schema {
 			graphqlField.description = field.description;
 		}
 
-		if (field.default) {
+		if (field.default !== undefined) {
 			if (_.isFunction(field.default)) {
 				graphqlField.defaultValue = field.default();
 			}
