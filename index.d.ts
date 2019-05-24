@@ -214,9 +214,26 @@ declare module 'gqutils' {
 		schemaDirectory?: string,
 	};
 
-	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?: commonOptions): gqlSchemas;
+	/**
+	 * @param modules if path, it is required relative to the basefolder
+	 */
+	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?: commonOptions & {baseFolder?: string;}): gqlSchemas;
+	/**
+	 * make a graphql schema from a directory by reading all schema & resolvers from it
+	 * Only supports exports of type:
+	 * - export {schema}
+	 * - export schema from
+	 * - module.exports = {schema}
+	 * - exports.schema =
+	 * - Object.defineProperty(exports, "schema",
+	 */
 	function makeSchemaFromDirectory(directory: string, opts?: commonOptions): gqlSchemas;
-	function makeSchemaFromConfig(opts?: commonOptions): gqlSchemas;
+	/**
+	 * If schemaSirectory is provided this uses makeSchemaFromDirectory
+	 * If modules then makeSchemaFromModules
+	 * @param opts Override default config read from config files (gqutils, sm-config, or package)
+	 */
+	function makeSchemaFromConfig(opts?: commonOptions & {schemaDirectory?: string, baseFolder?: string}): gqlSchemas;
 	function getConfig(): gqlConfig;
 
 	/**
@@ -253,6 +270,10 @@ declare module 'gqutils' {
 		after?: number;
 	}
 
+	/**
+	 * @param args
+	 * @param opts defaultLimit is 20 by default
+	 */
 	function getPagingParams(args: pagingParams, opts?: {defaultLimit?: number}): {limit: number, offset: number};
 	function getConnectionResolver<M, T extends connectionResolvers<M>>(query: Promise<M>, args: pagingParams, options?: {resolvers?: Partial<T>}): T;
 	function getIdFromCursor(cursor: number | string): number;

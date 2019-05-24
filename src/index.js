@@ -59,6 +59,12 @@ function makeSchemaFromModules(modules, opts = {}) {
 
 /**
  * make a graphql schema from a directory by reading all schema & resolvers from it
+ * Only supports exports of type:
+ * - export {schema}
+ * - export schema from
+ * - module.exports = {schema}
+ * - exports.schema =
+ * - Object.defineProperty(exports, "schema",
  * @param {string} directory
  * @param {object} [opts={}]
  */
