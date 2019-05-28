@@ -1,6 +1,8 @@
 import path from 'path';
 import _ from 'lodash';
 
+import Gql from './Gql';
+
 async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', outputPath, schema, options = {}} = {}) {
 	let generateTypeScriptTypes;
 	try {
@@ -42,5 +44,6 @@ export * from './connection';
 export * from './Schema';
 export * from './makeSchemaFrom';
 export {
+	Gql,
 	generateTypesFromSchema,
 };
