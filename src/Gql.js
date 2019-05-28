@@ -6,9 +6,10 @@ import {makeSchemaFromConfig} from './makeSchemaFrom';
 
 const ONE_DAY = 24 * 3600 * 1000;
 const ENUM_PREFIX = '__ENUM__::';
-const VAR_PREFIX = '__VAR__::';
+// const VAR_PREFIX = '__VAR__::';
 
-const NO_QUOTES_REGEX = new RegExp(`^(${ENUM_PREFIX}|${VAR_PREFIX})([A-Za-z_]+)$`);
+// const NO_QUOTES_REGEX = new RegExp(`^(${ENUM_PREFIX}|${VAR_PREFIX})([A-Za-z_]+)$`);
+const ENUM_REGEX = new RegExp(`^${ENUM_PREFIX}([A-Za-z_]+)$`);
 
 function graphql(schemaObj, query, rootValue, contextValue, variableValues) {
 	// we are not using the inbuilt graphql function because it validates
@@ -52,8 +53,10 @@ function convertObjToGqlArg(obj) {
 }
 
 function convertStrToGqlArg(str) {
-	const [, prefix, val] = str.match(NO_QUOTES_REGEX) || [];
-	if (prefix && val) return prefix === VAR_PREFIX ? '$' + val : val;
+	const [, val] = str.match(ENUM_REGEX) || [];
+	if (val) return val;
+	// const [, prefix, val] = str.match(NO_QUOTES_REGEX) || [];
+	// if (prefix && val) return prefix === VAR_PREFIX ? '$' + val : val;
 
 	return JSON.stringify(str);
 }
@@ -153,13 +156,14 @@ class Gql {
 		return this.constructor.enum(val);
 	}
 
-	static var(val) {
-		return val ? VAR_PREFIX + val : val;
-	}
+	// NOTE: Not useful for now
+	// static var(val) {
+	// 	return val ? VAR_PREFIX + val : val;
+	// }
 
-	var(val) {
-		return this.constructor.var(val);
-	}
+	// var(val) {
+	// 	return this.constructor.var(val);
+	// }
 
 	static toGqlArg(arg, opts = {}) {
 		let gqlArg = '';
