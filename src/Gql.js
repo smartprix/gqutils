@@ -14,11 +14,13 @@ const ENUM_REGEX = new RegExp(`^${ENUM_PREFIX}([A-Za-z_]+)$`);
 /**
  * we are not using the inbuilt graphql function because it validates
  * the graphql, which is an expensive operation
- * return graphql(schema, query, rootValue, contextValue, variableValues);
+ * return graphql(schema, query, rootValue, context, variables);
  * taken from:
  * @see https://github.com/graphql/graphql-js/blob/master/src/graphql.js
  */
-function graphql(schemaObj, query, rootValue, contextValue, variableValues) {
+function graphql({
+	schema, query, context, variables, rootValue = null, validateGraphql = false,
+}) {
 	// parse
 	let document;
 	try {
@@ -28,20 +30,19 @@ function graphql(schemaObj, query, rootValue, contextValue, variableValues) {
 		return Promise.resolve({errors: [syntaxError]});
 	}
 
-	// validate only in developement
-	if (process.env.NODE_ENV !== 'production') {
-		const validationErrors = validate(schemaObj, document);
+	if (validateGraphql) {
+		const validationErrors = validate(schema, document);
 		if (validationErrors.length > 0) {
 			return Promise.resolve({errors: validationErrors});
 		}
 	}
 
 	return execute(
-		schemaObj,
+		schema,
 		document,
 		rootValue,
-		contextValue,
-		variableValues,
+		context,
+		variables,
 	);
 }
 
@@ -84,6 +85,7 @@ class Gql {
 		this.logger = opts.logger || console;
 		this.cache = opts.cache;
 		this.formatError = opts.formatError || formatError;
+		this.validateGraphql = opts.validateGraphql || false;
 	}
 
 	async exec(query, context, {
@@ -102,7 +104,9 @@ class Gql {
 			query = `query { ${query} }`;
 		}
 
-		const result = await graphql(schema, query, null, context, variables);
+		const result = await graphql({
+			schema, query, context, variables, validateGraphql: this.validateGraphql,
+		});
 
 		if (!result.errors) {
 			if (cacheKey && this.cache) await this.cache.set(cacheKey, result.data, {ttl});
