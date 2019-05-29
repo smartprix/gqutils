@@ -229,8 +229,8 @@ declare module 'gqutils' {
 	 */
 	function makeSchemaFromDirectory(directory: string, opts?: commonOptions): gqlSchemas;
 	/**
-	 * If schemaSirectory is provided this uses makeSchemaFromDirectory
-	 * If modules then makeSchemaFromModules
+	 * If `schemaDirectory` is provided this uses `makeSchemaFromDirectory`
+	 * If `modules` then `makeSchemaFromModules`
 	 * @param opts Override default config read from config files (gqutils, sm-config, or package)
 	 */
 	function makeSchemaFromConfig(opts?: commonOptions & {schemaDirectory?: string, baseFolder?: string}): gqlSchemas;
