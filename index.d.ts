@@ -209,6 +209,7 @@ declare module 'gqutils' {
 
 	type schemaMap = {[key: string]: GraphQLSchema};
 	type gqlConfig = commonOptions & {
+		baseFolder?: string;
 		contextType?: string,
 		generateTypeOptions?: GenerateTypescriptOptions,
 		schemaDirectory?: string,
@@ -233,8 +234,12 @@ declare module 'gqutils' {
 	 * If `modules` then `makeSchemaFromModules`
 	 * @param opts Override default config read from config files (gqutils, sm-config, or package)
 	 */
-	function makeSchemaFromConfig(opts?: commonOptions & {schemaDirectory?: string, baseFolder?: string}): gqlSchemas;
-	function getConfig(): gqlConfig;
+	function makeSchemaFromConfig(opts?: Partial<gqlConfig>): gqlSchemas;
+	/**
+	 * Get config from config files
+	 * @param opts Overwrite some options
+	 */
+	function getConfig(opts?: Partial<gqlConfig>): gqlConfig;
 
 	/**
 	 * Generate type definitions from module ''graphql-schema-typescript'

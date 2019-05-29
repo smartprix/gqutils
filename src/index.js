@@ -145,7 +145,7 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 	return makeSchemaFromObjects(schemas, resolvers, opts);
 }
 
-function getConfig() {
+function getConfig(opts = {}) {
 	const confFile = `${process.cwd()}/gqutils`;
 	const smartprixConfFile = `${process.cwd()}/sm-config`;
 	const packageFile = `${process.cwd()}/package.json`;
@@ -171,23 +171,23 @@ function getConfig() {
 		}
 	}
 
-	return conf;
+	if (_.isEmpty(opts)) return conf;
+	return _.merge({}, conf, opts);
 }
 
 function makeSchemaFromConfig(opts = {}) {
-	const conf = getConfig();
-	const finalOpts = _.merge({}, conf, opts);
-	finalOpts.schemas = _.castArray(opts.schema || opts.schemas || conf.schema || conf.schemas);
+	const conf = getConfig(opts);
+	conf.schemas = _.castArray(opts.schema || opts.schemas || conf.schema || conf.schemas);
 	// convert relative path to absolute
-	if (finalOpts.schemaDirectory && !finalOpts.schemaDirectory.startsWith('/')) {
-		finalOpts.schemaDirectory = path.join(process.cwd(), finalOpts.schemaDirectory);
+	if (conf.schemaDirectory && !conf.schemaDirectory.startsWith('/')) {
+		conf.schemaDirectory = path.join(process.cwd(), conf.schemaDirectory);
 	}
 
-	if (finalOpts.modules) {
-		return makeSchemaFromModules(finalOpts.modules, finalOpts);
+	if (conf.modules) {
+		return makeSchemaFromModules(conf.modules, conf);
 	}
-	if (finalOpts.schemaDirectory) {
-		return makeSchemaFromDirectory(finalOpts.schemaDirectory, finalOpts);
+	if (conf.schemaDirectory) {
+		return makeSchemaFromDirectory(conf.schemaDirectory, conf);
 	}
 
 	throw new Error('`modules` or `schemaDirectory` option not found in config');
