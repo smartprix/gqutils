@@ -128,7 +128,7 @@ class Gql {
 			};
 		}
 
-		const err = new Error('Error in graphQL api');
+		const err = new Error(`[schema:${schemaName || 'default'}] Error in graphQL api`);
 		err.errors = errors;
 		err.fields = fields;
 		throw err;
