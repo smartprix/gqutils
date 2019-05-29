@@ -11,12 +11,14 @@ const ENUM_PREFIX = '__ENUM__::';
 // const NO_QUOTES_REGEX = new RegExp(`^(${ENUM_PREFIX}|${VAR_PREFIX})([A-Za-z_]+)$`);
 const ENUM_REGEX = new RegExp(`^${ENUM_PREFIX}([A-Za-z_]+)$`);
 
+/**
+ * we are not using the inbuilt graphql function because it validates
+ * the graphql, which is an expensive operation
+ * return graphql(schema, query, rootValue, contextValue, variableValues);
+ * taken from:
+ * @see https://github.com/graphql/graphql-js/blob/master/src/graphql.js
+ */
 function graphql(schemaObj, query, rootValue, contextValue, variableValues) {
-	// we are not using the inbuilt graphql function because it validates
-	// the graphql, which is an expensive operation
-	// return graphql(schema, query, rootValue, contextValue, variableValues);
-	// taken from: https://github.com/graphql/graphql-js/blob/master/src/graphql.js
-
 	// parse
 	let document;
 	try {
@@ -111,7 +113,6 @@ class Gql {
 		let fields = {};
 		const errors = result.errors;
 
-		// log & format all errors
 		errors.forEach((error) => {
 			error = this.formatError(error);
 			Object.assign(fields, error.fields);
