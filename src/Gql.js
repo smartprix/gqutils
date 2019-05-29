@@ -87,7 +87,10 @@ class Gql {
 	async exec(query, context, {
 		cache: {key: cacheKey, ttl = ONE_DAY} = {},
 		variables = {},
+		schemaName,
 	} = {}) {
+		const schema = schemaName ? this.schema[schemaName] : this.defaultSchema;
+
 		if (cacheKey && this.cache) {
 			const cached = await this.cache.get(cacheKey);
 			if (cached) return cached;
@@ -97,7 +100,7 @@ class Gql {
 			query = `query { ${query} }`;
 		}
 
-		const result = await graphql(this.defaultSchema, query, null, context, variables);
+		const result = await graphql(schema, query, null, context, variables);
 
 		if (!result.errors) {
 			if (cacheKey && this.cache) await this.cache.set(cacheKey, result.data, {ttl});
