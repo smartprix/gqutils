@@ -256,4 +256,37 @@ declare module 'gqutils' {
 		parseGraphqlSchemas(): schemaMap;
 		parseGraphqlSchema(schema: string): GraphQLSchema;
 	}
+
+	interface schemaConfigInput extends commonOptions {
+		validateGrqphql?: boolean;
+		cache?: any;
+		formatError: (error: any) => any;
+	}
+
+	interface apiInput {
+		api: {endpoint: string, headers: {[key: string]: string}};
+		logger: Partial<Console>;
+		cache?: any;
+		formatError: (error: any) => any;
+	}
+
+	interface execOptions {
+		cache?: {key: string, ttl: number};
+		variables?: {[key: string]: any};
+		schemaName?: string;
+	}
+
+	class Gql {
+		constructor(opts: apiInput | schemaConfigInput);
+
+		exec(query: string, context: any, opts?: execOptions): Promise<any>;
+		getAll(query: string, context: any, opts?: execOptions): Promise<any>;
+		get(query: string, context: any, opts: execOptions): Promise<any>;
+
+		enum(val: string): string;
+		static enum(val: string): string;
+
+		static toGqlArg(arg: any, opts?: string[] | {pick?: string[], curlyBrackets?: boolean, roundBrackets?: boolean}): string;
+		static tag(strings: string[], ...args: any[]): string;
+	}
 }
