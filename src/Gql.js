@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import {parse, validate, execute} from 'graphql';
+import {Connect} from 'sm-utils';
 
 import {formatError} from './errors';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
@@ -76,16 +77,21 @@ function convertToGqlArg(value) {
 
 class Gql {
 	constructor(opts = {}) {
-		const {schema, pubsub, defaultSchema} = makeSchemaFromConfig(opts);
+		if (opts.api) {
+			this.api = opts.api;
+		}
+		else {
+			const {schema, pubsub, defaultSchema} = makeSchemaFromConfig(opts);
 
-		this.schema = schema;
-		this.defaultSchema = defaultSchema;
-		this.pubsub = pubsub;
+			this.schema = schema;
+			this.defaultSchema = defaultSchema;
+			this.pubsub = pubsub;
+			this.validateGraphql = opts.validateGraphql || false;
+		}
 
 		this.logger = opts.logger || console;
 		this.cache = opts.cache;
 		this.formatError = opts.formatError || formatError;
-		this.validateGraphql = opts.validateGraphql || false;
 	}
 
 	async exec(query, context, {
@@ -93,8 +99,6 @@ class Gql {
 		variables = {},
 		schemaName,
 	} = {}) {
-		const schema = schemaName ? this.schema[schemaName] : this.defaultSchema;
-
 		if (cacheKey && this.cache) {
 			const cached = await this.cache.get(cacheKey);
 			if (cached) return cached;
@@ -104,6 +108,19 @@ class Gql {
 			query = `query { ${query} }`;
 		}
 
+		if (this.api) {
+			const result = await Connect
+				.url(this.api.endpoint)
+				.headers(this.api.headers)
+				.body({query})
+				.post()
+				.fetch();
+
+			if (cacheKey && this.cache) await this.cache.set(cacheKey, result, {ttl});
+			return result;
+		}
+
+		const schema = schemaName ? this.schema[schemaName] : this.defaultSchema;
 		const result = await graphql({
 			schema, query, context, variables, validateGraphql: this.validateGraphql,
 		});
