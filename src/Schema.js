@@ -659,12 +659,30 @@ class Schema {
 	parseGraphqlType(schema, type) {
 		const isTypeOf = this.resolvers[type.name] &&
 			this.resolvers[type.name].__isTypeOf;
+		let interfaces = type.interface || type.interfaces || type.implements;
+		const interfaceFields = {};
+
+		if (interfaces) {
+			interfaces = _.castArray(interfaces);
+			interfaces
+				.map(name => schema.interfaces[name] && schema.interfaces[name].fields)
+				.filter(Boolean)
+				.forEach((defaultFields) => {
+					Object.assign(interfaceFields, defaultFields);
+				});
+		}
 
 		const graphqlType = {
 			name: type.name,
 			description: type.description,
 			fields: () => {
-				const fields = this.parseGraphqlFields(schema, type.fields, type.name);
+				const fields = this.parseGraphqlFields(
+					schema,
+					Object.assign(interfaceFields, type.fields),
+					type.name
+				);
+
+
 				if (_.isEmpty(fields)) {
 					return {
 						noop: {
@@ -680,9 +698,7 @@ class Schema {
 			isTypeOf: isTypeOf || type.isTypeOf,
 		};
 
-		let interfaces = type.interface || type.interfaces || type.implements;
 		if (interfaces) {
-			interfaces = _.castArray(interfaces);
 			graphqlType.interfaces = () => this.parseTypes(schema, interfaces);
 		}
 
