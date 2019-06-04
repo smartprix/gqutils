@@ -260,14 +260,13 @@ declare module 'gqutils' {
 	interface schemaConfigInput extends commonOptions {
 		validateGrqphql?: boolean;
 		cache?: any;
-		formatError: (error: any) => any;
+		formatError?: (error: any) => any;
 	}
 
 	interface apiInput {
-		api: {endpoint: string, headers: {[key: string]: string}};
-		logger: Partial<Console>;
+		api: {endpoint: string, headers: {[key: string]: string}, cookies: {[key: string]: string}};
 		cache?: any;
-		formatError: (error: any) => any;
+		formatError?: (error: any) => any;
 	}
 
 	interface execOptions {
