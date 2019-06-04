@@ -266,7 +266,6 @@ declare module 'gqutils' {
 	interface apiInput {
 		api: {endpoint: string, headers: {[key: string]: string}, cookies: {[key: string]: string}};
 		cache?: any;
-		formatError?: (error: any) => any;
 	}
 
 	interface execOptions {

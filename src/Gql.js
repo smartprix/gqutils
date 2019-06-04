@@ -94,11 +94,10 @@ class Gql {
 			this.defaultSchema = defaultSchema;
 			this.pubsub = pubsub;
 			this.validateGraphql = opts.validateGraphql || false;
-			this.logger = opts.logger || console;
+			this.formatError = opts.formatError || formatError;
 		}
 
 		this.cache = opts.cache;
-		this.formatError = opts.formatError || formatError;
 	}
 
 	async _execApi(query) {
