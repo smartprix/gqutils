@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import {parse, validate, execute} from 'graphql';
-import {Connect} from 'sm-utils';
+import {Connect, Str} from 'sm-utils';
 
 import {formatError} from './errors';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
@@ -75,10 +75,17 @@ function convertToGqlArg(value) {
 	return JSON.stringify(value);
 }
 
+class ApiError extends Error {}
+class GraphqlError extends Error {}
+
 class Gql {
 	constructor(opts = {}) {
 		if (opts.api) {
-			this.api = opts.api;
+			this.api = _.defaults(opts.api, {
+				endpoint: null,
+				headers: {},
+				cookies: {},
+			});
 		}
 		else {
 			const {schema, pubsub, defaultSchema} = makeSchemaFromConfig(opts);
@@ -87,49 +94,47 @@ class Gql {
 			this.defaultSchema = defaultSchema;
 			this.pubsub = pubsub;
 			this.validateGraphql = opts.validateGraphql || false;
+			this.logger = opts.logger || console;
 		}
 
-		this.logger = opts.logger || console;
 		this.cache = opts.cache;
 		this.formatError = opts.formatError || formatError;
 	}
 
-	async exec(query, context, {
-		cache: {key: cacheKey, ttl = ONE_DAY} = {},
-		variables = {},
-		schemaName,
-	} = {}) {
-		if (cacheKey && this.cache) {
-			const cached = await this.cache.get(cacheKey);
-			if (cached) return cached;
+	async _execApi(query) {
+		const response = await Connect
+			.url(this.api.endpoint)
+			.headers(this.api.headers)
+			.cookies(this.api.cookies)
+			.body({query})
+			.post();
+
+		const result = Str.tryParseJson(response.body);
+
+		if (response.statusCode !== 200) {
+			throw new ApiError(`${response.statusCode}, ${(result && result.errors) || 'Unknown error'}`);
 		}
 
-		if (!/^\s*query|mutation|subscription/.test(query) && /^\s*[a-zA-Z0-9]/.test(query)) {
-			query = `query { ${query} }`;
+		if (!result) {
+			throw new ApiError('Invalid result from api');
 		}
 
-		if (this.api) {
-			const result = await Connect
-				.url(this.api.endpoint)
-				.headers(this.api.headers)
-				.body({query})
-				.post()
-				.fetch();
-
-			if (cacheKey && this.cache) await this.cache.set(cacheKey, result, {ttl});
-			return result;
+		if (!_.isEmpty(result.errors)) {
+			const err = new ApiError('Errors in api response');
+			err.errors = result.errors;
+			throw err;
 		}
 
+		return result;
+	}
+
+	async _execGraphql(query, context, {variables = {}, schemaName} = {}) {
 		const schema = schemaName ? this.schema[schemaName] : this.defaultSchema;
 		const result = await graphql({
 			schema, query, context, variables, validateGraphql: this.validateGraphql,
 		});
 
-		if (!result.errors) {
-			if (cacheKey && this.cache) await this.cache.set(cacheKey, result.data, {ttl});
-			return result.data;
-		}
-
+		if (_.isEmpty(result.errors)) return result.data;
 
 		let fields = {};
 		const errors = result.errors;
@@ -149,10 +154,32 @@ class Gql {
 			};
 		}
 
-		const err = new Error(`[schema:${schemaName || 'default'}] Error in graphQL api`);
+		const err = new GraphqlError(`[schema:${schemaName || 'default'}] Error in graphQL api`);
 		err.errors = errors;
 		err.fields = fields;
 		throw err;
+	}
+
+	async exec(query, context, {
+		cache: {key: cacheKey, ttl = ONE_DAY} = {},
+		variables = {},
+		schemaName,
+	} = {}) {
+		if (cacheKey && this.cache) {
+			const cached = await this.cache.get(cacheKey);
+			if (cached) return cached;
+		}
+
+		if (!/^\s*query|mutation|subscription/.test(query) && /^\s*[a-zA-Z0-9]/.test(query)) {
+			query = `query { ${query} }`;
+		}
+
+		const result = this.api ?
+			await this._execApi(query) :
+			await this._execGraphql(query, context, {variables, schemaName});
+
+		if (cacheKey && this.cache) await this.cache.set(cacheKey, result, {ttl});
+		return result;
 	}
 
 	async getAll(query, context, opts) {
