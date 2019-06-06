@@ -6,12 +6,14 @@ import {formatError} from './errors';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
 
 const ONE_DAY = 24 * 3600 * 1000;
-const ENUM_PREFIX = '__ENUM__::';
-// const VAR_PREFIX = '__VAR__::';
 
-// const NO_QUOTES_REGEX = new RegExp(`^(${ENUM_PREFIX}|${VAR_PREFIX})([A-Za-z_]+)$`);
-const ENUM_REGEX = new RegExp(`^${ENUM_PREFIX}([A-Za-z_]+)$`);
+class ApiError extends Error {}
+class GraphqlError extends Error {}
 
+class GqlEnum {
+	constructor(val) { this.val = val }
+	toString() { return this.val }
+}
 /**
  * we are not using the inbuilt graphql function because it validates
  * the graphql, which is an expensive operation
@@ -56,27 +58,18 @@ function convertObjToGqlArg(obj) {
 	return `${gqlArg.join(', ')}`;
 }
 
-function convertStrToGqlArg(str) {
-	const [, val] = str.match(ENUM_REGEX) || [];
-	if (val) return val;
-	// const [, prefix, val] = str.match(NO_QUOTES_REGEX) || [];
-	// if (prefix && val) return prefix === VAR_PREFIX ? '$' + val : val;
-
-	return JSON.stringify(str);
-}
-
 function convertToGqlArg(value) {
 	if (value == null) return null;
 
 	if (typeof value === 'number') return String(value);
-	if (typeof value === 'string') return convertStrToGqlArg(value);
+	if (value instanceof GqlEnum) return value.toString();
 	if (_.isPlainObject(value)) return `{${convertObjToGqlArg(value)}}`;
+	if (_.isArray(value) && value[0] instanceof GqlEnum) {
+		return `[${value.map(v => v.toString()).join(', ')}]`;
+	}
 
 	return JSON.stringify(value);
 }
-
-class ApiError extends Error {}
-class GraphqlError extends Error {}
 
 class Gql {
 	constructor(opts = {}) {
@@ -212,7 +205,7 @@ class Gql {
 	}
 
 	static enum(val) {
-		return val ? ENUM_PREFIX + val : val;
+		return new GqlEnum(val);
 	}
 
 	enum(val) {
