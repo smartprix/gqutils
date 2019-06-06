@@ -212,15 +212,6 @@ class Gql {
 		return this.constructor.enum(val);
 	}
 
-	// NOTE: Not useful for now
-	// static var(val) {
-	// 	return val ? VAR_PREFIX + val : val;
-	// }
-
-	// var(val) {
-	// 	return this.constructor.var(val);
-	// }
-
 	static toGqlArg(arg, opts = {}) {
 		let gqlArg = '';
 		if (_.isPlainObject(arg)) {
