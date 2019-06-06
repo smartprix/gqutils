@@ -59,6 +59,12 @@ function makeSchemaFromModules(modules, opts = {}) {
 
 /**
  * make a graphql schema from a directory by reading all schema & resolvers from it
+ * Only supports exports of type:
+ * - export {schema}
+ * - export schema from
+ * - module.exports = {schema}
+ * - exports.schema =
+ * - Object.defineProperty(exports, "schema",
  * @param {string} directory
  * @param {object} [opts={}]
  */
@@ -139,8 +145,9 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 	return makeSchemaFromObjects(schemas, resolvers, opts);
 }
 
-function getConfig() {
+function getConfig(opts = {}) {
 	const confFile = `${process.cwd()}/gqutils`;
+	const smartprixConfFile = `${process.cwd()}/sm-config`;
 	const packageFile = `${process.cwd()}/package.json`;
 
 	let conf;
@@ -148,27 +155,39 @@ function getConfig() {
 		conf = require(confFile); // eslint-disable-line
 	}
 	catch (e) {
-		conf = require(packageFile)['gqutils']; // eslint-disable-line
-		if (!conf || _.isEmpty(conf)) throw new Error('No config in package.json');
+		try {
+			conf = require(smartprixConfFile)['gqutils']; // eslint-disable-line
+			if (!conf || _.isEmpty(conf)) throw new Error('No config or empty config found in common \'sm-config\'');
+		}
+		catch (e2) {
+			try {
+				conf = require(packageFile)['gqutils']; // eslint-disable-line
+				if (!conf || _.isEmpty(conf)) throw new Error('No config or empty config found in package.json');
+			}
+			catch (e3) {
+				console.error('No config found or error in config', e.message, e2.message, e3.message);
+				throw new Error('No config found or error in config');
+			}
+		}
 	}
 
-	return conf;
+	if (_.isEmpty(opts)) return conf;
+	return _.merge({}, conf, opts);
 }
 
 function makeSchemaFromConfig(opts = {}) {
-	const conf = getConfig();
-	const finalOpts = _.merge({}, conf, opts);
-	finalOpts.schemas = _.castArray(opts.schema || opts.schemas || conf.schema || conf.schemas);
+	const conf = getConfig(opts);
+	conf.schemas = _.castArray(opts.schema || opts.schemas || conf.schema || conf.schemas);
 	// convert relative path to absolute
-	if (finalOpts.schemaDirectory && !finalOpts.schemaDirectory.startsWith('/')) {
-		finalOpts.schemaDirectory = path.join(process.cwd(), finalOpts.schemaDirectory);
+	if (conf.schemaDirectory && !conf.schemaDirectory.startsWith('/')) {
+		conf.schemaDirectory = path.join(process.cwd(), conf.schemaDirectory);
 	}
 
-	if (finalOpts.modules) {
-		return makeSchemaFromModules(finalOpts.modules, finalOpts);
+	if (conf.modules) {
+		return makeSchemaFromModules(conf.modules, conf);
 	}
-	if (finalOpts.schemaDirectory) {
-		return makeSchemaFromDirectory(finalOpts.schemaDirectory, finalOpts);
+	if (conf.schemaDirectory) {
+		return makeSchemaFromDirectory(conf.schemaDirectory, conf);
 	}
 
 	throw new Error('`modules` or `schemaDirectory` option not found in config');

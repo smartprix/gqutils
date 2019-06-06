@@ -93,8 +93,8 @@ declare module 'gqutils' {
 		 * }
 		 */
 		relayConnection?: boolean | {
-			edgeFields: GQUtilsFields;
-			fields: GQUtilsFields;
+			edgeFields?: GQUtilsFields;
+			fields?: GQUtilsFields;
 		};
 		/**
 		 * interfaces this type implements
@@ -209,15 +209,37 @@ declare module 'gqutils' {
 
 	type schemaMap = {[key: string]: GraphQLSchema};
 	type gqlConfig = commonOptions & {
+		baseFolder?: string;
 		contextType?: string,
 		generateTypeOptions?: GenerateTypescriptOptions,
 		schemaDirectory?: string,
 	};
 
-	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?: commonOptions): gqlSchemas;
+	/**
+	 * @param modules if path, it is required relative to the basefolder
+	 */
+	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?: commonOptions & {baseFolder?: string;}): gqlSchemas;
+	/**
+	 * make a graphql schema from a directory by reading all schema & resolvers from it
+	 * Only supports exports of type:
+	 * - export {schema}
+	 * - export schema from
+	 * - module.exports = {schema}
+	 * - exports.schema =
+	 * - Object.defineProperty(exports, "schema",
+	 */
 	function makeSchemaFromDirectory(directory: string, opts?: commonOptions): gqlSchemas;
-	function makeSchemaFromConfig(opts?: commonOptions): gqlSchemas;
-	function getConfig(): gqlConfig;
+	/**
+	 * If `schemaDirectory` is provided this uses `makeSchemaFromDirectory`
+	 * If `modules` then `makeSchemaFromModules`
+	 * @param opts Override default config read from config files (gqutils, sm-config, or package)
+	 */
+	function makeSchemaFromConfig(opts?: Partial<gqlConfig>): gqlSchemas;
+	/**
+	 * Get config from config files
+	 * @param opts Overwrite some options
+	 */
+	function getConfig(opts?: Partial<gqlConfig>): gqlConfig;
 
 	/**
 	 * Generate type definitions from module ''graphql-schema-typescript'
@@ -233,9 +255,9 @@ declare module 'gqutils' {
 	}};
 	function humanizeError(field: string, error: any): {message: string};
 
-	function getConnectionResolver<M, T extends {[key: string]: any}>(query: Promise<M>, args, options?: {resolvers?: T}): T & {
-		nodes: () => Promise<M>,
-		edges: () => Promise<{cursor: string, node: M}>,
+	interface connectionResolvers<M> {
+		nodes: () => Promise<M[]>,
+		edges: () => Promise<{cursor: string, node: M}[]>,
 		totalCount: () => Promise<number>,
 		pageInfo: () => Promise<{
 			startCursor: string | null,
@@ -244,7 +266,21 @@ declare module 'gqutils' {
 			hasNextPage: boolean,
 			edgeCount: number,
 		}>,
-	};
+	}
+
+	interface pagingParams {
+		first?: number;
+		last?: number;
+		before?: number;
+		after?: number;
+	}
+
+	/**
+	 * @param args
+	 * @param opts defaultLimit is 20 by default
+	 */
+	function getPagingParams(args: pagingParams, opts?: {defaultLimit?: number}): {limit: number, offset: number};
+	function getConnectionResolver<M, T extends connectionResolvers<M>>(query: Promise<M>, args: pagingParams, options?: {resolvers?: Partial<T>}): T;
 	function getIdFromCursor(cursor: number | string): number;
 	function getCursorFromId(id: number | string): string;
 

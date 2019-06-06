@@ -14,10 +14,9 @@ function getCursorFromId(id) {
 		.replace(/=+$/, '');
 }
 
-function getPagingParams({first, last, before, after}) {
+function getPagingParams({first, last, before, after}, {defaultLimit = 20} = {}) {
 	const isForwardPaging = !!first || !!after;
 	const isBackwardPaging = !!last || !!before;
-	const defaultLimit = 20;
 
 	if (isForwardPaging) {
 		return {
@@ -27,7 +26,7 @@ function getPagingParams({first, last, before, after}) {
 	}
 	if (isBackwardPaging) {
 		let limit = last || defaultLimit;
-		let offset = getIdFromCursor(before) - last;
+		let offset = before ? (getIdFromCursor(before) - limit) : 0;
 
 		// Check to see if our before-page is underflowing past the 0th item
 		if (offset < 0) {
@@ -193,6 +192,7 @@ function getConnectionResolver(query, args, options = {}) {
 }
 
 export {
+	getPagingParams,
 	getConnectionResolver,
 	getIdFromCursor,
 	getCursorFromId,
