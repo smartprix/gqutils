@@ -116,7 +116,9 @@ class Gql {
 		}
 
 		if (!result) {
-			throw new ApiError('Invalid result from api');
+			const err = new ApiError('Invalid result from api');
+			err.response = response;
+			throw err;
 		}
 
 		if (!_.isEmpty(result.errors)) {
