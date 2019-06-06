@@ -265,3 +265,9 @@ class Gql {
 }
 
 export default Gql;
+
+export {
+	Gql,
+	ApiError,
+	GraphqlError,
+};
