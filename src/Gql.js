@@ -112,12 +112,15 @@ class Gql {
 		const result = Str.tryParseJson(response.body);
 
 		if (response.statusCode !== 200) {
-			throw new ApiError(`${response.statusCode}, ${(result && result.errors) || 'Unknown error'}`);
+			const err = new ApiError(`${response.statusCode}, Invalid status code`);
+			err.errors = result && result.errors;
+			err.body = response.body;
+			throw err;
 		}
 
 		if (!result) {
 			const err = new ApiError('Invalid result from api');
-			err.response = response;
+			err.body = response.body;
 			throw err;
 		}
 
