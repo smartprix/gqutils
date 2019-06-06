@@ -28,6 +28,18 @@ function identity(value) {
 	return value;
 }
 
+function mergeFields(field1, field2) {
+	if (typeof field1 === 'string' && typeof field2 === 'string') return field2;
+
+	if (field1 === undefined) return field2;
+	if (field2 === undefined) return field1;
+
+	if (typeof field1 === 'string') field1 = {type: field1};
+	if (typeof field2 === 'string') field2 = {type: field2};
+
+	return Object.assign(field1, field2);
+}
+
 class Schema {
 	constructor(schema, resolvers, options = {}) {
 		if (!schema) {
@@ -659,12 +671,31 @@ class Schema {
 	parseGraphqlType(schema, type) {
 		const isTypeOf = this.resolvers[type.name] &&
 			this.resolvers[type.name].__isTypeOf;
+		let interfaces = type.interface || type.interfaces || type.implements;
+		const defaultFields = {};
+
+		if (interfaces) {
+			interfaces = _.castArray(interfaces);
+			interfaces
+				.map(name => schema.interfaces[name] && schema.interfaces[name].fields)
+				.filter(Boolean)
+				.forEach((interfaceFields) => {
+					// Assuming interfaces don't have conflicting fields
+					Object.assign(defaultFields, interfaceFields);
+				});
+		}
 
 		const graphqlType = {
 			name: type.name,
 			description: type.description,
 			fields: () => {
-				const fields = this.parseGraphqlFields(schema, type.fields, type.name);
+				const fields = this.parseGraphqlFields(
+					schema,
+					_.mergeWith(defaultFields, type.fields, mergeFields),
+					type.name
+				);
+
+
 				if (_.isEmpty(fields)) {
 					return {
 						noop: {
@@ -680,9 +711,7 @@ class Schema {
 			isTypeOf: isTypeOf || type.isTypeOf,
 		};
 
-		let interfaces = type.interface || type.interfaces || type.implements;
 		if (interfaces) {
-			interfaces = _.castArray(interfaces);
 			graphqlType.interfaces = () => this.parseTypes(schema, interfaces);
 		}
 
