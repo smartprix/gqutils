@@ -81,8 +81,9 @@ class GraphqlError extends Error {}
 class Gql {
 	constructor(opts = {}) {
 		if (opts.api) {
+			if (!opts.api.endpoint) throw new ApiError('Api endpoint is not provided');
+
 			this.api = _.defaults(opts.api, {
-				endpoint: null,
 				headers: {},
 				cookies: {},
 			});
