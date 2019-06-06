@@ -28,6 +28,18 @@ function identity(value) {
 	return value;
 }
 
+function mergeFields(field1, field2) {
+	if (typeof field1 === 'string' && typeof field2 === 'string') return field2;
+
+	if (field1 === undefined) return field2;
+	if (field2 === undefined) return field1;
+
+	if (typeof field1 === 'string') field1 = {type: field1};
+	if (typeof field2 === 'string') field2 = {type: field2};
+
+	return Object.assign(field1, field2);
+}
+
 class Schema {
 	constructor(schema, resolvers, options = {}) {
 		if (!schema) {
@@ -660,15 +672,16 @@ class Schema {
 		const isTypeOf = this.resolvers[type.name] &&
 			this.resolvers[type.name].__isTypeOf;
 		let interfaces = type.interface || type.interfaces || type.implements;
-		const interfaceFields = {};
+		const defaultFields = {};
 
 		if (interfaces) {
 			interfaces = _.castArray(interfaces);
 			interfaces
 				.map(name => schema.interfaces[name] && schema.interfaces[name].fields)
 				.filter(Boolean)
-				.forEach((defaultFields) => {
-					Object.assign(interfaceFields, defaultFields);
+				.forEach((interfaceFields) => {
+					// Assuming interfaces don't have conflicting fields
+					Object.assign(defaultFields, interfaceFields);
 				});
 		}
 
@@ -678,7 +691,7 @@ class Schema {
 			fields: () => {
 				const fields = this.parseGraphqlFields(
 					schema,
-					Object.assign(interfaceFields, type.fields),
+					_.mergeWith(defaultFields, type.fields, mergeFields),
 					type.name
 				);
 
