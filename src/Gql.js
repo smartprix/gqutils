@@ -130,7 +130,7 @@ class Gql {
 		return result;
 	}
 
-	async _execGraphql(query, context, {variables = {}, schemaName} = {}) {
+	async _execGraphql(query, {context, variables = {}, schemaName} = {}) {
 		const schema = schemaName ? this.schema[schemaName] : this.defaultSchema;
 		const result = await graphql({
 			schema, query, context, variables, validateGraphql: this.validateGraphql,
@@ -162,7 +162,8 @@ class Gql {
 		throw err;
 	}
 
-	async exec(query, context, {
+	async exec(query, {
+		context,
 		cache: {key: cacheKey, ttl = ONE_DAY} = {},
 		variables = {},
 		schemaName,
@@ -178,18 +179,18 @@ class Gql {
 
 		const result = this.api ?
 			await this._execApi(query) :
-			await this._execGraphql(query, context, {variables, schemaName});
+			await this._execGraphql(query, {context, variables, schemaName});
 
 		if (cacheKey && this.cache) await this.cache.set(cacheKey, result, {ttl});
 		return result;
 	}
 
-	async getAll(query, context, opts) {
-		return this.exec(query, context, opts);
+	async getAll(query, opts) {
+		return this.exec(query, opts);
 	}
 
-	async get(query, context, opts) {
-		const result = await this.exec(query, context, opts);
+	async get(query, opts) {
+		const result = await this.exec(query, opts);
 		if (!result) return result;
 
 		const keys = Object.keys(result);
