@@ -101,13 +101,17 @@ class Gql {
 		this.cache = opts.cache;
 	}
 
-	async _execApi(query) {
-		const response = await Connect
+	async _execApi(query, {variables, requestOptions = {}} = {}) {
+		let response = Connect
 			.url(this.api.endpoint)
-			.headers(this.api.headers)
-			.cookies(this.api.cookies)
-			.body({query})
+			.headers(requestOptions.headers)
+			.cookies(requestOptions.cookies)
+			.body({query, variables})
 			.post();
+
+		if (this.api.token) response.apiToken(this.api.token);
+
+		response = await response;
 
 		const result = Str.tryParseJson(response.body);
 
@@ -170,10 +174,11 @@ class Gql {
 		cache: {key: cacheKey, ttl = ONE_DAY} = {},
 		variables = {},
 		schemaName,
+		requestOptions = {},
 	} = {}) {
 		if (cacheKey && this.cache) {
 			const cached = await this.cache.get(cacheKey);
-			if (cached) return cached;
+			if (cached !== undefined) return cached;
 		}
 
 		if (!/^\s*query|mutation|subscription/.test(query) && /^\s*[a-zA-Z0-9]/.test(query)) {
@@ -181,7 +186,7 @@ class Gql {
 		}
 
 		const result = this.api ?
-			await this._execApi(query) :
+			await this._execApi(query, {variables, requestOptions}) :
 			await this._execGraphql(query, {context, variables, schemaName});
 
 		if (cacheKey && this.cache) await this.cache.set(cacheKey, result, {ttl});

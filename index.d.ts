@@ -266,7 +266,7 @@ declare module 'gqutils' {
 	}
 
 	interface apiInput {
-		api: {endpoint: string, headers: {[key: string]: string}, cookies: {[key: string]: string}};
+		api: {endpoint: string, token?: string, headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
 		cache?: Cache;
 	}
 
@@ -275,6 +275,7 @@ declare module 'gqutils' {
 		cache?: {key: string, ttl: number};
 		variables?: {[key: string]: any};
 		schemaName?: string;
+		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
 	}
 
 	class Gql {
