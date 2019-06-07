@@ -1,7 +1,8 @@
 import {PubSub} from 'graphql-subscriptions';
 import {GraphQLSchema} from 'graphql';
 import {IResolverValidationOptions} from 'graphql-tools';
-import {GenerateTypescriptOptions} from 'graphql-schema-typescript'
+import {GenerateTypescriptOptions} from 'graphql-schema-typescript';
+import {Cache} from 'sm-utils';
 
 declare module 'gqutils' {
 	type schemaType = string[] | string;
@@ -291,5 +292,39 @@ declare module 'gqutils' {
 
 		parseGraphqlSchemas(): schemaMap;
 		parseGraphqlSchema(schema: string): GraphQLSchema;
+	}
+
+	interface schemaConfigInput extends commonOptions {
+		validateGrqphql?: boolean;
+		cache?: Cache;
+		/** By default it uses `formatError` from `gqutils`. */
+		formatError?: (error: Error) => any;
+	}
+
+	interface apiInput {
+		api: {endpoint: string, token?: string, headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
+		cache?: Cache;
+	}
+
+	interface execOptions {
+		context?: any;
+		cache?: {key: string, ttl: number};
+		variables?: {[key: string]: any};
+		schemaName?: string;
+		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
+	}
+
+	class Gql {
+		constructor(opts: apiInput | schemaConfigInput);
+
+		exec(query: string, opts?: execOptions): Promise<any>;
+		getAll(query: string, opts?: execOptions): Promise<any>;
+		get(query: string, opts: execOptions): Promise<any>;
+
+		enum(val: string): string;
+		static enum(val: string): string;
+
+		static toGqlArg(arg: any, opts?: string[] | {pick?: string[], curlyBrackets?: boolean, roundBrackets?: boolean}): string;
+		static tag(strings: string[], ...args: any[]): string;
 	}
 }
