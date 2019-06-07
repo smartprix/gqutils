@@ -4,6 +4,7 @@ Utilities for GraphQL
 ### Extra Types
 * `String`, `Int`, `Float`, `Boolean`, `ID`
 * `JSON`
+* `JSONObject`: A valid JSON object (arrays and other json values are invalid), most of the times you'd want to use `JSONObject` instead of `JSON`
 * `StringOrInt`
 * `Email`
 * `URL`
@@ -17,7 +18,7 @@ Utilities for GraphQL
 `IntID`
 
 ## Functions
-### `makeSchemasFromModules(modules, opts)`
+### `makeSchemaFromModules(modules, opts)`
 Create a graphQL schema from various modules. If the module is a folder, it'll automatically require it.
 ```js
 const modules = [
@@ -25,7 +26,7 @@ const modules = [
 	'Category',
 ];
 
-const {schemas} = makeSchemasFromModules(modules, {
+const {schemas} = makeSchemaFromModules(modules, {
 	baseFolder: `${__dirname}/lib`,
 	schema: ['admin', 'public'],
 	allowUndefinedInResolve: false,
@@ -183,6 +184,56 @@ export {
 	resolvers,
 };
 ```
+
+
+
+### `makeSchemaFromDirectory(directory, opts = {})`
+
+Create a graphQL schema from a directory. It'll automatically require all the schemas & resolvers from inside the directory and create a schema using that.
+
+It'll require all the files with format:
+
+```js
+export {schema}
+export schema from
+module.exports = {schema}
+exports.schema =
+Object.defineProperty(exports, "schema",
+```
+
+##### Example
+
+```js
+const {schemas} = makeSchemaFromDirectory(`${__dirname}/lib`, {
+	schema: ['admin', 'public'],
+	allowUndefinedInResolve: false,
+	resolverValidationOptions: {},
+});
+
+// schemas will be {default: GraphqlSchema, admin: GraphqlSchema, public: GraphqlSchema}
+```
+
+
+
+### `makeSchemaFromConfig(opts = {})`
+
+Create a graphQL schema from config defined in `package.json` (`gqutils` key), `gqutils.js` or `sm-config.js` (`gqutils` key) in the root directory.
+
+```json
+// in package.json
+"gqutils": {
+    "schemaDirectory": "dist/lib",
+    "schema": ["admin", "public"],
+    "allowUndefinedInResolve": false,
+};
+```
+
+```js
+const {schemas} = makeSchemaFromConfig();
+// schemas will be {default: GraphqlSchema, admin: GraphqlSchema, public: GraphqlSchema}
+```
+
+
 
 ## Language Reference
 

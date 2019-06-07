@@ -22,12 +22,12 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "@types/graphql": "^14.0.7",
-    "@types/node": "^11.9.4",
-    "commander": "^2.19.0",
+    "@types/graphql": "^14.2.0",
+    "@types/node": "^12.0.7",
+    "commander": "^2.20.0",
     "graphql-custom-types": "^1.5.0",
-    "graphql-schema-typescript": "^1.2.8",
-    "graphql-type-json": "^0.2.1",
+    "graphql-schema-typescript": "^1.2.9",
+    "graphql-type-json": "^0.3.0",
     "lodash": "^4.17.11"
   },
   "peerDependencies": {
@@ -37,18 +37,18 @@
     "sm-utils": "*"
   },
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.3.3",
-    "@babel/plugin-proposal-class-properties": "^7.3.3",
-    "@babel/preset-env": "^7.3.1",
-    "@babel/register": "^7.0.0",
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/preset-env": "^7.4.5",
+    "@babel/register": "^7.4.4",
     "chai": "^4.2.0",
-    "eslint": "^5.14.0",
+    "eslint": "^5.16.0",
     "eslint-config-smartprix": "^3.5.4",
     "graphql": "^14.1.1",
     "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.4",
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.4",
     "sm-utils": "^2.17.18"
   },
   "babel": {

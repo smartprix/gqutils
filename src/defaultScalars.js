@@ -14,7 +14,7 @@ import {
 	GraphQLUUID,
 } from 'graphql-custom-types';
 
-import GraphQLJSON from 'graphql-type-json';
+import {GraphQLJSON, GraphQLJSONObject} from 'graphql-type-json';
 
 // http://dev.apollodata.com/tools/graphql-tools/scalars.html#Own-GraphQLScalarType-instance
 const GraphQLStringTrimmed = new GraphQLScalarType({
@@ -79,4 +79,5 @@ export default {
 	uuid: GraphQLUUID,
 	datetime: GraphQLDateTime,
 	json: GraphQLJSON,
+	jsonobject: GraphQLJSONObject,
 };
