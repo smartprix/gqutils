@@ -2,7 +2,12 @@ import _ from 'lodash';
 import {parse, validate, execute} from 'graphql';
 import {Connect, Str} from 'sm-utils';
 
-import {formatError} from './errors';
+import {
+	formatError,
+	convertObjToGqlArg,
+	convertToGqlArg,
+	GqlEnum,
+} from './helpers';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
 
 const ONE_DAY = 24 * 3600 * 1000;
@@ -10,10 +15,6 @@ const ONE_DAY = 24 * 3600 * 1000;
 class ApiError extends Error {}
 class GraphqlError extends Error {}
 
-class GqlEnum {
-	constructor(val) { this.val = val }
-	toString() { return this.val }
-}
 /**
  * we are not using the inbuilt graphql function because it validates
  * the graphql, which is an expensive operation
@@ -47,28 +48,6 @@ function graphql({
 		context,
 		variables,
 	);
-}
-
-function convertObjToGqlArg(obj) {
-	const gqlArg = [];
-	_.forEach(obj, (value, key) => {
-		// eslint-disable-next-line no-use-before-define
-		gqlArg.push(`${key}: ${convertToGqlArg(value)}`);
-	});
-	return `${gqlArg.join(', ')}`;
-}
-
-function convertToGqlArg(value) {
-	if (value == null) return null;
-
-	if (typeof value === 'number') return String(value);
-	if (value instanceof GqlEnum) return value.toString();
-	if (_.isPlainObject(value)) return `{${convertObjToGqlArg(value)}}`;
-	if (_.isArray(value) && value[0] instanceof GqlEnum) {
-		return `[${value.map(v => v.toString()).join(', ')}]`;
-	}
-
-	return JSON.stringify(value);
 }
 
 class Gql {

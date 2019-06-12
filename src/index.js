@@ -37,7 +37,7 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 	}));
 }
 
-export * from './errors';
+export * from './helpers';
 export * from './connection';
 export * from './Schema';
 export * from './makeSchemaFrom';

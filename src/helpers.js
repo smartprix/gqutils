@@ -127,7 +127,37 @@ function formatError(error) {
 	return error;
 }
 
+class GqlEnum {
+	constructor(val) { this.val = val }
+	toString() { return this.val }
+}
+
+function convertObjToGqlArg(obj) {
+	const gqlArg = [];
+	_.forEach(obj, (value, key) => {
+		// eslint-disable-next-line no-use-before-define
+		gqlArg.push(`${key}: ${convertToGqlArg(value)}`);
+	});
+	return `${gqlArg.join(', ')}`;
+}
+
+function convertToGqlArg(value) {
+	if (value == null) return null;
+
+	if (typeof value === 'number') return String(value);
+	if (value instanceof GqlEnum) return value.toString();
+	if (_.isPlainObject(value)) return `{${convertObjToGqlArg(value)}}`;
+	if (_.isArray(value) && value[0] instanceof GqlEnum) {
+		return `[${value.map(v => v.toString()).join(', ')}]`;
+	}
+
+	return JSON.stringify(value);
+}
+
 export {
 	formatError,
 	humanizeError,
+	convertObjToGqlArg,
+	convertToGqlArg,
+	GqlEnum,
 };
