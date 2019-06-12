@@ -295,7 +295,7 @@ declare module 'gqutils' {
 	}
 
 	interface schemaConfigInput extends commonOptions {
-		validateGrqphql?: boolean;
+		validateGraphql?: boolean;
 		cache?: Cache;
 		/**
 		 * By default it uses `formatError` from `gqutils`.
