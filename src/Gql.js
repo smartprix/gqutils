@@ -61,10 +61,13 @@ class Gql {
 			});
 		}
 		else {
-			const {schema, pubsub, defaultSchema} = makeSchemaFromConfig(opts);
+			const schemaName = opts.schemaName !== undefined ?
+				opts.schemaName :
+				(opts.defaultSchemaName || 'default');
+			const {schema, pubsub} = makeSchemaFromConfig(opts);
 
-			this.schema = schema;
-			this.defaultSchema = defaultSchema;
+			this.schemaName = schemaName;
+			this.schema = schema[schemaName];
 			this.pubsub = pubsub;
 			this.validateGraphql = opts.validateGraphql || false;
 			this.formatError = opts.formatError || formatError;
@@ -109,10 +112,9 @@ class Gql {
 		return result;
 	}
 
-	async _execGraphql(query, {context, variables = {}, schemaName} = {}) {
-		const schema = schemaName ? this.schema[schemaName] : this.defaultSchema;
+	async _execGraphql(query, {context, variables = {}} = {}) {
 		const result = await graphql({
-			schema, query, context, variables, validateGraphql: this.validateGraphql,
+			schema: this.schema, query, context, variables, validateGraphql: this.validateGraphql,
 		});
 
 		if (_.isEmpty(result.errors)) return result.data;
@@ -135,7 +137,7 @@ class Gql {
 			};
 		}
 
-		const err = new GraphqlError(`[schema:${schemaName || 'default'}] Error in graphQL api`);
+		const err = new GraphqlError(`[schema:${this.schemaName}] Error in graphQL api`);
 		err.errors = errors;
 		err.fields = fields;
 		throw err;
@@ -145,7 +147,6 @@ class Gql {
 		context,
 		cache: {key: cacheKey, ttl = ONE_DAY} = {},
 		variables = {},
-		schemaName,
 		requestOptions = {},
 	} = {}) {
 		if (cacheKey && this.cache) {
@@ -159,7 +160,7 @@ class Gql {
 
 		const result = this.api ?
 			await this._execApi(query, {variables, requestOptions}) :
-			await this._execGraphql(query, {context, variables, schemaName});
+			await this._execGraphql(query, {context, variables});
 
 		if (cacheKey && this.cache) await this.cache.set(cacheKey, result, {ttl});
 		return result;
