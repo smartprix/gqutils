@@ -321,6 +321,11 @@ declare module 'gqutils' {
 	class Gql {
 		constructor(opts: apiInput | schemaConfigInput);
 
+		/** Will exist if schema config options are passed */
+		schema?: schemaMap;
+		/** Will exist if schema config options are passed */
+		pubsub?: PubSub;
+
 		exec(query: string, opts?: execOptions): Promise<any>;
 		getAll(query: string, opts?: execOptions): Promise<any>;
 		get(query: string, opts: execOptions): Promise<any>;
