@@ -7,6 +7,7 @@ import {
 	convertObjToGqlArg,
 	convertToGqlArg,
 	GqlEnum,
+	GqlFragment,
 } from './helpers';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
 
@@ -64,10 +65,11 @@ class Gql {
 			const schemaName = opts.schemaName !== undefined ?
 				opts.schemaName :
 				(opts.defaultSchemaName || 'default');
-			const {schema, pubsub} = makeSchemaFromConfig(opts);
+			const {schema, pubsub, fragments} = makeSchemaFromConfig(opts);
 
 			this.schemaName = schemaName;
 			this.schema = schema[schemaName];
+			this.fragments = fragments[schemaName];
 			this.pubsub = pubsub;
 			this.validateGraphql = opts.validateGraphql || false;
 			this.formatError = opts.formatError || formatError;
@@ -192,6 +194,10 @@ class Gql {
 		return this.constructor.enum(val);
 	}
 
+	fragment(name) {
+		return new GqlFragment(this.fragments, name);
+	}
+
 	static toGqlArg(arg, opts = {}) {
 		let gqlArg = '';
 		if (_.isPlainObject(arg)) {
@@ -223,6 +229,9 @@ class Gql {
 				// arg is a graphql field
 				if (typeof arg === 'string') {
 					out += arg;
+				}
+				else if (arg instanceof GqlFragment) {
+					out += arg.toString();
 				}
 				else if (Array.isArray(arg)) {
 					out += arg.filter(Boolean).join(' ');

@@ -132,6 +132,11 @@ class GqlEnum {
 	toString() { return this.val }
 }
 
+class GqlFragment {
+	constructor(fragments, key) { this.val = fragments[key] }
+	toString() { return this.val }
+}
+
 function convertObjToGqlArg(obj) {
 	const gqlArg = [];
 	_.forEach(obj, (value, key) => {
@@ -160,4 +165,5 @@ export {
 	convertObjToGqlArg,
 	convertToGqlArg,
 	GqlEnum,
+	GqlFragment,
 };
