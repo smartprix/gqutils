@@ -190,7 +190,26 @@ declare module 'gqutils' {
 		args?: GQUtilsArgs;
 	}
 
-	type GQUtilsSchema = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsScalarSchemaAlternate | GQUtilsQuerySchema;
+	type fragmentField = string | Array<string | fragmentFieldObj>
+
+	interface fragmentFieldObj {
+		name: string;
+		/** If you want to alias the field, like: `name: fullName` */
+		alias?: string;
+		/** args for field, will be passed to `Gql.toGqlArg` */
+		args?: {[arg: string]: any};
+		/** If field type is itself aan object type */
+		fields?: fragmentField;
+	}
+
+	interface GQUtilsFragmentSchema extends GQUtilsBaseSchema {
+		graphql: 'fragment';
+		/** On which type is this fragment supposed to be defined */
+		type: string;
+		fields: fragmentField;
+	}
+
+	type GQUtilsSchema = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsScalarSchemaAlternate | GQUtilsQuerySchema | GQUtilsFragmentSchema;
 
 	interface commonOptions {
 		defaultSchemaName?: string;
