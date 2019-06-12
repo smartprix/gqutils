@@ -297,8 +297,12 @@ declare module 'gqutils' {
 	interface schemaConfigInput extends commonOptions {
 		validateGrqphql?: boolean;
 		cache?: Cache;
-		/** By default it uses `formatError` from `gqutils`. */
-		formatError?: (error: Error) => any;
+		/**
+		 * By default it uses `formatError` from `gqutils`.
+		 * @param error Error object
+		 * @param context The context passed to exec
+		 */
+		formatError?: (error: Error, context: any) => any;
 	}
 
 	interface apiInput {

@@ -142,7 +142,7 @@ class Gql {
 		const errors = result.errors;
 
 		errors.forEach((error) => {
-			error = this.formatError(error);
+			error = this.formatError(error, context);
 			Object.assign(fields, error.fields);
 		});
 
