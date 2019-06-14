@@ -252,7 +252,8 @@ class Gql {
 
 			out += strings[i];
 		}
-		// Add fragment definitions
+		if (_.isEmpty(fragments)) return out;
+
 		out += `\n${Object.values(fragments).join('\n')}`;
 		return out;
 	}
