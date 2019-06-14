@@ -212,6 +212,7 @@ declare module 'gqutils' {
 	type GQUtilsSchema = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsScalarSchemaAlternate | GQUtilsQuerySchema | GQUtilsFragmentSchema;
 
 	interface commonOptions {
+		/** default is `default` */
 		defaultSchemaName?: string;
 		schema?: string[];
 		schemas?: string[];
@@ -323,6 +324,8 @@ declare module 'gqutils' {
 	interface schemaConfigInput extends commonOptions {
 		validateGraphql?: boolean;
 		cache?: Cache;
+		/** Default is defaultSchemaName value */
+		schemaName?: string;
 		/**
 		 * By default it uses `formatError` from `gqutils`.
 		 * @param error Error object
@@ -356,7 +359,7 @@ declare module 'gqutils' {
 		getDefinition(): string;
 	}
 
-	class Gql {
+	class Gql<FragmentsType = string> {
 		constructor(opts: apiInput | schemaConfigInput);
 
 		/** Will exist if schema config options are passed */
@@ -371,7 +374,7 @@ declare module 'gqutils' {
 		 * **NOTE:** Works only if if schema config options are passed
 		 * This automatically picks up the fragment from the generated schema
 		 */
-		fragment(fragmentName: string): GqlFragment;
+		fragment(fragmentName: FragmentsType): GqlFragment;
 
 		enum(val: string): GqlEnum;
 		static enum(val: string): GqlEnum;
