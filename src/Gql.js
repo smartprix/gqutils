@@ -98,6 +98,7 @@ class Gql {
 			const err = new ApiError(`${response.statusCode}, Invalid status code`);
 			err.errors = result && result.errors;
 			err.body = response.body;
+			err.statusCode = response.statusCode;
 			throw err;
 		}
 
