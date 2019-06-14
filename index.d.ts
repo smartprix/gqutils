@@ -220,7 +220,11 @@ declare module 'gqutils' {
 		resolverValidationOptions?: IResolverValidationOptions;
 	}
 
-	type fragments = {[fragmentName: string]: string};
+	type fragments = {[fragmentName: string]: {
+		name: string;
+		type: string;
+		fields: string;
+	}};
 
 	interface gqlSchemas {
 		schema: schemaMap;
@@ -340,6 +344,18 @@ declare module 'gqutils' {
 		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
 	}
 
+	class GqlEnum {
+		constructor(val: string);
+		toString(): string;
+	}
+
+	class GqlFragment<F extends fragments = {}> {
+		constructor(fragments: F, key: keyof F);
+		toString(): string;
+		getName(): string;
+		getDefinition(): string;
+	}
+
 	class Gql {
 		constructor(opts: apiInput | schemaConfigInput);
 
@@ -351,10 +367,14 @@ declare module 'gqutils' {
 		exec(query: string, opts?: execOptions): Promise<any>;
 		getAll(query: string, opts?: execOptions): Promise<any>;
 		get(query: string, opts: execOptions): Promise<any>;
-		fragment(fragmentName: string): string;
+		/**
+		 * **NOTE:** Works only if if schema config options are passed
+		 * This automatically picks up the fragment from the generated schema
+		 */
+		fragment(fragmentName: string): GqlFragment;
 
-		enum(val: string): string;
-		static enum(val: string): string;
+		enum(val: string): GqlEnum;
+		static enum(val: string): GqlEnum;
 
 		static toGqlArg(arg: any, opts?: string[] | {pick?: string[], curlyBrackets?: boolean, roundBrackets?: boolean}): string;
 		static tag(strings: string[], ...args: any[]): string;
