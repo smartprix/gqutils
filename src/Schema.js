@@ -603,14 +603,16 @@ class Schema {
 			let str = '';
 			if (field.alias) { str += `${field.alias} : ` }
 			str += field.name;
+
 			if (field.args) {
 				str += ' ( ';
 				if (_.isPlainObject(field.args)) str += convertObjToGqlArg(field.args);
 				else str += convertToGqlArg(field.args);
 				str += ' ) ';
 			}
+
 			if (field.fields) {
-				str += this.parseFragmentFields(field.fields);
+				str += `{ ${this.parseFragmentFields(field.fields)} }`;
 			}
 			return str;
 		}).join('\n');
