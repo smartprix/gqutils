@@ -38,7 +38,7 @@ function mergeFields(field1, field2) {
 	if (typeof field1 === 'string') field1 = {type: field1};
 	if (typeof field2 === 'string') field2 = {type: field2};
 
-	return Object.assign(field1, field2);
+	return Object.assign({}, field1, field2);
 }
 
 class Schema {
