@@ -154,6 +154,7 @@ class Gql {
 
 	async exec(query, {
 		context,
+		ctx,
 		cache: {key: cacheKey, ttl = ONE_DAY} = {},
 		variables = {},
 		requestOptions = {},
@@ -169,7 +170,7 @@ class Gql {
 
 		const result = this._api ?
 			await this._execApi(query, {variables, requestOptions}) :
-			await this._execGraphql(query, {context, variables});
+			await this._execGraphql(query, {context: context || ctx, variables});
 
 		if (cacheKey && this._cache) await this._cache.set(cacheKey, result, {ttl});
 		return result;
