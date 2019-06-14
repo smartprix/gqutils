@@ -56,7 +56,7 @@ class Gql {
 		if (opts.api) {
 			if (!opts.api.endpoint) throw new ApiError('Api endpoint is not provided');
 
-			this.api = _.defaults(opts.api, {
+			this._api = _.defaults(opts.api, {
 				headers: {},
 				cookies: {},
 			});
@@ -67,26 +67,28 @@ class Gql {
 				(opts.defaultSchemaName || 'default');
 			const {schema, pubsub, fragments} = makeSchemaFromConfig(opts);
 
-			this.schemaName = schemaName;
-			this.schema = schema[schemaName];
-			this.fragments = fragments[schemaName];
+			this.schema = schema;
 			this.pubsub = pubsub;
-			this.validateGraphql = opts.validateGraphql || false;
-			this.formatError = opts.formatError || formatError;
+
+			this._schemaName = schemaName;
+			this._schema = schema[schemaName];
+			this._fragments = fragments[schemaName];
+			this._validateGraphql = opts.validateGraphql || false;
+			this._formatError = opts.formatError || formatError;
 		}
 
-		this.cache = opts.cache;
+		this._cache = opts.cache;
 	}
 
 	async _execApi(query, {variables, requestOptions = {}} = {}) {
 		let response = Connect
-			.url(this.api.endpoint)
+			.url(this._api.endpoint)
 			.headers(requestOptions.headers)
 			.cookies(requestOptions.cookies)
 			.body({query, variables})
 			.post();
 
-		if (this.api.token) response.apiToken(this.api.token);
+		if (this._api.token) response.apiToken(this._api.token);
 
 		response = await response;
 
@@ -116,7 +118,11 @@ class Gql {
 
 	async _execGraphql(query, {context, variables = {}} = {}) {
 		const result = await graphql({
-			schema: this.schema, query, context, variables, validateGraphql: this.validateGraphql,
+			schema: this._schema,
+			query,
+			context,
+			variables,
+			validateGraphql: this._validateGraphql,
 		});
 
 		if (_.isEmpty(result.errors)) return result.data;
@@ -125,7 +131,7 @@ class Gql {
 		const errors = result.errors;
 
 		errors.forEach((error) => {
-			error = this.formatError(error, context);
+			error = this._formatError(error, context);
 			Object.assign(fields, error.fields);
 		});
 
@@ -139,7 +145,7 @@ class Gql {
 			};
 		}
 
-		const err = new GraphqlError(`[schema:${this.schemaName}] Error in graphQL api`);
+		const err = new GraphqlError(`[schema:${this._schemaName}] Error in graphQL api`);
 		err.errors = errors;
 		err.fields = fields;
 		throw err;
@@ -151,8 +157,8 @@ class Gql {
 		variables = {},
 		requestOptions = {},
 	} = {}) {
-		if (cacheKey && this.cache) {
-			const cached = await this.cache.get(cacheKey);
+		if (cacheKey && this._cache) {
+			const cached = await this._cache.get(cacheKey);
 			if (cached !== undefined) return cached;
 		}
 
@@ -160,11 +166,11 @@ class Gql {
 			query = `query { ${query} }`;
 		}
 
-		const result = this.api ?
+		const result = this._api ?
 			await this._execApi(query, {variables, requestOptions}) :
 			await this._execGraphql(query, {context, variables});
 
-		if (cacheKey && this.cache) await this.cache.set(cacheKey, result, {ttl});
+		if (cacheKey && this._cache) await this._cache.set(cacheKey, result, {ttl});
 		return result;
 	}
 
@@ -195,9 +201,9 @@ class Gql {
 	}
 
 	fragment(name) {
-		if (!this.fragments || this.fragments[name] === undefined) throw new Error(`[schema:${this.schemaName}] Invalid fragment name, ${name}`);
+		if (!this._fragments || this._fragments[name] === undefined) throw new Error(`[schema:${this._schemaName}] Invalid fragment name, ${name}`);
 
-		return new GqlFragment(this.fragments, name);
+		return new GqlFragment(this._fragments, name);
 	}
 
 	static toGqlArg(arg, opts = {}) {
