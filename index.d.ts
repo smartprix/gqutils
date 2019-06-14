@@ -380,6 +380,6 @@ declare module 'gqutils' {
 		static enum(val: string): GqlEnum;
 
 		static toGqlArg(arg: any, opts?: string[] | {pick?: string[], curlyBrackets?: boolean, roundBrackets?: boolean}): string;
-		static tag(strings: string[], ...args: any[]): string;
+		static tag(strings: TemplateStringsArray, ...args: any[]): string;
 	}
 }
