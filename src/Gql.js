@@ -221,6 +221,7 @@ class Gql {
 
 	static tag(strings, ...args) {
 		let out = strings[0];
+		const fragments = {};
 		for (let i = 1; i < strings.length; i++) {
 			const arg = args[i - 1];
 			if (/(?::|\()\s*$/.test(strings[i - 1])) {
@@ -234,6 +235,9 @@ class Gql {
 				}
 				else if (arg instanceof GqlFragment) {
 					out += arg.toString();
+					if (fragments[arg.getName()] === undefined) {
+						fragments[arg.getName()] = arg.getDefinition();
+					}
 				}
 				else if (Array.isArray(arg)) {
 					out += arg.filter(Boolean).join(' ');
@@ -242,6 +246,8 @@ class Gql {
 
 			out += strings[i];
 		}
+		// Add fragment definitions
+		out += `\n${Object.values(fragments).join('\n')}`;
 		return out;
 	}
 

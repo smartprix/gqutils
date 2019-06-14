@@ -615,7 +615,7 @@ class Schema {
 			return str;
 		}).join('\n');
 
-		return `{ ${fieldsString} }`;
+		return `${fieldsString}`;
 	}
 
 	parseGraphqlEnumValue(schema, value, name) {
@@ -760,7 +760,11 @@ class Schema {
 	parseGraphqlFragment(schema, fragment) {
 		const type = this.getTypeName(fragment.type);
 		if (!schema.types[type]) throw new Error(`Type for fragment does not exist, ${type}`);
-		return `... ${fragment.name} on ${type}	${this.parseFragmentFields(fragment.fields)}`;
+		return {
+			name: fragment.name,
+			type,
+			fields: this.parseFragmentFields(fragment.fields),
+		};
 	}
 
 	parseGraphqlScalars(schema, scalars) {

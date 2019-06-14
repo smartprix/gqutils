@@ -134,7 +134,11 @@ class GqlEnum {
 
 class GqlFragment {
 	constructor(fragments, key) { this.val = fragments[key] }
-	toString() { return this.val }
+	toString() { return `... ${this.val.name}` }
+	getName() { return this.val.name }
+	getDefinition() {
+		return `fragment ${this.val.name} on ${this.val.type} { ${this.val.fields} } `;
+	}
 }
 
 function convertObjToGqlArg(obj) {
