@@ -220,14 +220,17 @@ declare module 'gqutils' {
 		resolverValidationOptions?: IResolverValidationOptions;
 	}
 
+	type fragments = {[fragmentName: string]: string};
+
 	interface gqlSchemas {
 		schema: schemaMap;
 		schemas: schemaMap;
 		defaultSchema: GraphQLSchema;
 		pubsub: PubSub;
+		fragments: {[schemaName: string]: fragments};
 	}
-
 	type schemaMap = {[key: string]: GraphQLSchema};
+
 	type gqlConfig = commonOptions & {
 		baseFolder?: string;
 		contextType?: string,
@@ -348,6 +351,7 @@ declare module 'gqutils' {
 		exec(query: string, opts?: execOptions): Promise<any>;
 		getAll(query: string, opts?: execOptions): Promise<any>;
 		get(query: string, opts: execOptions): Promise<any>;
+		fragment(fragmentName: string): string;
 
 		enum(val: string): string;
 		static enum(val: string): string;
