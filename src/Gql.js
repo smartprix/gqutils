@@ -114,7 +114,7 @@ class Gql {
 			throw err;
 		}
 
-		return result;
+		return result.data;
 	}
 
 	async _execGraphql(query, {context, variables = {}} = {}) {
