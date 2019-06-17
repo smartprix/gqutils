@@ -371,7 +371,7 @@ declare module 'gqutils' {
 		getAll(query: string, opts?: execOptions): Promise<any>;
 		get(query: string, opts: execOptions): Promise<any>;
 		/**
-		 * **NOTE:** Works only if if schema config options are passed
+		 * **NOTE:** Works only if schema config options are passed
 		 * This automatically picks up the fragment from the generated schema
 		 */
 		fragment(fragmentName: FragmentsType): GqlFragment;
