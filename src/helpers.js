@@ -133,7 +133,7 @@ class GqlEnum {
 }
 
 class GqlFragment {
-	constructor(fragments, key) { this.val = fragments[key] }
+	constructor(fragment) { this.val = fragment }
 	toString() { return `... ${this.val.name}` }
 	getName() { return this.val.name }
 	getDefinition() {

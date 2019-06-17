@@ -221,18 +221,20 @@ declare module 'gqutils' {
 		resolverValidationOptions?: IResolverValidationOptions;
 	}
 
-	type fragments = {[fragmentName: string]: {
+	type GQUtilsFragment = {
 		name: string;
 		type: string;
 		fields: string;
-	}};
+	};
+
+	type GQUtilsFragmentMap = {[fragmentName: string]: GQUtilsFragment};
 
 	interface gqlSchemas {
 		schema: schemaMap;
 		schemas: schemaMap;
 		defaultSchema: GraphQLSchema;
 		pubsub: PubSub;
-		fragments: {[schemaName: string]: fragments};
+		fragments: {[schemaName: string]: GQUtilsFragmentMap};
 	}
 	type schemaMap = {[key: string]: GraphQLSchema};
 
@@ -354,8 +356,8 @@ declare module 'gqutils' {
 		toString(): string;
 	}
 
-	class GqlFragment<F extends fragments = {}> {
-		constructor(fragments: F, key: keyof F);
+	class GqlFragment {
+		constructor(fragment: GQUtilsFragment);
 		toString(): string;
 		getName(): string;
 		getDefinition(): string;
