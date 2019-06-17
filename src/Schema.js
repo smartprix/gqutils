@@ -23,7 +23,7 @@ import {withFilter} from 'graphql-subscriptions';
 import defaultScalars from './defaultScalars';
 import defaultTypes from './defaultTypes';
 import defaultArgs from './defaultArgs';
-import {convertObjToGqlArg, convertToGqlArg} from './helpers';
+import {toGqlArg} from './helpers';
 
 function identity(value) {
 	return value;
@@ -605,10 +605,7 @@ class Schema {
 			str += field.name;
 
 			if (field.args) {
-				str += ' ( ';
-				if (_.isPlainObject(field.args)) str += convertObjToGqlArg(field.args);
-				else str += convertToGqlArg(field.args);
-				str += ' ) ';
+				str += toGqlArg(field.args, {roundBrackets: true});
 			}
 
 			if (field.fields) {

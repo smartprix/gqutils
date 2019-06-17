@@ -283,6 +283,8 @@ declare module 'gqutils' {
 	}};
 	function humanizeError(field: string, error: any): {message: string};
 
+	function toGqlArg(arg: any, opts?: string[] | {pick?: string[], curlyBrackets?: boolean, roundBrackets?: boolean}): string;
+
 	interface connectionResolvers<M> {
 		nodes: () => Promise<M[]>,
 		edges: () => Promise<{cursor: string, node: M}[]>,
@@ -379,7 +381,7 @@ declare module 'gqutils' {
 		enum(val: string): GqlEnum;
 		static enum(val: string): GqlEnum;
 
-		static toGqlArg(arg: any, opts?: string[] | {pick?: string[], curlyBrackets?: boolean, roundBrackets?: boolean}): string;
+		static toGqlArg: typeof toGqlArg;
 		static tag(strings: TemplateStringsArray, ...args: any[]): string;
 	}
 }

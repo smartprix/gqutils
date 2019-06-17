@@ -163,11 +163,31 @@ function convertToGqlArg(value) {
 	return JSON.stringify(value);
 }
 
+function toGqlArg(arg, opts = {}) {
+	let gqlArg = '';
+	if (_.isPlainObject(arg)) {
+		if (Array.isArray(opts)) opts = {pick: opts};
+		if (opts.pick) arg = _.pick(arg, opts.pick);
+
+		gqlArg = convertObjToGqlArg(arg);
+
+		if (opts.curlyBrackets) gqlArg = `{${gqlArg}}`;
+	}
+	else {
+		gqlArg = convertToGqlArg(arg);
+	}
+
+	if (opts.roundBrackets) gqlArg = gqlArg ? `(${gqlArg})` : ' ';
+
+	return gqlArg || '# no args <>\n';
+}
+
 export {
 	formatError,
 	humanizeError,
 	convertObjToGqlArg,
 	convertToGqlArg,
+	toGqlArg,
 	GqlEnum,
 	GqlFragment,
 };

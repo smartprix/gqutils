@@ -4,8 +4,7 @@ import {Connect, Str} from 'sm-utils';
 
 import {
 	formatError,
-	convertObjToGqlArg,
-	convertToGqlArg,
+	toGqlArg,
 	GqlEnum,
 	GqlFragment,
 } from './helpers';
@@ -210,24 +209,7 @@ class Gql {
 		return new GqlFragment(this._fragments, name);
 	}
 
-	static toGqlArg(arg, opts = {}) {
-		let gqlArg = '';
-		if (_.isPlainObject(arg)) {
-			if (Array.isArray(opts)) opts = {pick: opts};
-			if (opts.pick) arg = _.pick(arg, opts.pick);
-
-			gqlArg = convertObjToGqlArg(arg);
-
-			if (opts.curlyBrackets) gqlArg = `{${gqlArg}}`;
-		}
-		else {
-			gqlArg = convertToGqlArg(arg);
-		}
-
-		if (opts.roundBrackets) gqlArg = gqlArg ? `(${gqlArg})` : ' ';
-
-		return gqlArg || '# no args <>\n';
-	}
+	static toGqlArg = toGqlArg;
 
 	static tag(strings, ...args) {
 		let out = strings[0];
