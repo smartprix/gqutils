@@ -80,9 +80,11 @@ class Gql {
 		this._cache = opts.cache;
 	}
 
-	async _execApi(query, {variables, requestOptions = {}} = {}) {
+	async _execApi(query, {variables = {}, requestOptions = {}} = {}) {
 		let response = Connect
 			.url(this._api.endpoint)
+			.headers(this._api.headers)
+			.cookies(this._api.cookies)
 			.headers(requestOptions.headers)
 			.cookies(requestOptions.cookies)
 			.body({query, variables})
