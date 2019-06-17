@@ -60,23 +60,57 @@ class Gql {
 				cookies: {},
 			});
 		}
-		else {
-			const schemaName = opts.schemaName !== undefined ?
-				opts.schemaName :
-				(opts.defaultSchemaName || 'default');
-			const {schema, pubsub, fragments} = makeSchemaFromConfig(opts);
-
-			this.schema = schema;
-			this.pubsub = pubsub;
+		else if (opts.config || opts.schemas) {
+			let config;
+			if (opts.config) {
+				config = opts.config;
+				const makeResult = makeSchemaFromConfig(config);
+				this._makeResult = makeResult;
+			}
+			else {
+				config = opts.schemas;
+				this._makeResult = opts.schemas;
+			}
+			const schemaName = config.schemaName !== undefined ?
+				config.schemaName : (config.defaultSchemaName || 'default');
+			const {schema, fragments} = this._makeResult;
 
 			this._schemaName = schemaName;
 			this._schema = schema[schemaName];
 			this._fragments = fragments[schemaName];
-			this._validateGraphql = opts.validateGraphql || false;
-			this._formatError = opts.formatError || formatError;
+			this._validateGraphql = config.validateGraphql || false;
+			this._formatError = config.formatError || formatError;
 		}
+		else throw new Error('Invalid options for Gql');
 
 		this._cache = opts.cache;
+	}
+
+	static fromApi(opts) {
+		return new Gql({api: opts, cache: opts.cache});
+	}
+
+	static fromConfig(opts) {
+		return new Gql({config: opts, cache: opts.cache});
+	}
+
+	static fromSchemas(opts) {
+		return new Gql({schemas: opts, cache: opts.cache});
+	}
+
+	getSchemas() {
+		if (this._api) throw new Error('Invalid Method');
+		return this._makeResult.schemas;
+	}
+
+	getFragments() {
+		if (this._api) throw new Error('Invalid Method');
+		return this._makeResult.fragments;
+	}
+
+	getPubSub() {
+		if (this._api) throw new Error('Invalid Method');
+		return this._makeResult.pubsub;
 	}
 
 	async _execApi(query, {variables = {}, requestOptions = {}} = {}) {

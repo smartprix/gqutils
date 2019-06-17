@@ -325,9 +325,8 @@ declare module 'gqutils' {
 		parseGraphqlSchema(schema: string): GraphQLSchema;
 	}
 
-	interface schemaConfigInput extends commonOptions {
+	interface schemaConfigInput {
 		validateGraphql?: boolean;
-		cache?: Cache;
 		/** Default is defaultSchemaName value */
 		schemaName?: string;
 		/**
@@ -339,8 +338,10 @@ declare module 'gqutils' {
 	}
 
 	interface apiInput {
-		api: {endpoint: string, token?: string, headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
-		cache?: Cache;
+		endpoint: string;
+		token?: string;
+		headers?: {[key: string]: string};
+		cookies?: {[key: string]: string};
 	}
 
 	interface execOptions {
@@ -363,27 +364,44 @@ declare module 'gqutils' {
 		getDefinition(): string;
 	}
 
-	class Gql<FragmentsType = string> {
-		constructor(opts: apiInput | schemaConfigInput);
+	interface _cacheOpts {
+		cache?: Cache;
+	}
 
-		/** Will exist if schema config options are passed */
-		schema?: schemaMap;
-		/** Will exist if schema config options are passed */
-		pubsub?: PubSub;
+	class Gql<FragmentsType = string> {
+		/** Provide either one of `api`, `config` or `schemas` */
+		constructor(opts: _cacheOpts & {
+			api?: apiInput;
+			config?: schemaConfigInput & commonOptions;
+			schemas?: schemaConfigInput & gqlSchemas;
+		});
+
+		static fromApi(opts: apiInput & _cacheOpts): Gql;
+		static fromConfig(opts: schemaConfigInput & commonOptions & _cacheOpts): Gql;
+		static fromSchemas(opts: schemaConfigInput & gqlSchemas & _cacheOpts): Gql;
+
+		static enum(val: string): GqlEnum;
+
+		static toGqlArg: typeof toGqlArg;
+		static tag(strings: TemplateStringsArray, ...args: any[]): string;
+
+		/** Will throw if api options are passed */
+		getSchemas(): schemaMap;
+		/** Will throw if api options are passed */
+		getPubSub(): PubSub;
+		/** Will throw if api options are passed */
+		getFragments(): {[schemaName: string]: GQUtilsFragmentMap};
 
 		exec(query: string, opts?: execOptions): Promise<any>;
 		getAll(query: string, opts?: execOptions): Promise<any>;
 		get(query: string, opts: execOptions): Promise<any>;
 		/**
-		 * **NOTE:** Works only if schema config options are passed
+		 * **NOTE:** Does not work if api options are passed
+		 *
 		 * This automatically picks up the fragment from the generated schema
 		 */
 		fragment(fragmentName: FragmentsType): GqlFragment;
 
 		enum(val: string): GqlEnum;
-		static enum(val: string): GqlEnum;
-
-		static toGqlArg: typeof toGqlArg;
-		static tag(strings: TemplateStringsArray, ...args: any[]): string;
 	}
 }
