@@ -17,9 +17,6 @@ Utilities for GraphQL
 * `JSON`
 * `JSONObject`: A valid JSON object (arrays and other json values are invalid), most of the times you'd want to use `JSONObject` instead of `JSON`
 
-
-`IntID`
-
 ## Functions
 ### `makeSchemaFromModules(modules, opts)`
 Create a graphQL schema from various modules. If the module is a folder, it'll automatically require it.
