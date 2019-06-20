@@ -127,7 +127,67 @@ function formatError(error) {
 	return error;
 }
 
+class GqlEnum {
+	constructor(val) { this.val = val }
+	toString() { return this.val }
+}
+
+class GqlFragment {
+	constructor(fragment) { this.val = fragment }
+	toString() { return `... ${this.val.name}` }
+	getName() { return this.val.name }
+	getDefinition() {
+		return `fragment ${this.val.name} on ${this.val.type} { ${this.val.fields} } `;
+	}
+}
+
+function convertObjToGqlArg(obj) {
+	const gqlArg = [];
+	_.forEach(obj, (value, key) => {
+		// eslint-disable-next-line no-use-before-define
+		gqlArg.push(`${key}: ${convertToGqlArg(value)}`);
+	});
+	return `${gqlArg.join(', ')}`;
+}
+
+function convertToGqlArg(value) {
+	if (value == null) return null;
+
+	if (typeof value === 'number') return String(value);
+	if (value instanceof GqlEnum) return value.toString();
+	if (_.isPlainObject(value)) return `{${convertObjToGqlArg(value)}}`;
+	if (_.isArray(value) && value[0] instanceof GqlEnum) {
+		return `[${value.map(v => v.toString()).join(', ')}]`;
+	}
+
+	return JSON.stringify(value);
+}
+
+function toGqlArg(arg, opts = {}) {
+	let gqlArg = '';
+	if (_.isPlainObject(arg)) {
+		if (Array.isArray(opts)) opts = {pick: opts};
+		if (opts.pick) arg = _.pick(arg, opts.pick);
+
+		gqlArg = convertObjToGqlArg(arg);
+
+		if (opts.curlyBrackets) gqlArg = `{${gqlArg}}`;
+	}
+	else {
+		gqlArg = convertToGqlArg(arg);
+	}
+
+	if (opts.roundBrackets) gqlArg = gqlArg ? `(${gqlArg})` : ' ';
+
+	return gqlArg || '# no args <>\n';
+}
+
 export {
 	formatError,
 	humanizeError,
+	convertObjToGqlArg,
+	convertToGqlArg,
+	toGqlArg,
+	GqlEnum,
+	GqlFragment,
 };

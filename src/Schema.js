@@ -23,6 +23,7 @@ import {withFilter} from 'graphql-subscriptions';
 import defaultScalars from './defaultScalars';
 import defaultTypes from './defaultTypes';
 import defaultArgs from './defaultArgs';
+import {toGqlArg} from './helpers';
 
 function identity(value) {
 	return value;
@@ -37,7 +38,7 @@ function mergeFields(field1, field2) {
 	if (typeof field1 === 'string') field1 = {type: field1};
 	if (typeof field2 === 'string') field2 = {type: field2};
 
-	return Object.assign(field1, field2);
+	return Object.assign({}, field1, field2);
 }
 
 class Schema {
@@ -93,6 +94,7 @@ class Schema {
 				interfaces: {},
 				scalars: {},
 				unions: {},
+				fragments: {},
 			};
 		});
 
@@ -152,6 +154,10 @@ class Schema {
 
 			case 'union':
 				schemaItems.unions[itemName] = schemaItem;
+				break;
+
+			case 'fragment':
+				schemaItems.fragments[itemName] = schemaItem;
 				break;
 
 			default:
@@ -591,6 +597,26 @@ class Schema {
 		return parsedFields;
 	}
 
+	parseFragmentFields(fields) {
+		const fieldsString = _.castArray(fields).map((field) => {
+			if (typeof field === 'string') return field;
+			let str = '';
+			if (field.alias) { str += `${field.alias} : ` }
+			str += field.name;
+
+			if (field.args) {
+				str += toGqlArg(field.args, {roundBrackets: true});
+			}
+
+			if (field.fields) {
+				str += `{ ${this.parseFragmentFields(field.fields)} }`;
+			}
+			return str;
+		}).join('\n');
+
+		return `${fieldsString}`;
+	}
+
 	parseGraphqlEnumValue(schema, value, name) {
 		const schemaContainsField = this.shouldSchemaContain(schema, value, {includeByDefault: true});
 		if (!schemaContainsField) return null;
@@ -730,6 +756,16 @@ class Schema {
 		});
 	}
 
+	parseGraphqlFragment(schema, fragment) {
+		const type = this.getTypeName(fragment.type);
+		if (!schema.types[type]) throw new Error(`Type for fragment does not exist, ${type}`);
+		return {
+			name: fragment.name,
+			type,
+			fields: this.parseFragmentFields(fragment.fields),
+		};
+	}
+
 	parseGraphqlScalars(schema, scalars) {
 		_.forEach(scalars, scalar => this.parseGraphqlScalar(schema, scalar));
 	}
@@ -754,6 +790,10 @@ class Schema {
 		_.forEach(unions, union => this.parseGraphqlUnion(schema, union));
 	}
 
+	parseGraphqlFragments(schema, fragments) {
+		return _.mapValues(fragments, fragment => this.parseGraphqlFragment(schema, fragment));
+	}
+
 	parseGraphqlSchema(schema) {
 		this.collectGraphqlTypeInSchema(schema, 'scalars');
 		this.collectGraphqlTypeInSchema(schema, 'enums');
@@ -761,6 +801,7 @@ class Schema {
 		this.collectGraphqlTypeInSchema(schema, 'inputTypes');
 		this.collectGraphqlTypeInSchema(schema, 'types');
 		this.collectGraphqlTypeInSchema(schema, 'unions');
+		this.collectGraphqlTypeInSchema(schema, 'fragments');
 
 		this.parseGraphqlScalars(schema, schema.scalars);
 		this.parseGraphqlEnums(schema, schema.enums);
@@ -775,6 +816,7 @@ class Schema {
 			subscription: schema.types.Subscription._graphql,
 		});
 
+		graphqlSchema._fragments = this.parseGraphqlFragments(schema, schema.fragments);
 		if (this.options.resolverValidationOptions) {
 			assertResolveFunctionsPresent(graphqlSchema, this.options.resolverValidationOptions);
 		}

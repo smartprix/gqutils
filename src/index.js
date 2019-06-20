@@ -1,5 +1,6 @@
 import path from 'path';
 import _ from 'lodash';
+import {File} from 'sm-utils';
 
 async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', outputPath, schema, options = {}} = {}) {
 	let generateTypeScriptTypes;
@@ -16,6 +17,16 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 
 	schema = _.castArray(schema);
 
+	const getTypeStringForFragments = (fragments, schemaName) => `\
+
+
+declare global {
+	namespace GraphQl.${schemaName} {
+		type fragments = '${Object.keys(fragments).join("' | '")}';
+	}
+}
+`;
+
 	return Promise.all(Object.keys(graphqlSchemas).map(async (schemaName) => {
 		if (schema.length && !schema.includes(schemaName)) return;
 
@@ -26,18 +37,27 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 			// https://github.com/dangcuuson/graphql-schema-typescript/issues/17
 			// asyncResult: true
 		};
+		const graphqlSchema = graphqlSchemas[schemaName];
+		const fragments = graphqlSchema._fragments;
+
+		const typesFile = new File(path.join(folder, `${schemaName}.d.ts`));
+
 		await generateTypeScriptTypes(
-			graphqlSchemas[schemaName],
-			path.join(folder, `${schemaName}.d.ts`),
+			graphqlSchema,
+			typesFile.path,
 			_.merge(defaultOptions, options, {
 				namespace: `GraphQl.${schemaName}`,
 				contextType,
 			}),
 		);
+
+		if (_.isEmpty(fragments)) return;
+
+		await typesFile.append(getTypeStringForFragments(fragments, schemaName));
 	}));
 }
 
-export * from './errors';
+export * from './helpers';
 export * from './connection';
 export * from './Schema';
 export * from './makeSchemaFrom';
