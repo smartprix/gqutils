@@ -2,18 +2,21 @@
 Utilities for GraphQL
 
 ### Extra Types
-* `String`, `Int`, `Float`, `Boolean`, `ID`
-* `JSON`
-* `JSONObject`: A valid JSON object (arrays and other json values are invalid), most of the times you'd want to use `JSONObject` instead of `JSON`
+* `Int`
+* `Float`
+* `String`
 * `StringOrInt`
+* `StringOriginal`: `String` is automatically trimmed of whitespaces. If you want an untrimmed string use this.
+* `Boolean`
+* `ID`
+* `IntID`: this can be used where input is either an integer or a numeric string. value is casted as an integer.
 * `Email`
 * `URL`
 * `DateTime`
 * `UUID`
-* `StringOriginal`
-* `IntID`: this can be used where input is either an integer or a numeric string. value is casted as an integer.
+* `JSON`
+* `JSONObject`: A valid JSON object (arrays and other json values are invalid), most of the times you'd want to use `JSONObject` instead of `JSON`
 
-`String` is automatically trimmed of whitespaces. If you want an untrimmed string use `StringOriginal`.
 
 `IntID`
 
@@ -233,6 +236,219 @@ const {schemas} = makeSchemaFromConfig();
 // schemas will be {default: GraphqlSchema, admin: GraphqlSchema, public: GraphqlSchema}
 ```
 
+## Gql Class
+
+```js
+const gql = new Gql(opts);
+```
+
+The Gql class provides a way to execute the schema and to construct queries.
+
+### Executable Schemas
+
+There are two ways you can use Gql to get an executable schema:
+
+#### Config:
+```js
+const gql = new Gql({
+	config: {
+		schema: ['admin', 'public'],
+		schemaName: 'admin',
+		...
+	},
+});
+```
+Provide the same options you would provide to [makeSchemaFromConfig](#makeschemafromconfigopts--) under the config field in the constructor options.
+
+Select the schema you want to execute against using the schemaName option (default is the `default` schema)
+
+#### Schemas:
+
+If you have multiple schemas and would like to have multiple Gql instances each executing different schemas then use it this way. It takes the output of one of the `makeSchema` functions plus some options as input.
+
+```js
+const output = makeSchemaFromConfig();
+const adminGql = new Gql({
+	schemas: {
+		...output,
+		schemaName: 'admin',
+	},
+});
+const publicGql = new Gql({
+	schemas: {
+		...output,
+		schemaName: 'public',
+	},
+})
+```
+
+### Execute against API
+
+If you would like to use Gql against a GraphQL API:
+
+```js
+const apiGql = new Gql({
+	api: {
+		endpoint: 'https://example.com/api',
+		headers: {},
+		cookies: {},
+	}
+});
+```
+
+### Query Building And Execution
+
+
+#### gql.tag
+
+This is a Tag function used to build GraphQL Queries, it'll automatically convert args and arg objects. Some examples:
+
+```js
+const query = gql.tag`
+query {
+	employee(name: ${'admin'}) {
+		id
+	}
+}`;
+```
+
+```js
+const args = {
+	name: 'admin',
+};
+const query = gql.tag`
+query {
+	employee(${args}) {
+		id
+	}
+}`;
+```
+
+These all give us the query:
+```graphql
+query {
+	employee(name: "admin") {
+		id
+	}
+}
+```
+
+#### gql.enum
+
+As the [`tag`](#gql.tag) function adds `"` to all string args, enums need to be handled separately.
+
+```js
+const query = gql.tag`
+query {
+	employee(type: ${gql.enum('MANAGER'))}) {
+		id
+	}
+}`;
+```
+
+This gives us the query:
+```graphql
+query {
+	employee(type: MANAGER) {
+		id
+	}
+}
+```
+
+#### gql.fragment
+
+ **Note:** This function is only available to use with execuatble schemas and not with API
+
+
+Use this function to add a [fragment declared in the schema](#Fragments) to the query. eg.:
+
+```js
+/** schema.js */
+const employeeFragment = {
+	graphql: 'fragment',
+	type: 'Employee',
+	fields: [
+		'id',
+		'name',
+		'email',
+		'phone',
+		'createdAt',
+	],
+};
+```
+
+```js
+const query = gql.tag`
+query {
+	employee(name: ${'admin'}) {
+		${gql.fragment('employeeFragment')}
+	}
+}`;
+```
+
+This will give us the query:
+```graphql
+query {
+	employee(name: "admin") {
+		...employeeFragment
+	}
+	fragment employeeFragment on Employee {
+		id
+		name
+		email
+		phone
+		createdAt
+	}
+}
+```
+
+#### gql.exec
+
+> `gql.getAll` is an alias
+
+Execute a query. Let's consider the following query example:
+
+```js
+const query = gql.tag`
+query($name: String) {
+	employee(name: $name) {
+		id
+		name
+		email
+		phone
+	}
+}`;
+
+async function getEmployeeByName(name) {
+	const res = await gql.exec(query, {
+		variables: {name},
+	});
+	return res.employee;
+}
+```
+
+#### gql.get
+
+For the previous query there was only one field in the result. To simplify that use case we have the get function that automatically gets the nested field if only one field was queried.
+It goes one level deep if the nested field is `nodes` and is the only field.
+
+```js
+const query = gql.tag`
+query($name: String) {
+	employee(name: $name) {
+		id
+		name
+		email
+		phone
+	}
+}`;
+
+async function getEmployeeByName(name) {
+	return gql.get(query, {
+		variables: {name},
+	});
+}
+```
 
 
 ## Language Reference
@@ -247,6 +463,7 @@ graphql option reference
 * `query`: for root query
 * `mutation`: for root mutation
 * `subscription`: for root subscription
+* `fragment`: for declaring common fragments (To be used with [Gql](#Gql-class))
 
 These are available in the type definitions, so can be imported as 'GQUtilsSchema' and type checked.
 
@@ -350,6 +567,10 @@ const User = {
 
 ### Interface
 Defined with `graphql: interface`
+
+Interfaces in `gqutils` work more like `extends`, i.e. any `type` that implements an interface automatically has the fields of that interface.
+
+This can be used to have a set of default fields. (Along with default resolver implementations)
 ```js
 const Vehicle = {
 	// graphql = interface means it's a graphql iterface
@@ -371,7 +592,15 @@ const Vehicle = {
 	// see Fields definition for more details
 	fields: {
 		id: 'ID!',
-		name: 'String',
+		modelName: 'String',
+		variantName: 'String',
+		name: {
+			type: 'String',
+			// Interface fields can also have resolvers, these work like default resolvers. Type resolvers over ride these if provided
+			resolve: (root) => {
+				return `${root.modelName} - ${root.variantName}`;
+			}
+		}
 	},
 
 	// resolveType (optional): function for determining which type is actually used when the value is resolved
@@ -566,6 +795,39 @@ const Employee = {
 }
 ```
 
+### Fragments
+
+For use with Gql's [fragment](#gql.fragment) function while building queries.
+
+```js
+const EmployeeFragment = {
+	graphql: 'fragment',
+	// Type on which fragment is to be declared
+	type: 'Employee',
+	fields: [
+		'id',
+		// Can also provide options for fields
+		{
+			// will be queried as `contact: email`
+			alias: 'contact',
+			name: 'email',
+		},
+		{
+			name: 'teams',
+			// This is converted to arg options like in `Gql.tag`
+			args: {
+				status: 'active',
+			},
+			// Can also nest fields
+			fields: [
+				'id',
+				'phone',
+			]
+		},
+	]
+};
+```
+
 ### `getConnectionResolver(query, args, options = {})`
 Given a query (xorm query) and its arguments, it'll automatically generate a resolver for a relay connection.
 
@@ -628,7 +890,7 @@ Use to generate types from graphql schema
 	$ gqutils types
 Only build specific schema:
 	$ gqutils types --schema admin
-	
+
 
 Options:
   -v, --version        output the version number
