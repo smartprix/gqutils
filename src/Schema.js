@@ -41,6 +41,25 @@ function mergeFields(field1, field2) {
 	return Object.assign({}, field1, field2);
 }
 
+function getMergedTypeFieldsWithInterfaces(schema, type) {
+	const interfaces = type.interface || type.interfaces || type.implements;
+	if (!interfaces) {
+		return type.fields;
+	}
+	const defaultFields = {};
+
+	_.castArray(interfaces)
+		.map(name => schema.interfaces[name] && schema.interfaces[name].fields)
+		.filter(Boolean)
+		.forEach((interfaceFields) => {
+			// Assuming interfaces don't have conflicting fields
+			Object.assign(defaultFields, interfaceFields);
+		});
+
+	return _.mergeWith(defaultFields, type.fields, mergeFields);
+}
+
+
 class Schema {
 	constructor(schema, resolvers, options = {}) {
 		if (!schema) {
@@ -502,7 +521,7 @@ class Schema {
 
 			const type = schema.types[typeName] || schema.interfaces[typeName];
 			if (type) {
-				let typeFields = type.fields;
+				let typeFields = getMergedTypeFieldsWithInterfaces(schema, type);
 
 				// if the type is a connection
 				// then also consider the fields of the connection type in $default
@@ -511,9 +530,10 @@ class Schema {
 					const connectionTypeName = matches[1];
 					const connectionType = schema.types[connectionTypeName] ||
 						schema.interfaces[connectionTypeName];
+					const connectionFields = getMergedTypeFieldsWithInterfaces(schema, connectionType);
 
 					if (connectionType) {
-						typeFields = _.assign({}, typeFields, connectionType.fields);
+						typeFields = _.assign({}, typeFields, connectionFields);
 					}
 				}
 
@@ -698,18 +718,6 @@ class Schema {
 		const isTypeOf = this.resolvers[type.name] &&
 			this.resolvers[type.name].__isTypeOf;
 		let interfaces = type.interface || type.interfaces || type.implements;
-		const defaultFields = {};
-
-		if (interfaces) {
-			interfaces = _.castArray(interfaces);
-			interfaces
-				.map(name => schema.interfaces[name] && schema.interfaces[name].fields)
-				.filter(Boolean)
-				.forEach((interfaceFields) => {
-					// Assuming interfaces don't have conflicting fields
-					Object.assign(defaultFields, interfaceFields);
-				});
-		}
 
 		const graphqlType = {
 			name: type.name,
@@ -717,10 +725,9 @@ class Schema {
 			fields: () => {
 				const fields = this.parseGraphqlFields(
 					schema,
-					_.mergeWith(defaultFields, type.fields, mergeFields),
+					getMergedTypeFieldsWithInterfaces(schema, type),
 					type.name
 				);
-
 
 				if (_.isEmpty(fields)) {
 					return {
@@ -738,6 +745,7 @@ class Schema {
 		};
 
 		if (interfaces) {
+			interfaces = _.castArray(interfaces);
 			graphqlType.interfaces = () => this.parseTypes(schema, interfaces);
 		}
 
