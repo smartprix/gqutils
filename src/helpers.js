@@ -144,6 +144,7 @@ class GqlFragment {
 function convertObjToGqlArg(obj) {
 	const gqlArg = [];
 	_.forEach(obj, (value, key) => {
+		if (value === undefined) return;
 		// eslint-disable-next-line no-use-before-define
 		gqlArg.push(`${key}: ${convertToGqlArg(value)}`);
 	});
