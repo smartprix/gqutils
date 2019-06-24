@@ -403,5 +403,6 @@ declare module 'gqutils' {
 		fragment(fragmentName: FragmentsType): GqlFragment;
 
 		enum(val: string): GqlEnum;
+		tag(strings: TemplateStringsArray, ...args: any[]): string;
 	}
 }
