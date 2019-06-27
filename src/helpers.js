@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import getFieldNames from 'graphql-list-fields';
 
 function humanizeError(field, error) {
 	let message = error.message;
@@ -183,6 +184,19 @@ function toGqlArg(arg, opts = {}) {
 	return gqlArg || '# no args <>\n';
 }
 
+/**
+ * @param {string} field The field to be found
+ * @param {string[]} fields An array of fields in which to look for field
+ * @returns {boolean} true if field is a substring of any item in the fields array,
+ * false otherwise
+ */
+function includesField(field, fields) {
+	for (const queryField of fields) {
+		if (queryField.includes(field)) return true;
+	}
+	return false;
+}
+
 export {
 	formatError,
 	humanizeError,
@@ -191,4 +205,6 @@ export {
 	toGqlArg,
 	GqlEnum,
 	GqlFragment,
+	getFieldNames,
+	includesField,
 };
