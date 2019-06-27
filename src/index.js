@@ -3,6 +3,7 @@ import _ from 'lodash';
 import {File} from 'sm-utils';
 
 async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', outputPath, schema, options = {}} = {}) {
+	/** @type {import('graphql-schema-typescript').generateTypeScriptTypes} */
 	let generateTypeScriptTypes;
 	try {
 		// This is done this way so that those who don't need the cli don't need to install typescript
@@ -12,7 +13,6 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 	catch (err) {
 		throw new Error('You need to install \'typescript\' as a dependency');
 	}
-
 	const folder = outputPath || `${process.cwd()}/typings/graphql`;
 
 	schema = _.castArray(schema);
