@@ -245,6 +245,12 @@ class Gql {
 
 	static toGqlArg = toGqlArg;
 
+	toGqlArg = toGqlArg;
+
+	args(arg, {pick} = {}) {
+		return this.toGqlArg(arg, {roundBrackets: true, pick});
+	}
+
 	static tag(strings, ...args) {
 		let out = strings[0];
 		const fragments = {};

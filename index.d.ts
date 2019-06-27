@@ -381,9 +381,8 @@ declare module 'gqutils' {
 		static fromSchemas(opts: schemaConfigInput & gqlSchemas & _cacheOpts): Gql;
 
 		static enum(val: string): GqlEnum;
-
-		static toGqlArg: typeof toGqlArg;
 		static tag(strings: TemplateStringsArray, ...args: any[]): string;
+		static toGqlArg: typeof toGqlArg;
 
 		/** Will throw if api options are passed */
 		getSchemas(): schemaMap;
@@ -401,8 +400,10 @@ declare module 'gqutils' {
 		 * This automatically picks up the fragment from the generated schema
 		 */
 		fragment(fragmentName: FragmentsType): GqlFragment;
-
 		enum(val: string): GqlEnum;
 		tag(strings: TemplateStringsArray, ...args: any[]): string;
+		/** Calls toGqlArg with roundBrackets true */
+		arg: (arg: any, opts?: string[] | {pick?: string[]}) => string;
+		toGqlArg: typeof toGqlArg;
 	}
 }
