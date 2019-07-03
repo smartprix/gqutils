@@ -17,12 +17,19 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 
 	schema = _.castArray(schema);
 
-	const getTypeStringForFragments = (fragments, schemaName) => `\
+	const getTypeStringForFragments = ({fragments, enums}, schemaName) => `\
 
+
+import {GqlEnum} from 'gqutils';
 
 declare global {
 	namespace GraphQl.${schemaName} {
 		type fragments = '${Object.keys(fragments).join("' | '")}';
+		type enums = {
+			${_.map(Object.entries(enums),
+		([enumName, values]) => `${enumName}: { ${Object.keys(values).map(key => `${key}: GqlEnum;`).join(' ')} }`
+	).join(';\n\t\t\t')}
+		}
 	}
 }
 `;
@@ -38,7 +45,7 @@ declare global {
 			// asyncResult: true
 		};
 		const graphqlSchema = graphqlSchemas[schemaName];
-		const fragments = graphqlSchema._fragments;
+		const {fragments, enums} = graphqlSchema._data || {};
 
 		const typesFile = new File(path.join(folder, `${schemaName}.d.ts`));
 
@@ -51,9 +58,9 @@ declare global {
 			}),
 		);
 
-		if (_.isEmpty(fragments)) return;
+		if (_.isEmpty(fragments) && _.isEmpty(enums)) return;
 
-		await typesFile.append(getTypeStringForFragments(fragments, schemaName));
+		await typesFile.append(getTypeStringForFragments({fragments, enums}, schemaName));
 	}));
 }
 

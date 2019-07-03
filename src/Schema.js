@@ -23,7 +23,7 @@ import {withFilter} from 'graphql-subscriptions';
 import defaultScalars from './defaultScalars';
 import defaultTypes from './defaultTypes';
 import defaultArgs from './defaultArgs';
-import {toGqlArg} from './helpers';
+import {toGqlArg, GqlEnum} from './helpers';
 
 function identity(value) {
 	return value;
@@ -691,11 +691,13 @@ class Schema {
 	}
 
 	parseGraphqlEnum(schema, schemaItem) {
+		const values = this.parseGraphqlEnumValues(schema, schemaItem.values);
 		schemaItem._graphql = new GraphQLEnumType({
 			name: schemaItem.name,
 			description: schemaItem.description,
-			values: this.parseGraphqlEnumValues(schema, schemaItem.values),
+			values,
 		});
+		return _.mapValues(values, (v, name) => new GqlEnum(name));
 	}
 
 	parseGraphqlInterface(schema, schemaItem) {
@@ -783,7 +785,11 @@ class Schema {
 	}
 
 	parseGraphqlEnums(schema, enums) {
-		_.forEach(enums, schemaItem => this.parseGraphqlEnum(schema, schemaItem));
+		const gqlEnumMap = {};
+		_.forEach(enums, (schemaItem) => {
+			gqlEnumMap[schemaItem.name] = this.parseGraphqlEnum(schema, schemaItem);
+		});
+		return gqlEnumMap;
 	}
 
 	parseGraphqlInterfaces(schema, interfaces) {
@@ -816,11 +822,12 @@ class Schema {
 		this.collectGraphqlTypeInSchema(schema, 'fragments');
 
 		this.parseGraphqlScalars(schema, schema.scalars);
-		this.parseGraphqlEnums(schema, schema.enums);
+		const enums = this.parseGraphqlEnums(schema, schema.enums);
 		this.parseGraphqlInterfaces(schema, schema.interfaces);
 		this.parseGraphqlInputTypes(schema, schema.inputTypes);
 		this.parseGraphqlTypes(schema, schema.types);
 		this.parseGraphqlUnions(schema, schema.unions);
+		const fragments = this.parseGraphqlFragments(schema, schema.fragments);
 
 		const graphqlSchema = new GraphQLSchema({
 			query: schema.types.Query._graphql,
@@ -828,7 +835,11 @@ class Schema {
 			subscription: schema.types.Subscription._graphql,
 		});
 
-		graphqlSchema._fragments = this.parseGraphqlFragments(schema, schema.fragments);
+		graphqlSchema._data = {
+			fragments,
+			enums,
+		};
+
 		if (this.options.resolverValidationOptions) {
 			assertResolveFunctionsPresent(graphqlSchema, this.options.resolverValidationOptions);
 		}

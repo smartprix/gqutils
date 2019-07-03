@@ -73,11 +73,12 @@ class Gql {
 			}
 			const schemaName = config.schemaName !== undefined ?
 				config.schemaName : (config.defaultSchemaName || 'default');
-			const {schema, fragments} = this._makeResult;
+			const {schema, data} = this._makeResult;
 
 			this._schemaName = schemaName;
 			this._schema = schema[schemaName];
-			this._fragments = fragments[schemaName];
+			this._fragments = data[schemaName].fragments;
+			this._enums = data[schemaName].enums;
 			this._validateGraphql = config.validateGraphql || false;
 			this._formatError = config.formatError || formatError;
 		}
@@ -234,6 +235,10 @@ class Gql {
 
 	enum(val) {
 		return this.constructor.enum(val);
+	}
+
+	get enums() {
+		return this._enums;
 	}
 
 	fragment(name) {

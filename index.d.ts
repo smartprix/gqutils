@@ -380,7 +380,7 @@ declare module 'gqutils' {
 		cache?: Cache;
 	}
 
-	class Gql<FragmentsType = string> {
+	class Gql<FragmentsType = string, EnumsMap = any> {
 		/** Provide either one of `api`, `config` or `schemas` */
 		constructor(opts: _cacheOpts & {
 			api?: apiInput;
@@ -413,6 +413,7 @@ declare module 'gqutils' {
 		 */
 		fragment(fragmentName: FragmentsType): GqlFragment;
 		enum(val: string): GqlEnum;
+		enums: EnumsMap;
 		tag(strings: TemplateStringsArray, ...args: any[]): string;
 		/** Calls toGqlArg with roundBrackets true */
 		arg: (arg: any, opts?: string[] | {pick?: string[]}) => string;
