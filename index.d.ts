@@ -2,6 +2,7 @@ import {PubSub} from 'graphql-subscriptions';
 import {GraphQLSchema} from 'graphql';
 import {IResolverValidationOptions} from 'graphql-tools';
 import {GenerateTypescriptOptions} from 'graphql-schema-typescript';
+import graphqlListFields = require('graphql-list-fields');
 import {Cache} from 'sm-utils';
 
 declare module 'gqutils' {
@@ -320,6 +321,12 @@ declare module 'gqutils' {
 	function getConnectionResolver<M, T extends connectionResolvers<M>>(query: Promise<M>, args: pagingParams, options?: {resolvers?: Partial<T>}): T;
 	function getIdFromCursor(cursor: number | string): number;
 	function getCursorFromId(id: number | string): string;
+	const getFieldNames: typeof graphqlListFields;
+	/**
+	 * returns true if field is a substring of any item in the fields array,
+	 * false otherwise
+	 */
+	function includesField(field: string, fields: string[]): boolean;
 
 	function makeSchemas(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions): {[key:string]: GraphQLSchema};
 

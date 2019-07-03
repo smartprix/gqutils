@@ -784,6 +784,18 @@
   dependencies:
     "@types/babel-types" "*"
 
+"@types/graphql-list-fields@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@types/graphql-list-fields/-/graphql-list-fields-2.0.1.tgz#95dd9fe42459dc0b22e18594204ca5bfd30f8d96"
+  integrity sha512-OJX0HaF3hu3JI8pL+H4P9d+Efn6dAuHd4Ve2iFkp2agrZePP+0EIiQ58BEkiF4V3Z9Oazth/YUj10I269aBB5g==
+  dependencies:
+    "@types/graphql" "*"
+
+"@types/graphql@*":
+  version "14.2.2"
+  resolved "https://registry.yarnpkg.com/@types/graphql/-/graphql-14.2.2.tgz#10f197e6f8559c11b16d630c5e9c10c3c8e61c5e"
+  integrity sha512-okXbUmdZFMO3AYBEJCcpJFPFDkKmIiZZBqWD5TmPtAv+GHfjD2qLZEI0PvZ8IWMU4ozoK2HV2lDxWjw4LbVlnw==
+
 "@types/graphql@^14.2.0":
   version "14.2.0"
   resolved "https://registry.yarnpkg.com/@types/graphql/-/graphql-14.2.0.tgz#74e1da5f2a4a744ac6eb3ed57b48242ea9367202"
