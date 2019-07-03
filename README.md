@@ -777,7 +777,9 @@ const Employee = {
 				// to enforce required condition add `!` to the field's name
 				// $paging is used for paging parameters (first, after, last, before)
 				// $order is used for order parameters (orderBy & orderDirection)
-				$default: ['id', 'phone!', '$paging', '$order'],
+				// $sort is used for order params (sort & order)
+				// $sort uses String type for order while order uses Enum
+				$default: ['id', 'phone!', '$paging', '$sort'],
 
 				// rest of the parameters are defined in same way as field definition
 				search: 'String',

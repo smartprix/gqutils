@@ -15,8 +15,11 @@ declare module 'gqutils' {
 	/** $paging is used for paging parameters (first, after, last, before) */
 	type pagingArg = '$paging';
 
-	/** $order is used for order parameters (orderBy & orderDirection) */
+	/** $order is used for order parameters (orderBy & orderDirection (Enum of ASC, DESC)) */
 	type orderArg = '$order';
+
+	/** $sort is used for order parameters (order & sort (String type)) */
+	type sortArg = '$sort';
 
 	interface GQUtilsBaseSchema {
 		/**
@@ -65,10 +68,12 @@ declare module 'gqutils' {
 		 * fields defined in $default will be taken from parent's (TeamConnection's) fields
 		 * fields in $default will not have required condition even if mentioned in the type
 		 * to enforce required condition add `!` to the field's name
-		 * $paging is used for paging parameters (first, after, last, before)
-		 * $order is used for order parameters (orderBy & orderDirection)
+		 * - $paging is used for paging parameters (first, after, last, before)
+		 * - $order is used for order parameters (orderBy & orderDirection)
+		 * - $sort is used for order params (sort & order)
+		 * **NOTE**: $sort uses String type for order while $order uses Enum
 		 */
-		$default?: (pagingArg | orderArg | string)[];
+		$default?: (pagingArg | orderArg | sortArg | string)[];
 	};
 
 	type GQUtilsFields = {

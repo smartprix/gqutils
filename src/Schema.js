@@ -550,6 +550,10 @@ class Schema {
 						return;
 					}
 
+					if (argName === '$sort') {
+						_.defaults(args, defaultArgs.sortArgs);
+					}
+
 					const isRequired = argName.includes('!');
 					argName = argName.replace('!', '');
 
