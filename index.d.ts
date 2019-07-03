@@ -233,14 +233,17 @@ declare module 'gqutils' {
 		fields: string;
 	};
 
-	type GQUtilsFragmentMap = {[fragmentName: string]: GQUtilsFragment};
+	type GQUtilsData = {
+		fragments: {[fragmentName: string]: GqlFragment};
+		enums: {[enumName: string]: GqlEnum};
+	};
 
 	interface gqlSchemas {
 		schema: schemaMap;
 		schemas: schemaMap;
 		defaultSchema: GraphQLSchema;
 		pubsub: PubSub;
-		fragments: {[schemaName: string]: GQUtilsFragmentMap};
+		data: {[schemaName: string]: GQUtilsData};
 	}
 	type schemaMap = {[key: string]: GraphQLSchema};
 
@@ -380,7 +383,7 @@ declare module 'gqutils' {
 		cache?: Cache;
 	}
 
-	class Gql<FragmentsType = {[key: string]: any}, EnumsMap = any> {
+	class Gql<FragmentsMap = {[key: string]: any}, EnumsMap = any> {
 		/** Provide either one of `api`, `config` or `schemas` */
 		constructor(opts: _cacheOpts & {
 			api?: apiInput;
@@ -401,7 +404,7 @@ declare module 'gqutils' {
 		/** Will throw if api options are passed */
 		getPubSub(): PubSub;
 		/** Will throw if api options are passed */
-		getFragments(): {[schemaName: string]: GQUtilsFragmentMap};
+		getData(): {[schemaName: string]: GQUtilsData};
 
 		exec(query: string, opts?: execOptions): Promise<any>;
 		getAll(query: string, opts?: execOptions): Promise<any>;
@@ -411,11 +414,11 @@ declare module 'gqutils' {
 		 *
 		 * This automatically picks up the fragment from the generated schema
 		 */
-		fragment(fragmentName: keyof FragmentsType): GqlFragment;
+		fragment(fragmentName: keyof FragmentsMap): GqlFragment;
 		/**
 		 * **NOTE:** Does not work if api options are passed
 		 */
-		fragments: FragmentsType;
+		fragments: FragmentsMap;
 		enum(val: string): GqlEnum;
 		/**
 		 * **NOTE:** Does not work if api options are passed

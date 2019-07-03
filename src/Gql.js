@@ -104,9 +104,9 @@ class Gql {
 		return this._makeResult.schemas;
 	}
 
-	getFragments() {
+	getData() {
 		if (this._api) throw new Error('Invalid Method');
-		return this._makeResult.fragments;
+		return this._makeResult.data;
 	}
 
 	getPubSub() {
@@ -249,7 +249,6 @@ class Gql {
 	}
 
 	get fragments() {
-		if (!this._fragments) throw new Error('Invalid Method: Fragments not defined');
 		return this._fragments;
 	}
 
