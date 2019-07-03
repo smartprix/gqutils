@@ -20,16 +20,19 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 	const getTypeStringForFragments = ({fragments, enums}, schemaName) => `\
 
 
-import {GqlEnum} from 'gqutils';
+import {GqlEnum, GqlFragment} from 'gqutils';
 
 declare global {
 	namespace GraphQl.${schemaName} {
-		type fragments = '${Object.keys(fragments).join("' | '")}';
+		type fragments = {
+			${Object.keys(fragments).map(key => `${key}: GqlFragment;`).join('\n\t\t\t')}
+		};
+
 		type enums = {
 			${_.map(Object.entries(enums),
 		([enumName, values]) => `${enumName}: { ${Object.keys(values).map(key => `${key}: GqlEnum;`).join(' ')} }`
 	).join(';\n\t\t\t')}
-		}
+		};
 	}
 }
 `;

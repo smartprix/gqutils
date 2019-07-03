@@ -23,7 +23,7 @@ import {withFilter} from 'graphql-subscriptions';
 import defaultScalars from './defaultScalars';
 import defaultTypes from './defaultTypes';
 import defaultArgs from './defaultArgs';
-import {toGqlArg, GqlEnum} from './helpers';
+import {toGqlArg, GqlEnum, GqlFragment} from './helpers';
 
 function identity(value) {
 	return value;
@@ -773,11 +773,11 @@ class Schema {
 	parseGraphqlFragment(schema, fragment) {
 		const type = this.getTypeName(fragment.type);
 		if (!schema.types[type]) throw new Error(`Type for fragment does not exist, ${type}`);
-		return {
+		return new GqlFragment({
 			name: fragment.name,
 			type,
 			fields: this.parseFragmentFields(fragment.fields),
-		};
+		});
 	}
 
 	parseGraphqlScalars(schema, scalars) {

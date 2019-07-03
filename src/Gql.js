@@ -245,7 +245,12 @@ class Gql {
 		if (!this._fragments) throw new Error('Invalid Method: Fragments not defined');
 		if (this._fragments[name] === undefined) throw new Error(`[schema:${this._schemaName}] Invalid fragment name, ${name}`);
 
-		return new GqlFragment(this._fragments[name]);
+		return this._fragments[name];
+	}
+
+	get fragments() {
+		if (!this._fragments) throw new Error('Invalid Method: Fragments not defined');
+		return this._fragments;
 	}
 
 	static toGqlArg = toGqlArg;

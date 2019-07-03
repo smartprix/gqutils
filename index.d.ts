@@ -411,7 +411,8 @@ declare module 'gqutils' {
 		 *
 		 * This automatically picks up the fragment from the generated schema
 		 */
-		fragment(fragmentName: FragmentsType): GqlFragment;
+		fragment(fragmentName: keyof FragmentsType): GqlFragment;
+		fragments: FragmentsType;
 		enum(val: string): GqlEnum;
 		enums: EnumsMap;
 		tag(strings: TemplateStringsArray, ...args: any[]): string;
