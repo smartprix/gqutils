@@ -380,7 +380,7 @@ declare module 'gqutils' {
 		cache?: Cache;
 	}
 
-	class Gql<FragmentsType = string, EnumsMap = any> {
+	class Gql<FragmentsType = {[key: string]: any}, EnumsMap = any> {
 		/** Provide either one of `api`, `config` or `schemas` */
 		constructor(opts: _cacheOpts & {
 			api?: apiInput;
@@ -412,8 +412,14 @@ declare module 'gqutils' {
 		 * This automatically picks up the fragment from the generated schema
 		 */
 		fragment(fragmentName: keyof FragmentsType): GqlFragment;
+		/**
+		 * **NOTE:** Does not work if api options are passed
+		 */
 		fragments: FragmentsType;
 		enum(val: string): GqlEnum;
+		/**
+		 * **NOTE:** Does not work if api options are passed
+		 */
 		enums: EnumsMap;
 		tag(strings: TemplateStringsArray, ...args: any[]): string;
 		/** Calls toGqlArg with roundBrackets true */

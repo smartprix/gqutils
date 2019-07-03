@@ -129,8 +129,8 @@ function formatError(error) {
 }
 
 class GqlEnum {
-	constructor(val) { this.val = val }
-	toString() { return this.val }
+	constructor(name) { this.name = name }
+	toString() { return this.name }
 }
 
 class GqlFragment {
