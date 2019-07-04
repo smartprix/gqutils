@@ -518,10 +518,11 @@ class Schema {
 		if (args.$default) {
 			// since we are modifying args, clone it first
 			args = _.cloneDeep(args);
-
+			let typeFields;
 			const type = schema.types[typeName] || schema.interfaces[typeName];
+
 			if (type) {
-				let typeFields = getMergedTypeFieldsWithInterfaces(schema, type);
+				typeFields = getMergedTypeFieldsWithInterfaces(schema, type);
 
 				// if the type is a connection
 				// then also consider the fields of the connection type in $default
@@ -536,66 +537,65 @@ class Schema {
 						typeFields = _.assign({}, typeFields, connectionFields);
 					}
 				}
+			}
+			_.forEach(args.$default, (argName) => {
+				// handle paging args
+				if (argName === '$paging') {
+					_.defaults(args, defaultArgs.pagingArgs);
+					return;
+				}
 
-				_.forEach(args.$default, (argName) => {
-					// handle paging args
-					if (argName === '$paging') {
-						_.defaults(args, defaultArgs.pagingArgs);
-						return;
+				// handle order args
+				if (argName === '$order') {
+					_.defaults(args, defaultArgs.orderArgs);
+					return;
+				}
+				if (argName === '$sort') {
+					_.defaults(args, defaultArgs.sortArgs);
+					return;
+				}
+
+				if (!type || !typeFields) return;
+
+				const isRequired = argName.includes('!');
+				argName = argName.replace('!', '');
+
+				if (argName in args) return;
+				if (!(argName in typeFields)) return;
+
+				let field = typeFields[argName];
+				if (typeof field === 'string') {
+					if (isRequired) {
+						// add required if not there
+						if (!field.includes('!')) {
+							field += '!';
+						}
 					}
-
-					// handle order args
-					if (argName === '$order') {
-						_.defaults(args, defaultArgs.orderArgs);
-						return;
+					else {
+						// remove required
+						field = field.replace(/!$/, '');
 					}
+				}
+				else {
+					field = _.clone(field);
 
-					if (argName === '$sort') {
-						_.defaults(args, defaultArgs.sortArgs);
-						return;
-					}
-
-					const isRequired = argName.includes('!');
-					argName = argName.replace('!', '');
-
-
-					if (argName in args) return;
-					if (!(argName in typeFields)) return;
-
-					let field = typeFields[argName];
-					if (typeof field === 'string') {
+					// remove required
+					if (typeof field.type === 'string') {
 						if (isRequired) {
 							// add required if not there
-							if (!field.includes('!')) {
-								field += '!';
+							if (!field.type.includes('!')) {
+								field.type += '!';
 							}
 						}
 						else {
 							// remove required
-							field = field.replace(/!$/, '');
+							field.type = field.type.replace(/!$/, '');
 						}
 					}
-					else {
-						field = _.clone(field);
+				}
 
-						// remove required
-						if (typeof field.type === 'string') {
-							if (isRequired) {
-								// add required if not there
-								if (!field.type.includes('!')) {
-									field.type += '!';
-								}
-							}
-							else {
-								// remove required
-								field.type = field.type.replace(/!$/, '');
-							}
-						}
-					}
-
-					args[argName] = field;
-				});
-			}
+				args[argName] = field;
+			});
 
 			delete args.$default;
 		}
