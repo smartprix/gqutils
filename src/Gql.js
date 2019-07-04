@@ -256,7 +256,7 @@ class Gql {
 
 	toGqlArg = toGqlArg;
 
-	arg(arg, opts = []) {
+	arg(arg, opts = {}) {
 		let pick;
 		if (_.isArray(opts)) pick = opts;
 		else ({pick} = opts);
