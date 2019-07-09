@@ -2,6 +2,7 @@ import {PubSub} from 'graphql-subscriptions';
 import {GraphQLSchema} from 'graphql';
 import {IResolverValidationOptions} from 'graphql-tools';
 import {GenerateTypescriptOptions} from 'graphql-schema-typescript';
+import graphqlListFields = require('graphql-list-fields');
 import {Cache} from 'sm-utils';
 
 declare module 'gqutils' {
@@ -15,8 +16,11 @@ declare module 'gqutils' {
 	/** $paging is used for paging parameters (first, after, last, before) */
 	type pagingArg = '$paging';
 
-	/** $order is used for order parameters (orderBy & orderDirection) */
+	/** $order is used for order parameters (orderBy & orderDirection (Enum of ASC, DESC)) */
 	type orderArg = '$order';
+
+	/** $sort is used for order parameters (order & sort (String type)) */
+	type sortArg = '$sort';
 
 	interface GQUtilsBaseSchema {
 		/**
@@ -65,10 +69,12 @@ declare module 'gqutils' {
 		 * fields defined in $default will be taken from parent's (TeamConnection's) fields
 		 * fields in $default will not have required condition even if mentioned in the type
 		 * to enforce required condition add `!` to the field's name
-		 * $paging is used for paging parameters (first, after, last, before)
-		 * $order is used for order parameters (orderBy & orderDirection)
+		 * - $paging is used for paging parameters (first, after, last, before)
+		 * - $order is used for order parameters (orderBy & orderDirection)
+		 * - $sort is used for order params (sort & order)
+		 * **NOTE**: $sort uses String type for order while $order uses Enum
 		 */
-		$default?: (pagingArg | orderArg | string)[];
+		$default?: (pagingArg | orderArg | sortArg | string)[];
 	};
 
 	type GQUtilsFields = {
@@ -227,14 +233,17 @@ declare module 'gqutils' {
 		fields: string;
 	};
 
-	type GQUtilsFragmentMap = {[fragmentName: string]: GQUtilsFragment};
+	type GQUtilsData = {
+		fragments: {[fragmentName: string]: GqlFragment};
+		enums: {[enumName: string]: GqlEnum};
+	};
 
 	interface gqlSchemas {
 		schema: schemaMap;
 		schemas: schemaMap;
 		defaultSchema: GraphQLSchema;
 		pubsub: PubSub;
-		fragments: {[schemaName: string]: GQUtilsFragmentMap};
+		data: {[schemaName: string]: GQUtilsData};
 	}
 	type schemaMap = {[key: string]: GraphQLSchema};
 
@@ -315,6 +324,12 @@ declare module 'gqutils' {
 	function getConnectionResolver<M, T extends connectionResolvers<M>>(query: Promise<M>, args: pagingParams, options?: {resolvers?: Partial<T>}): T;
 	function getIdFromCursor(cursor: number | string): number;
 	function getCursorFromId(id: number | string): string;
+	const getFieldNames: typeof graphqlListFields;
+	/**
+	 * returns true if field is a substring of any item in the fields array,
+	 * false otherwise
+	 */
+	function includesField(field: string, fields: string[]): boolean;
 
 	function makeSchemas(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions): {[key:string]: GraphQLSchema};
 
@@ -368,7 +383,7 @@ declare module 'gqutils' {
 		cache?: Cache;
 	}
 
-	class Gql<FragmentsType = string> {
+	class Gql<FragmentsMap = {[key: string]: any}, EnumsMap = any> {
 		/** Provide either one of `api`, `config` or `schemas` */
 		constructor(opts: _cacheOpts & {
 			api?: apiInput;
@@ -381,16 +396,15 @@ declare module 'gqutils' {
 		static fromSchemas(opts: schemaConfigInput & gqlSchemas & _cacheOpts): Gql;
 
 		static enum(val: string): GqlEnum;
-
-		static toGqlArg: typeof toGqlArg;
 		static tag(strings: TemplateStringsArray, ...args: any[]): string;
+		static toGqlArg: typeof toGqlArg;
 
 		/** Will throw if api options are passed */
 		getSchemas(): schemaMap;
 		/** Will throw if api options are passed */
 		getPubSub(): PubSub;
 		/** Will throw if api options are passed */
-		getFragments(): {[schemaName: string]: GQUtilsFragmentMap};
+		getData(): {[schemaName: string]: GQUtilsData};
 
 		exec(query: string, opts?: execOptions): Promise<any>;
 		getAll(query: string, opts?: execOptions): Promise<any>;
@@ -400,8 +414,19 @@ declare module 'gqutils' {
 		 *
 		 * This automatically picks up the fragment from the generated schema
 		 */
-		fragment(fragmentName: FragmentsType): GqlFragment;
-
+		fragment(fragmentName: keyof FragmentsMap): GqlFragment;
+		/**
+		 * **NOTE:** Does not work if api options are passed
+		 */
+		fragments: FragmentsMap;
 		enum(val: string): GqlEnum;
+		/**
+		 * **NOTE:** Does not work if api options are passed
+		 */
+		enums: EnumsMap;
+		tag(strings: TemplateStringsArray, ...args: any[]): string;
+		/** Calls toGqlArg with roundBrackets true */
+		arg: (arg: any, opts?: string[] | {pick?: string[]}) => string;
+		toGqlArg: typeof toGqlArg;
 	}
 }

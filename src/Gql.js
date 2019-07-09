@@ -73,11 +73,12 @@ class Gql {
 			}
 			const schemaName = config.schemaName !== undefined ?
 				config.schemaName : (config.defaultSchemaName || 'default');
-			const {schema, fragments} = this._makeResult;
+			const {schema, data} = this._makeResult;
 
 			this._schemaName = schemaName;
 			this._schema = schema[schemaName];
-			this._fragments = fragments[schemaName];
+			this._fragments = data[schemaName].fragments;
+			this._enums = data[schemaName].enums;
 			this._validateGraphql = config.validateGraphql || false;
 			this._formatError = config.formatError || formatError;
 		}
@@ -103,9 +104,9 @@ class Gql {
 		return this._makeResult.schemas;
 	}
 
-	getFragments() {
+	getData() {
 		if (this._api) throw new Error('Invalid Method');
-		return this._makeResult.fragments;
+		return this._makeResult.data;
 	}
 
 	getPubSub() {
@@ -236,14 +237,32 @@ class Gql {
 		return this.constructor.enum(val);
 	}
 
+	get enums() {
+		return this._enums;
+	}
+
 	fragment(name) {
 		if (!this._fragments) throw new Error('Invalid Method: Fragments not defined');
 		if (this._fragments[name] === undefined) throw new Error(`[schema:${this._schemaName}] Invalid fragment name, ${name}`);
 
-		return new GqlFragment(this._fragments[name]);
+		return this._fragments[name];
+	}
+
+	get fragments() {
+		return this._fragments;
 	}
 
 	static toGqlArg = toGqlArg;
+
+	toGqlArg = toGqlArg;
+
+	arg(arg, opts = {}) {
+		let pick;
+		if (_.isArray(opts)) pick = opts;
+		else ({pick} = opts);
+
+		return this.toGqlArg(arg, {roundBrackets: true, pick});
+	}
 
 	static tag(strings, ...args) {
 		let out = strings[0];

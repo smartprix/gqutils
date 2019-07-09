@@ -23,9 +23,11 @@
   "license": "ISC",
   "dependencies": {
     "@types/graphql": "^14.2.0",
+    "@types/graphql-list-fields": "^2.0.1",
     "@types/node": "^12.0.7",
     "commander": "^2.20.0",
     "graphql-custom-types": "^1.5.0",
+    "graphql-list-fields": "^2.0.2",
     "graphql-schema-typescript": "^1.2.9",
     "graphql-type-json": "^0.3.0",
     "lodash": "^4.17.11"

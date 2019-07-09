@@ -23,7 +23,7 @@ import {withFilter} from 'graphql-subscriptions';
 import defaultScalars from './defaultScalars';
 import defaultTypes from './defaultTypes';
 import defaultArgs from './defaultArgs';
-import {toGqlArg} from './helpers';
+import {toGqlArg, GqlEnum, GqlFragment} from './helpers';
 
 function identity(value) {
 	return value;
@@ -40,6 +40,25 @@ function mergeFields(field1, field2) {
 
 	return Object.assign({}, field1, field2);
 }
+
+function getMergedTypeFieldsWithInterfaces(schema, type) {
+	const interfaces = type.interface || type.interfaces || type.implements;
+	if (!interfaces) {
+		return type.fields;
+	}
+	const defaultFields = {};
+
+	_.castArray(interfaces)
+		.map(name => schema.interfaces[name] && schema.interfaces[name].fields)
+		.filter(Boolean)
+		.forEach((interfaceFields) => {
+			// Assuming interfaces don't have conflicting fields
+			Object.assign(defaultFields, interfaceFields);
+		});
+
+	return _.mergeWith(defaultFields, type.fields, mergeFields);
+}
+
 
 class Schema {
 	constructor(schema, resolvers, options = {}) {
@@ -499,10 +518,11 @@ class Schema {
 		if (args.$default) {
 			// since we are modifying args, clone it first
 			args = _.cloneDeep(args);
-
+			let typeFields;
 			const type = schema.types[typeName] || schema.interfaces[typeName];
+
 			if (type) {
-				let typeFields = type.fields;
+				typeFields = getMergedTypeFieldsWithInterfaces(schema, type);
 
 				// if the type is a connection
 				// then also consider the fields of the connection type in $default
@@ -511,66 +531,71 @@ class Schema {
 					const connectionTypeName = matches[1];
 					const connectionType = schema.types[connectionTypeName] ||
 						schema.interfaces[connectionTypeName];
+					const connectionFields = getMergedTypeFieldsWithInterfaces(schema, connectionType);
 
 					if (connectionType) {
-						typeFields = _.assign({}, typeFields, connectionType.fields);
+						typeFields = _.assign({}, typeFields, connectionFields);
 					}
 				}
+			}
+			_.forEach(args.$default, (argName) => {
+				// handle paging args
+				if (argName === '$paging') {
+					_.defaults(args, defaultArgs.pagingArgs);
+					return;
+				}
 
-				_.forEach(args.$default, (argName) => {
-					// handle paging args
-					if (argName === '$paging') {
-						_.defaults(args, defaultArgs.pagingArgs);
-						return;
+				// handle order args
+				if (argName === '$order') {
+					_.defaults(args, defaultArgs.orderArgs);
+					return;
+				}
+				if (argName === '$sort') {
+					_.defaults(args, defaultArgs.sortArgs);
+					return;
+				}
+
+				if (!type || !typeFields) return;
+
+				const isRequired = argName.includes('!');
+				argName = argName.replace('!', '');
+
+				if (argName in args) return;
+				if (!(argName in typeFields)) return;
+
+				let field = typeFields[argName];
+				if (typeof field === 'string') {
+					if (isRequired) {
+						// add required if not there
+						if (!field.includes('!')) {
+							field += '!';
+						}
 					}
-
-					// handle order args
-					if (argName === '$order') {
-						_.defaults(args, defaultArgs.orderArgs);
-						return;
+					else {
+						// remove required
+						field = field.replace(/!$/, '');
 					}
+				}
+				else {
+					field = _.clone(field);
 
-					const isRequired = argName.includes('!');
-					argName = argName.replace('!', '');
-
-
-					if (argName in args) return;
-					if (!(argName in typeFields)) return;
-
-					let field = typeFields[argName];
-					if (typeof field === 'string') {
+					// remove required
+					if (typeof field.type === 'string') {
 						if (isRequired) {
 							// add required if not there
-							if (!field.includes('!')) {
-								field += '!';
+							if (!field.type.includes('!')) {
+								field.type += '!';
 							}
 						}
 						else {
 							// remove required
-							field = field.replace(/!$/, '');
+							field.type = field.type.replace(/!$/, '');
 						}
 					}
-					else {
-						field = _.clone(field);
+				}
 
-						// remove required
-						if (typeof field.type === 'string') {
-							if (isRequired) {
-								// add required if not there
-								if (!field.type.includes('!')) {
-									field.type += '!';
-								}
-							}
-							else {
-								// remove required
-								field.type = field.type.replace(/!$/, '');
-							}
-						}
-					}
-
-					args[argName] = field;
-				});
-			}
+				args[argName] = field;
+			});
 
 			delete args.$default;
 		}
@@ -667,11 +692,13 @@ class Schema {
 	}
 
 	parseGraphqlEnum(schema, schemaItem) {
+		const values = this.parseGraphqlEnumValues(schema, schemaItem.values);
 		schemaItem._graphql = new GraphQLEnumType({
 			name: schemaItem.name,
 			description: schemaItem.description,
-			values: this.parseGraphqlEnumValues(schema, schemaItem.values),
+			values,
 		});
+		return _.mapValues(values, (v, name) => new GqlEnum(name));
 	}
 
 	parseGraphqlInterface(schema, schemaItem) {
@@ -698,18 +725,6 @@ class Schema {
 		const isTypeOf = this.resolvers[type.name] &&
 			this.resolvers[type.name].__isTypeOf;
 		let interfaces = type.interface || type.interfaces || type.implements;
-		const defaultFields = {};
-
-		if (interfaces) {
-			interfaces = _.castArray(interfaces);
-			interfaces
-				.map(name => schema.interfaces[name] && schema.interfaces[name].fields)
-				.filter(Boolean)
-				.forEach((interfaceFields) => {
-					// Assuming interfaces don't have conflicting fields
-					Object.assign(defaultFields, interfaceFields);
-				});
-		}
 
 		const graphqlType = {
 			name: type.name,
@@ -717,10 +732,9 @@ class Schema {
 			fields: () => {
 				const fields = this.parseGraphqlFields(
 					schema,
-					_.mergeWith(defaultFields, type.fields, mergeFields),
+					getMergedTypeFieldsWithInterfaces(schema, type),
 					type.name
 				);
-
 
 				if (_.isEmpty(fields)) {
 					return {
@@ -738,6 +752,7 @@ class Schema {
 		};
 
 		if (interfaces) {
+			interfaces = _.castArray(interfaces);
 			graphqlType.interfaces = () => this.parseTypes(schema, interfaces);
 		}
 
@@ -759,11 +774,11 @@ class Schema {
 	parseGraphqlFragment(schema, fragment) {
 		const type = this.getTypeName(fragment.type);
 		if (!schema.types[type]) throw new Error(`Type for fragment does not exist, ${type}`);
-		return {
+		return new GqlFragment({
 			name: fragment.name,
 			type,
 			fields: this.parseFragmentFields(fragment.fields),
-		};
+		});
 	}
 
 	parseGraphqlScalars(schema, scalars) {
@@ -771,7 +786,11 @@ class Schema {
 	}
 
 	parseGraphqlEnums(schema, enums) {
-		_.forEach(enums, schemaItem => this.parseGraphqlEnum(schema, schemaItem));
+		const gqlEnumMap = {};
+		_.forEach(enums, (schemaItem) => {
+			gqlEnumMap[schemaItem.name] = this.parseGraphqlEnum(schema, schemaItem);
+		});
+		return gqlEnumMap;
 	}
 
 	parseGraphqlInterfaces(schema, interfaces) {
@@ -804,11 +823,12 @@ class Schema {
 		this.collectGraphqlTypeInSchema(schema, 'fragments');
 
 		this.parseGraphqlScalars(schema, schema.scalars);
-		this.parseGraphqlEnums(schema, schema.enums);
+		const enums = this.parseGraphqlEnums(schema, schema.enums);
 		this.parseGraphqlInterfaces(schema, schema.interfaces);
 		this.parseGraphqlInputTypes(schema, schema.inputTypes);
 		this.parseGraphqlTypes(schema, schema.types);
 		this.parseGraphqlUnions(schema, schema.unions);
+		const fragments = this.parseGraphqlFragments(schema, schema.fragments);
 
 		const graphqlSchema = new GraphQLSchema({
 			query: schema.types.Query._graphql,
@@ -816,7 +836,11 @@ class Schema {
 			subscription: schema.types.Subscription._graphql,
 		});
 
-		graphqlSchema._fragments = this.parseGraphqlFragments(schema, schema.fragments);
+		graphqlSchema._data = {
+			fragments,
+			enums,
+		};
+
 		if (this.options.resolverValidationOptions) {
 			assertResolveFunctionsPresent(graphqlSchema, this.options.resolverValidationOptions);
 		}

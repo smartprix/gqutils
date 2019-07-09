@@ -33,7 +33,7 @@ function makeSchemaFromObjects(schemas, resolvers, opts = {}) {
 		schema: graphqlSchemas,
 		defaultSchema: graphqlSchemas[defaultSchemaName],
 		pubsub,
-		fragments: _.mapValues(graphqlSchemas, schema => schema._fragments),
+		data: _.mapValues(graphqlSchemas, schema => schema._data),
 	};
 }
 

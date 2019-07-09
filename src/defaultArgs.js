@@ -30,7 +30,19 @@ const orderArgs = {
 	},
 };
 
+const sortArgs = {
+	sort: {
+		type: 'String',
+		description: 'Property by which the list should be sorted',
+	},
+	order: {
+		type: 'String',
+		description: 'Which direction the list should be ordered by (ASC or DESC)',
+	},
+};
+
 export default {
 	pagingArgs,
 	orderArgs,
+	sortArgs,
 };

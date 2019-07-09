@@ -3,6 +3,7 @@ import _ from 'lodash';
 import {File} from 'sm-utils';
 
 async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', outputPath, schema, options = {}} = {}) {
+	/** @type {import('graphql-schema-typescript').generateTypeScriptTypes} */
 	let generateTypeScriptTypes;
 	try {
 		// This is done this way so that those who don't need the cli don't need to install typescript
@@ -12,17 +13,26 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 	catch (err) {
 		throw new Error('You need to install \'typescript\' as a dependency');
 	}
-
 	const folder = outputPath || `${process.cwd()}/typings/graphql`;
 
 	schema = _.castArray(schema);
 
-	const getTypeStringForFragments = (fragments, schemaName) => `\
+	const getTypeStringForCustomAdditions = ({fragments, enums}, schemaName) => `\
 
+
+import {GqlEnum, GqlFragment} from 'gqutils';
 
 declare global {
 	namespace GraphQl.${schemaName} {
-		type fragments = '${Object.keys(fragments).join("' | '")}';
+		type fragments = {
+			${Object.keys(fragments).map(fragmentName => `${fragmentName}: GqlFragment;`).join('\n\t\t\t')}
+		};
+
+		type enums = {
+			${_.map(Object.entries(enums),
+		([enumName, values]) => `${enumName}: { ${Object.keys(values).map(key => `${key}: GqlEnum;`).join(' ')} }`
+	).join(';\n\t\t\t')}
+		};
 	}
 }
 `;
@@ -38,7 +48,7 @@ declare global {
 			// asyncResult: true
 		};
 		const graphqlSchema = graphqlSchemas[schemaName];
-		const fragments = graphqlSchema._fragments;
+		const {fragments, enums} = graphqlSchema._data || {};
 
 		const typesFile = new File(path.join(folder, `${schemaName}.d.ts`));
 
@@ -51,9 +61,9 @@ declare global {
 			}),
 		);
 
-		if (_.isEmpty(fragments)) return;
+		if (_.isEmpty(fragments) && _.isEmpty(enums)) return;
 
-		await typesFile.append(getTypeStringForFragments(fragments, schemaName));
+		await typesFile.append(getTypeStringForCustomAdditions({fragments, enums}, schemaName));
 	}));
 }
 
