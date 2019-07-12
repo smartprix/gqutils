@@ -361,7 +361,7 @@ declare module 'gqutils' {
 
 	interface execOptions {
 		context?: any;
-		cache?: {key: string, ttl: number};
+		cache?: {key: string, ttl?: number, forceUpdate?: boolean};
 		variables?: {[key: string]: any};
 		schemaName?: string;
 		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};

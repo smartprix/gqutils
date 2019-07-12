@@ -190,11 +190,11 @@ class Gql {
 
 	async exec(query, {
 		context,
-		cache: {key: cacheKey, ttl = ONE_DAY} = {},
+		cache: {key: cacheKey, ttl = ONE_DAY, forceUpdate = false} = {},
 		variables = {},
 		requestOptions = {},
 	} = {}) {
-		if (cacheKey && this._cache) {
+		if (cacheKey && this._cache && !forceUpdate) {
 			const cached = await this._cache.get(cacheKey);
 			if (cached !== undefined) return cached;
 		}
