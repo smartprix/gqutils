@@ -59,6 +59,33 @@ function getMergedTypeFieldsWithInterfaces(schema, type) {
 	return _.mergeWith(defaultFields, type.fields, mergeFields);
 }
 
+function collectSingleInterfaceDependencies(schema, interfaceName) {
+	const dependencies = [];
+	const processQueue = [interfaceName];
+
+	while (processQueue.length) {
+		const top = processQueue.shift();
+		const _interface = schema.interfaces[top];
+
+		if (_interface === undefined) throw new Error(`Interface "${top}" is not defined`);
+		if (dependencies.includes(top)) throw new Error(`Cyclic dependency in interface "${interfaceName}"`);
+
+		dependencies.push(top);
+		processQueue.push(...(_interface.extends || []));
+	}
+
+	return dependencies;
+}
+
+function collectInterfaceDependencies(schema, interfaces) {
+	const dependencies = [];
+	interfaces = _.castArray(interfaces);
+	interfaces.forEach((name) => {
+		dependencies.push(...collectSingleInterfaceDependencies(schema, name));
+	});
+	return _.uniq(dependencies);
+}
+
 
 class Schema {
 	constructor(schema, resolvers, options = {}) {
@@ -705,10 +732,18 @@ class Schema {
 		const resolveType = this.resolvers[schemaItem.name] &&
 			this.resolvers[schemaItem.name].__resolveType;
 
+		const dependencies = collectSingleInterfaceDependencies(schema, schemaItem.name);
+
+		const fields = {};
+		for (let i = dependencies.length - 1; i >= 0; i--) {
+			const _interface = schema.interfaces[dependencies[i]];
+			Object.assign(fields, _interface.fields);
+		}
+
 		schemaItem._graphql = new GraphQLInterfaceType({
 			name: schemaItem.name,
 			description: schemaItem.description,
-			fields: () => this.parseGraphqlFields(schema, schemaItem.fields, schemaItem.name),
+			fields: () => this.parseGraphqlFields(schema, fields, schemaItem.name),
 			resolveType: resolveType || schemaItem.resolveType,
 		});
 	}
@@ -725,6 +760,14 @@ class Schema {
 		const isTypeOf = this.resolvers[type.name] &&
 			this.resolvers[type.name].__isTypeOf;
 		let interfaces = type.interface || type.interfaces || type.implements;
+		if (interfaces) {
+			interfaces = collectInterfaceDependencies(schema, interfaces);
+
+			/** To be used in @method getMergedTypeFieldsWithInterfaces */
+			type.interfaces = interfaces;
+			delete type.interface;
+			delete type.implements;
+		}
 
 		const graphqlType = {
 			name: type.name,
@@ -752,7 +795,6 @@ class Schema {
 		};
 
 		if (interfaces) {
-			interfaces = _.castArray(interfaces);
 			graphqlType.interfaces = () => this.parseTypes(schema, interfaces);
 		}
 
