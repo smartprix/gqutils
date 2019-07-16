@@ -585,6 +585,13 @@ const Vehicle = {
 	// if schema is not given, it won't be available in any schema
 	schema: ['admin', 'public'],
 
+	// extends (optional): extend other interfaces(s)
+	// Fields of other interfaces will be merged in this interface.
+	// (To expose all common fields in graphql api)
+	// If some interface(s) do(es) not belong to the currently used schema
+	// then that interface(s) will be ignored.
+	extends: ['Transport'],
+
 	// fields (required): fields of the interface
 	// see Fields definition for more details
 	fields: {
