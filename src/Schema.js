@@ -740,6 +740,10 @@ class Schema {
 		const dependencies = this.collectSingleInterfaceDependencies(schema, schemaItem.name);
 
 		const fields = {};
+
+		// Reverse iteration is done to merge fields according to hierarchy
+		// For ex. if B extends A then to get B's fields, merge B's fields into A's not the other way.
+		// Hence overrided fields will not be affected
 		for (let i = dependencies.length - 1; i >= 0; i--) {
 			const _interface = schema.interfaces[dependencies[i]];
 			Object.assign(fields, _interface.fields);
