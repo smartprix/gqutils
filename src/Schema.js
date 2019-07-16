@@ -69,6 +69,7 @@ function collectDependenciesUtil(schema, allInterfaces, interfaceName, state = {
 	const _interface = schema.interfaces[interfaceName];
 
 	if (_interface === undefined) {
+		// Ignore interface if it is defined in other schema
 		if (allInterfaces.includes(interfaceName)) return [];
 		throw new Error(`Interface "${interfaceName}" is not defined`);
 	}
