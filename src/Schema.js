@@ -59,6 +59,29 @@ function getMergedTypeFieldsWithInterfaces(schema, type) {
 	return _.mergeWith(defaultFields, type.fields, mergeFields);
 }
 
+function collectDependenciesUtil(schema, allInterfaces, interfaceName, processing = {}) {
+	if (processing[interfaceName]) throw new Error(`Cyclic dependencies at interface "${interfaceName}"`);
+
+	const dependencies = [];
+	const _interface = schema.interfaces[interfaceName];
+
+	if (_interface === undefined) {
+		if (allInterfaces.includes(interfaceName)) return [];
+		throw new Error(`Interface "${interfaceName}" is not defined`);
+	}
+
+	dependencies.push(interfaceName);
+
+	processing[interfaceName] = true;
+
+	_.forEach(_interface.extends, (name) => {
+		dependencies.push(...collectDependenciesUtil(schema, allInterfaces, name, processing));
+	});
+
+	delete processing[interfaceName];
+	return _.uniq(dependencies);
+}
+
 class Schema {
 	constructor(schema, resolvers, options = {}) {
 		if (!schema) {
@@ -436,24 +459,7 @@ class Schema {
 		let allInterfaces = this.schemas[this.defaultSchemaName].interfaces;
 		allInterfaces = _.map(allInterfaces, i => i.name);
 
-		const dependencies = [];
-		const processQueue = [interfaceName];
-
-		while (processQueue.length) {
-			const top = processQueue.shift();
-			const _interface = schema.interfaces[top];
-
-			if (_interface === undefined) {
-				if (allInterfaces.includes(top)) continue;
-				throw new Error(`Interface "${top}" is not defined`);
-			}
-			if (dependencies.includes(top)) throw new Error(`Cyclic dependency in interface "${interfaceName}"`);
-
-			dependencies.push(top);
-			processQueue.push(...(_interface.extends || []));
-		}
-
-		return dependencies;
+		return collectDependenciesUtil(schema, allInterfaces, interfaceName);
 	}
 
 	collectInterfaceDependencies(schema, interfaces) {
