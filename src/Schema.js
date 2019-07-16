@@ -444,8 +444,8 @@ class Schema {
 			const _interface = schema.interfaces[top];
 
 			if (_interface === undefined) {
-				if (interfaces.includes(_interface)) continue;
-				throw new Error(`Interface ${_interface} is not defined`);
+				if (interfaces.includes(top)) continue;
+				throw new Error(`Interface "${top}" is not defined`);
 			}
 			if (dependencies.includes(top)) throw new Error(`Cyclic dependency in interface "${interfaceName}"`);
 
