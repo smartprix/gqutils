@@ -433,8 +433,8 @@ class Schema {
 	}
 
 	collectSingleInterfaceDependencies(schema, interfaceName) {
-		let interfaces = this.schemas[this.defaultSchemaName].interfaces;
-		interfaces = interfaces.map(i => i.name);
+		let allInterfaces = this.schemas[this.defaultSchemaName].interfaces;
+		allInterfaces = _.map(allInterfaces, i => i.name);
 
 		const dependencies = [];
 		const processQueue = [interfaceName];
@@ -444,7 +444,7 @@ class Schema {
 			const _interface = schema.interfaces[top];
 
 			if (_interface === undefined) {
-				if (interfaces.includes(top)) continue;
+				if (allInterfaces.includes(top)) continue;
 				throw new Error(`Interface "${top}" is not defined`);
 			}
 			if (dependencies.includes(top)) throw new Error(`Cyclic dependency in interface "${interfaceName}"`);
