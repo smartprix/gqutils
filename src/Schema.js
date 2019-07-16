@@ -59,8 +59,11 @@ function getMergedTypeFieldsWithInterfaces(schema, type) {
 	return _.mergeWith(defaultFields, type.fields, mergeFields);
 }
 
-function collectDependenciesUtil(schema, allInterfaces, interfaceName, processing = {}) {
-	if (processing[interfaceName]) throw new Error(`Cyclic dependencies at interface "${interfaceName}"`);
+function collectDependenciesUtil(schema, allInterfaces, interfaceName, state = {}) {
+	// Already Processing
+	if (state[interfaceName] === 1) throw new Error(`Cyclic dependencies at interface "${interfaceName}"`);
+	// Already Processed
+	else if (state[interfaceName] === 2) return [];
 
 	const dependencies = [];
 	const _interface = schema.interfaces[interfaceName];
@@ -72,14 +75,14 @@ function collectDependenciesUtil(schema, allInterfaces, interfaceName, processin
 
 	dependencies.push(interfaceName);
 
-	processing[interfaceName] = true;
+	state[interfaceName] = 1; // Processing
 
 	_.forEach(_interface.extends, (name) => {
-		dependencies.push(...collectDependenciesUtil(schema, allInterfaces, name, processing));
+		dependencies.push(...collectDependenciesUtil(schema, allInterfaces, name, state));
 	});
 
-	delete processing[interfaceName];
-	return _.uniq(dependencies);
+	state[interfaceName] = 2; // Processed
+	return dependencies;
 }
 
 class Schema {
