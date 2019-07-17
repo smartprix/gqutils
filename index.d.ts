@@ -131,9 +131,11 @@ declare module 'gqutils' {
 
 	interface GQUtilsInterfaceSchema extends GQUtilsBaseSchema {
 		graphql: 'interface';
-		/**
-		 * fields of the interface
-		 */
+
+		/** Extend other interface(s) */
+		extends?: string[];
+
+		/** fields of the interface */
 		fields: GQUtilsFields;
 
 		/** resolveType (optional): function for determining which type is actually used when the value is resolved */
