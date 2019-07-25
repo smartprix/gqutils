@@ -1,7 +1,15 @@
+<a href="https://www.npmjs.com/package/gqutils"><img src="https://img.shields.io/npm/v/gqutils.svg" alt="Version"></a>
+<a href="https://www.npmjs.com/package/gqutils"><img src="https://img.shields.io/npm/dm/gqutils.svg" alt="Downloads"></a>
+<a href="https://www.npmjs.com/package/gqutils"><img src="https://img.shields.io/npm/l/gqutils.svg" alt="License"></a>
+<a href="https://david-dm.org/smartprix/gqutils"><img src="https://david-dm.org/smartprix/gqutils/status.svg" alt="Dependencies"></a>
+<a href="https://david-dm.org/smartprix/gqutils?type=dev"><img src="https://david-dm.org/smartprix/gqutils/dev-status.svg" alt="Dev Dependencies"></a>
+
 # gqutils
+
 Utilities for GraphQL
 
-### Extra Types
+## Extra Types
+
 * `Int`
 * `Float`
 * `String`
@@ -18,8 +26,11 @@ Utilities for GraphQL
 * `JSONObject`: A valid JSON object (arrays and other json values are invalid), most of the times you'd want to use `JSONObject` instead of `JSON`
 
 ## Functions
+
 ### `makeSchemaFromModules(modules, opts)`
+
 Create a graphQL schema from various modules. If the module is a folder, it'll automatically require it.
+
 ```js
 const modules = [
 	'employee/Employee',
@@ -41,9 +52,11 @@ This function returns `{schemas, pubsub}`, you can ignore pubsub if you're not u
 Each module can either export `{schema, resolvers}` or the `{schema}` can contain resolvers in itself.
 
 #### Concept of Schemas
+
 `makeSchemasFromModules`, returns multiple graphql schemas. You have to list all possible schema names in the `schema` option. Each graphql schema will only contain the types/queries/mutations etc, that have listed that schema name in their `schema` option.
 
 To be included in a particular schema, the following must be true:
+
 * The schema name is defined in the `schema` option
 * The schema name is also defined in the parent's `schema` option
 
@@ -54,6 +67,7 @@ In case of fields, args & values, if you haven't defined `schema` option, it'll 
 Regardless of the schema option, a default schema named `default` contains all the types/fields.
 
 ### Example Schema
+
 ```js
 const Employee = {
 	graphql: 'type',
@@ -185,8 +199,6 @@ export {
 };
 ```
 
-
-
 ### `makeSchemaFromDirectory(directory, opts = {})`
 
 Create a graphQL schema from a directory. It'll automatically require all the schemas & resolvers from inside the directory and create a schema using that.
@@ -201,7 +213,7 @@ exports.schema =
 Object.defineProperty(exports, "schema",
 ```
 
-##### Example
+#### Example
 
 ```js
 const {schemas} = makeSchemaFromDirectory(`${__dirname}/lib`, {
@@ -212,8 +224,6 @@ const {schemas} = makeSchemaFromDirectory(`${__dirname}/lib`, {
 
 // schemas will be {default: GraphqlSchema, admin: GraphqlSchema, public: GraphqlSchema}
 ```
-
-
 
 ### `makeSchemaFromConfig(opts = {})`
 
@@ -246,6 +256,7 @@ The Gql class provides a way to execute the schema and to construct queries.
 There are two ways you can use Gql to get an executable schema:
 
 #### Config:
+
 ```js
 const gql = new Gql({
 	config: {
@@ -255,6 +266,7 @@ const gql = new Gql({
 	},
 });
 ```
+
 Provide the same options you would provide to [makeSchemaFromConfig](#makeschemafromconfigopts--) under the config field in the constructor options.
 
 Select the schema you want to execute against using the schemaName option (default is the `default` schema)
@@ -322,6 +334,7 @@ query {
 ```
 
 These all give us the query:
+
 ```graphql
 query {
 	employee(name: "admin") {
@@ -344,6 +357,7 @@ query {
 ```
 
 This gives us the query:
+
 ```graphql
 query {
 	employee(type: MANAGER) {
@@ -384,6 +398,7 @@ query {
 ```
 
 This will give us the query:
+
 ```graphql
 query {
 	employee(name: "admin") {
@@ -451,6 +466,7 @@ async function getEmployeeByName(name) {
 ## Language Reference
 
 graphql option reference
+
 * `type`: for object type
 * `input`: for input object type
 * `union`: for union
@@ -465,7 +481,9 @@ graphql option reference
 These are available in the type definitions, so can be imported as 'GQUtilsSchema' and type checked.
 
 ### Types
+
 Defined with `graphql: type`
+
 ```js
 const Employee = {
 	// graphql = type means it's a graphql type
@@ -563,11 +581,13 @@ const User = {
 ```
 
 ### Interface
+
 Defined with `graphql: interface`
 
 Interfaces in `gqutils` work more like `extends`, i.e. any `type` that implements an interface automatically has the fields of that interface.
 
 This can be used to have a set of default fields. (Along with default resolver implementations)
+
 ```js
 const Vehicle = {
 	// graphql = interface means it's a graphql iterface
@@ -613,7 +633,9 @@ const Vehicle = {
 ```
 
 ### Enum
+
 Defined with `graphql: enum`
+
 ```js
 const Color = {
 	// graphql = enum means it's a graphql enum
@@ -663,9 +685,11 @@ const Color = {
 ```
 
 ### Scalar
+
 Defined with `graphql: scalar`
 
 You need to give either `resolve` or `serialize, parseValue, parseLiteral`
+
 ```js
 const URL = {
 	// graphql = scalar means it's a graphql scalar
@@ -699,9 +723,11 @@ const URL = {
 ```
 
 ### Query / Mutation / Subscription
+
 * Defined as `graphql: query` => for Query
 * Defined as `graphql: mutation` => for Mutation
 * Defined as `graphql: subscription` => for Subscription
+
 ```js
 const getEmployees = {
 	// graphql = query means it's a graphql query
@@ -737,6 +763,7 @@ const getEmployees = {
 ```
 
 ### Fields / Args
+
 ```js
 const Employee = {
 	graphql: 'type',
@@ -835,9 +862,11 @@ const EmployeeFragment = {
 ```
 
 ### `getConnectionResolver(query, args, options = {})`
+
 Given a query (xorm query) and its arguments, it'll automatically generate a resolver for a relay connection.
 
 options can be `{resolvers: { fields }}` if you want to override default resolvers or specify any extra resolver.
+
 ```js
 async function getEmployees(root, args) {
 	const query = Employee.query();
@@ -866,6 +895,7 @@ async function getReviews(root, args) {
 ```
 
 ### `formatError`
+
 Use this function to format the errors sent to the client, so that you can display them in a user friendly way.
 
 It'll add `fields` to each error, which you can use to display errors on front end.
@@ -886,6 +916,7 @@ Using https://github.com/dangcuuson/graphql-schema-typescript#readme to generate
 Pass the generated schema to `generateTypesFromSchema` and it will output type definitions in 'typings/graphql' folder.
 
 Or use the cli after creating gqutils config or adding to package.json
+
 ### CLI
 
 ```sh
