@@ -681,7 +681,7 @@ class Schema {
 			return str;
 		}).join('\n');
 
-		return `${fieldsString}`;
+		return fieldsString;
 	}
 
 	parseGraphqlEnumValue(schema, value, name) {

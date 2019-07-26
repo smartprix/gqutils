@@ -229,11 +229,11 @@ declare module 'gqutils' {
 		resolverValidationOptions?: IResolverValidationOptions;
 	}
 
-	type GQUtilsFragment = {
+	interface GQUtilsFragment {
 		name: string;
 		type: string;
 		fields: string;
-	};
+	}
 
 	type GQUtilsData = {
 		fragments: {[fragmentName: string]: GqlFragment};
@@ -338,7 +338,7 @@ declare module 'gqutils' {
 	class Schema {
 		constructor(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions)
 
-		static parseFragmentFields(fields: fragmentField)
+		static parseFragmentFields(fields: fragmentField): string;
 
 		parseGraphqlSchemas(): schemaMap;
 		parseGraphqlSchema(schema: string): GraphQLSchema;
@@ -376,14 +376,18 @@ declare module 'gqutils' {
 		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
 	}
 
-	class GqlEnum<V = undefined> {
+	class GqlEnum<V = any> {
 		constructor(name: string, val?: V);
-		getValue(): V;
+		value: Readonly<V>;
+		name: Readonly<string>;
 		toString(): string;
 	}
 
-	class GqlFragment {
+	class GqlFragment implements GQUtilsFragment {
 		constructor(fragment: GQUtilsFragment);
+		name: Readonly<string>;
+		type: Readonly<string>;
+		fields: Readonly<string>;
 		toString(): string;
 		getName(): string;
 		getDefinition(): string;

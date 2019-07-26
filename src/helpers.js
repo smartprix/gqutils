@@ -131,20 +131,25 @@ function formatError(error) {
 class GqlEnum {
 	constructor(name, val) {
 		this.name = name;
-		this.val = val;
+		this.value = val;
 	}
-
-	getValue() { return this.val }
 
 	toString() { return this.name }
 }
 
 class GqlFragment {
-	constructor(fragment) { this.val = fragment }
-	toString() { return `... ${this.val.name}` }
-	getName() { return this.val.name }
+	constructor(fragment) {
+		this.name = fragment.name;
+		this.type = fragment.type;
+		this.fields = fragment.fields;
+	}
+
+	toString() { return `... ${this.name}` }
+
+	getName() { return this.name }
+
 	getDefinition() {
-		return `fragment ${this.val.name} on ${this.val.type} { ${this.val.fields} } `;
+		return `fragment ${this.name} on ${this.type} { ${this.fields} } `;
 	}
 }
 
