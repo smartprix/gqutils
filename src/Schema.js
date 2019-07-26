@@ -664,7 +664,7 @@ class Schema {
 		return parsedFields;
 	}
 
-	parseFragmentFields(fields) {
+	static parseFragmentFields(fields) {
 		const fieldsString = _.castArray(fields).map((field) => {
 			if (typeof field === 'string') return field;
 			let str = '';
@@ -839,7 +839,7 @@ class Schema {
 		return new GqlFragment({
 			name: fragment.name,
 			type,
-			fields: this.parseFragmentFields(fragment.fields),
+			fields: Schema.parseFragmentFields(fragment.fields),
 		});
 	}
 

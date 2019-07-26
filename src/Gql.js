@@ -9,6 +9,7 @@ import {
 	GqlFragment,
 } from './helpers';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
+import {Schema} from './Schema';
 
 const ONE_DAY = 24 * 3600 * 1000;
 
@@ -233,6 +234,13 @@ class Gql {
 		return new GqlEnum(name, val);
 	}
 
+	static fragment(schema) {
+		return new GqlFragment({
+			name: schema.name,
+			type: schema.type,
+			fields: Schema.parseFragmentFields(schema.fields),
+		});
+	}
 
 	enum(name, val) {
 		return this.constructor.enum(name, val);
@@ -251,6 +259,10 @@ class Gql {
 
 	get fragments() {
 		return this._fragments;
+	}
+
+	setFragments(map) {
+		this._fragments = map;
 	}
 
 	static toGqlArg = toGqlArg;

@@ -338,6 +338,8 @@ declare module 'gqutils' {
 	class Schema {
 		constructor(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions)
 
+		static parseFragmentFields(fields: fragmentField)
+
 		parseGraphqlSchemas(): schemaMap;
 		parseGraphqlSchema(schema: string): GraphQLSchema;
 	}
@@ -399,6 +401,7 @@ declare module 'gqutils' {
 		static fromSchemas(opts: schemaConfigInput & gqlSchemas & _cacheOpts): Gql;
 
 		static enum<V extends any>(name: string, value?: V): GqlEnum<V>;
+		static fragment(fragment:  Pick<GQUtilsFragmentSchema, 'name' | 'fields' | 'type'>): GqlFragment;
 		static tag(strings: TemplateStringsArray, ...args: any[]): string;
 		static toGqlArg: typeof toGqlArg;
 
@@ -418,6 +421,10 @@ declare module 'gqutils' {
 		 * This automatically picks up the fragment from the generated schema
 		 */
 		fragment(fragmentName: keyof FragmentsMap): GqlFragment;
+		/**
+		 * Use with care, this is only provided
+		 */
+		setFragments<M extends FragmentsMap>(map: M): void;
 		/**
 		 * **NOTE:** Does not work if api options are passed
 		 */
