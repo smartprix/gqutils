@@ -765,6 +765,7 @@ class Schema {
 			fields: () => this.parseGraphqlFields(schema, fields, schemaItem.name),
 			resolveType: resolveType || schemaItem.resolveType,
 		});
+		return dependencies;
 	}
 
 	parseGraphqlInputType(schema, inputType) {
@@ -855,7 +856,7 @@ class Schema {
 	}
 
 	parseGraphqlInterfaces(schema, interfaces) {
-		_.forEach(interfaces, schemaItem => this.parseGraphqlInterface(schema, schemaItem));
+		return _.mapValues(interfaces, schemaItem => this.parseGraphqlInterface(schema, schemaItem));
 	}
 
 	parseGraphqlInputTypes(schema, inputTypes) {
@@ -885,7 +886,7 @@ class Schema {
 
 		this.parseGraphqlScalars(schema, schema.scalars);
 		const enums = this.parseGraphqlEnums(schema, schema.enums);
-		this.parseGraphqlInterfaces(schema, schema.interfaces);
+		const interfaces = this.parseGraphqlInterfaces(schema, schema.interfaces);
 		this.parseGraphqlInputTypes(schema, schema.inputTypes);
 		this.parseGraphqlTypes(schema, schema.types);
 		this.parseGraphqlUnions(schema, schema.unions);
@@ -898,8 +899,9 @@ class Schema {
 		});
 
 		graphqlSchema._data = {
-			fragments,
 			enums,
+			fragments,
+			interfaces,
 		};
 
 		if (this.options.resolverValidationOptions) {

@@ -87,7 +87,7 @@ declare module 'gqutils' {
 		})
 	}
 
-	interface GQUtilsTypeSchema extends GQUtilsBaseSchema {
+	interface GQUtilsTypeSchema<I = string> extends GQUtilsBaseSchema {
 		graphql: 'type';
 		/**
 		 * (default=false): generate a relay connection type automatically
@@ -106,7 +106,7 @@ declare module 'gqutils' {
 		/**
 		 * interfaces this type implements
 		 */
-		interfaces?: string[];
+		interfaces?: I[];
 		/**
 		 * fields of the type
 		 */
@@ -129,11 +129,11 @@ declare module 'gqutils' {
 		resolveType?: (value: any, info: any) => string;
 	}
 
-	interface GQUtilsInterfaceSchema extends GQUtilsBaseSchema {
+	interface GQUtilsInterfaceSchema<I = string> extends GQUtilsBaseSchema {
 		graphql: 'interface';
 
 		/** Extend other interface(s) */
-		extends?: string[];
+		extends?: I[];
 
 		/** fields of the interface */
 		fields: GQUtilsFields;
@@ -217,7 +217,7 @@ declare module 'gqutils' {
 		fields: fragmentField;
 	}
 
-	type GQUtilsSchema = GQUtilsTypeSchema | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsScalarSchemaAlternate | GQUtilsQuerySchema | GQUtilsFragmentSchema;
+	type GQUtilsSchema<I = string> = GQUtilsTypeSchema<I> | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema<I> | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsScalarSchemaAlternate | GQUtilsQuerySchema | GQUtilsFragmentSchema;
 
 	interface commonOptions {
 		/** default is `default` */
