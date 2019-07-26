@@ -35,7 +35,7 @@ declare global {
 			Object
 				.keys(values)
 				.map((key) => {
-					const val = _.get(values, key + '.val.value', notFound);
+					const val = _.get(values, key + '.value.value', notFound);
 					const type = val === notFound ? 'any' : typeof val;
 
 					return `${key}: GqlEnum<${type}>;`;
