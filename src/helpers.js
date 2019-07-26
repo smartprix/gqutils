@@ -129,7 +129,13 @@ function formatError(error) {
 }
 
 class GqlEnum {
-	constructor(name) { this.name = name }
+	constructor(name, val) {
+		this.name = name;
+		this.val = val;
+	}
+
+	getValue() { return this.val }
+
 	toString() { return this.name }
 }
 

@@ -740,7 +740,7 @@ class Schema {
 			description: schemaItem.description,
 			values,
 		});
-		return _.mapValues(values, (v, name) => new GqlEnum(name));
+		return _.mapValues(values, (val, name) => new GqlEnum(name, val));
 	}
 
 	parseGraphqlInterface(schema, schemaItem) {

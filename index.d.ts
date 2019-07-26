@@ -369,8 +369,9 @@ declare module 'gqutils' {
 		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
 	}
 
-	class GqlEnum {
-		constructor(val: string);
+	class GqlEnum<V = undefined> {
+		constructor(name: string, val?: V);
+		getValue(): V;
 		toString(): string;
 	}
 
@@ -385,7 +386,7 @@ declare module 'gqutils' {
 		cache?: Cache;
 	}
 
-	class Gql<FragmentsMap = {[key: string]: any}, EnumsMap = any> {
+	class Gql<FragmentsMap = {[key: string]: GqlFragment}, EnumsMap = {[key: string]: GqlEnum}> {
 		/** Provide either one of `api`, `config` or `schemas` */
 		constructor(opts: _cacheOpts & {
 			api?: apiInput;
@@ -397,7 +398,7 @@ declare module 'gqutils' {
 		static fromConfig(opts: schemaConfigInput & commonOptions & _cacheOpts): Gql;
 		static fromSchemas(opts: schemaConfigInput & gqlSchemas & _cacheOpts): Gql;
 
-		static enum(val: string): GqlEnum;
+		static enum<V extends any>(name: string, value?: V): GqlEnum<V>;
 		static tag(strings: TemplateStringsArray, ...args: any[]): string;
 		static toGqlArg: typeof toGqlArg;
 
@@ -421,7 +422,7 @@ declare module 'gqutils' {
 		 * **NOTE:** Does not work if api options are passed
 		 */
 		fragments: FragmentsMap;
-		enum(val: string): GqlEnum;
+		enum<V extends any>(name: string, val?: V): GqlEnum<V>;
 		/**
 		 * **NOTE:** Does not work if api options are passed
 		 */

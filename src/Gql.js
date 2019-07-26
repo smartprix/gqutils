@@ -229,8 +229,8 @@ class Gql {
 		return newResult;
 	}
 
-	static enum(val) {
-		return new GqlEnum(val);
+	static enum(name, val) {
+		return new GqlEnum(name, val);
 	}
 
 	enum(val) {
