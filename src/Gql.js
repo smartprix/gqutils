@@ -60,6 +60,8 @@ class Gql {
 				headers: {},
 				cookies: {},
 			});
+			this._fragments = opts.fragments;
+			this._enums = opts.enums;
 		}
 		else if (opts.config || opts.schemas) {
 			let config;
@@ -242,8 +244,11 @@ class Gql {
 		});
 	}
 
-	enum(name, val) {
-		return this.constructor.enum(name, val);
+	enum(name) {
+		if (!this._enums) throw new Error('Invalid Method: Enums not defined');
+		if (this._enums[name] === undefined) throw new Error(`[schema:${this._schemaName || ''}] Invalid enum name, ${name}`);
+
+		return this._enums[name];
 	}
 
 	get enums() {
@@ -252,17 +257,13 @@ class Gql {
 
 	fragment(name) {
 		if (!this._fragments) throw new Error('Invalid Method: Fragments not defined');
-		if (this._fragments[name] === undefined) throw new Error(`[schema:${this._schemaName}] Invalid fragment name, ${name}`);
+		if (this._fragments[name] === undefined) throw new Error(`[schema:${this._schemaName || ''}] Invalid fragment name, ${name}`);
 
 		return this._fragments[name];
 	}
 
 	get fragments() {
 		return this._fragments;
-	}
-
-	setFragments(map) {
-		this._fragments = map;
 	}
 
 	static toGqlArg = toGqlArg;

@@ -356,9 +356,14 @@ declare module 'gqutils' {
 		formatError?: (error: Error, context: any) => any;
 	}
 
+	type gqlFragmentMap = {[key: string]: GqlFragment};
+	type gqlEnumMap = {[key: string]: GqlEnum}
+
 	interface apiInput {
 		endpoint: string;
 		token?: string;
+		fragments?: gqlFragmentMap;
+		enums?: gqlEnumMap;
 		headers?: {[key: string]: string};
 		cookies?: {[key: string]: string};
 	}
@@ -388,7 +393,7 @@ declare module 'gqutils' {
 		cache?: Cache;
 	}
 
-	class Gql<FragmentsMap = {[key: string]: GqlFragment}, EnumsMap = {[key: string]: GqlEnum}> {
+	class Gql<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> {
 		/** Provide either one of `api`, `config` or `schemas` */
 		constructor(opts: _cacheOpts & {
 			api?: apiInput;
@@ -400,7 +405,14 @@ declare module 'gqutils' {
 		static fromConfig(opts: schemaConfigInput & commonOptions & _cacheOpts): Gql;
 		static fromSchemas(opts: schemaConfigInput & gqlSchemas & _cacheOpts): Gql;
 
+		/**
+		 * This just calls the constructor of GqlEnul
+		 */
 		static enum<V extends any>(name: string, value?: V): GqlEnum<V>;
+		/**
+		 * This parses the fields if they are in schema format and
+		 * then calls the constructor of GqlFragment
+		 */
 		static fragment(fragment:  Pick<GQUtilsFragmentSchema, 'name' | 'fields' | 'type'>): GqlFragment;
 		static tag(strings: TemplateStringsArray, ...args: any[]): string;
 		static toGqlArg: typeof toGqlArg;
@@ -416,22 +428,22 @@ declare module 'gqutils' {
 		getAll(query: string, opts?: execOptions): Promise<any>;
 		get(query: string, opts: execOptions): Promise<any>;
 		/**
-		 * **NOTE:** Does not work if api options are passed
+		 * **NOTE:** Does not work if fragments are not present in schema/passed in constructor
 		 *
 		 * This automatically picks up the fragment from the generated schema
 		 */
-		fragment(fragmentName: keyof FragmentsMap): GqlFragment;
+		fragment<key extends keyof FragmentsMap>(fragmentName: key): FragmentsMap[key];
 		/**
-		 * Use with care, this is only provided
-		 */
-		setFragments<M extends FragmentsMap>(map: M): void;
-		/**
-		 * **NOTE:** Does not work if api options are passed
+		 * **NOTE:** Does not work if fragments are not present in schema/passed in constructor
 		 */
 		fragments: FragmentsMap;
-		enum<V extends any>(name: string, val?: V): GqlEnum<V>;
 		/**
-		 * **NOTE:** Does not work if api options are passed
+		 * **NOTE:** Does not work if enums are not present in schema/passed in constructor
+		 * @param name
+		 */
+		enum<key extends keyof EnumsMap>(name: key): EnumsMap[key];
+		/**
+		 * **NOTE:** Does not work if enums are not present in schema/passed in constructor
 		 */
 		enums: EnumsMap;
 		tag(strings: TemplateStringsArray, ...args: any[]): string;
