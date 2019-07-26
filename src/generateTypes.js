@@ -26,11 +26,22 @@ declare global {
 
 	/** **************************** Enum Map **************************** */
 	if (!_.isEmpty(enums)) {
+		const notFound = Symbol('val not found');
 		typeString += `\
 
 		type enums = {
 			${_.map(Object.entries(enums),
-		([enumName, values]) => `${enumName}: { ${Object.keys(values).map(key => `${key}: GqlEnum;`).join(' ')} }`
+		([enumName, values]) => `${enumName}: { ${
+			Object
+				.keys(values)
+				.map((key) => {
+					const val = _.get(values, key + '.val.value', notFound);
+					const type = val === notFound ? 'any' : typeof val;
+
+					return `${key}: GqlEnum<${type}>;`;
+				})
+				.join(' ')
+		} }`
 	).join(';\n\t\t\t')}
 		};
 `;
