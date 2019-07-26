@@ -102,6 +102,53 @@ class Gql {
 		return new Gql({schemas: opts, cache: opts.cache});
 	}
 
+	static enum(name, val) {
+		return new GqlEnum(name, val);
+	}
+
+	static fragment(schema) {
+		return new GqlFragment({
+			name: schema.name,
+			type: schema.type,
+			fields: Schema.parseFragmentFields(schema.fields),
+		});
+	}
+
+	static toGqlArg = toGqlArg;
+
+	static tag(strings, ...args) {
+		let out = strings[0];
+		const fragments = {};
+		for (let i = 1; i < strings.length; i++) {
+			const arg = args[i - 1];
+			if (/(?::|\()\s*$/.test(strings[i - 1])) {
+				// arg is a graphql argument
+				out += this.toGqlArg(arg);
+			}
+			else if (arg) {
+				// arg is a graphql field
+				if (typeof arg === 'string') {
+					out += arg;
+				}
+				else if (arg instanceof GqlFragment) {
+					out += arg.toString();
+					if (fragments[arg.getName()] === undefined) {
+						fragments[arg.getName()] = arg.getDefinition();
+					}
+				}
+				else if (Array.isArray(arg)) {
+					out += arg.filter(Boolean).join(' ');
+				}
+			}
+
+			out += strings[i];
+		}
+		if (_.isEmpty(fragments)) return out;
+
+		out += `\n${Object.values(fragments).join('\n')}`;
+		return out;
+	}
+
 	getSchemas() {
 		if (this._api) throw new Error('Invalid Method');
 		return this._makeResult.schemas;
@@ -232,18 +279,6 @@ class Gql {
 		return newResult;
 	}
 
-	static enum(name, val) {
-		return new GqlEnum(name, val);
-	}
-
-	static fragment(schema) {
-		return new GqlFragment({
-			name: schema.name,
-			type: schema.type,
-			fields: Schema.parseFragmentFields(schema.fields),
-		});
-	}
-
 	enum(name) {
 		if (!this._enums) throw new Error('Invalid Method: Enums not defined');
 		if (this._enums[name] === undefined) throw new Error(`[schema:${this._schemaName || ''}] Invalid enum name, ${name}`);
@@ -266,8 +301,6 @@ class Gql {
 		return this._fragments;
 	}
 
-	static toGqlArg = toGqlArg;
-
 	toGqlArg = toGqlArg;
 
 	arg(arg, opts = {}) {
@@ -276,39 +309,6 @@ class Gql {
 		else ({pick} = opts);
 
 		return this.toGqlArg(arg, {roundBrackets: true, pick});
-	}
-
-	static tag(strings, ...args) {
-		let out = strings[0];
-		const fragments = {};
-		for (let i = 1; i < strings.length; i++) {
-			const arg = args[i - 1];
-			if (/(?::|\()\s*$/.test(strings[i - 1])) {
-				// arg is a graphql argument
-				out += this.toGqlArg(arg);
-			}
-			else if (arg) {
-				// arg is a graphql field
-				if (typeof arg === 'string') {
-					out += arg;
-				}
-				else if (arg instanceof GqlFragment) {
-					out += arg.toString();
-					if (fragments[arg.getName()] === undefined) {
-						fragments[arg.getName()] = arg.getDefinition();
-					}
-				}
-				else if (Array.isArray(arg)) {
-					out += arg.filter(Boolean).join(' ');
-				}
-			}
-
-			out += strings[i];
-		}
-		if (_.isEmpty(fragments)) return out;
-
-		out += `\n${Object.values(fragments).join('\n')}`;
-		return out;
 	}
 
 	tag(...args) {
