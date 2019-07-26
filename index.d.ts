@@ -142,7 +142,7 @@ declare module 'gqutils' {
 		resolveType?: (value: any, info: any) => string;
 	}
 
-	interface valuesType {
+	interface ValuesType {
 		[key: string]: string | number | boolean | {
 			value: any;
 			description?: string;
@@ -153,7 +153,7 @@ declare module 'gqutils' {
 
 	interface GQUtilsEnumSchema extends GQUtilsBaseSchema {
 		graphql: 'enum';
-		values: valuesType;
+		values: ValuesType;
 		/** resolveType (optional): function for determining which type is actually used when the value is resolved */
 		resolveType?: (value: any, info: any) => string;
 	}
@@ -161,7 +161,7 @@ declare module 'gqutils' {
 	interface GQUtilsScalarSchema extends GQUtilsBaseSchema {
 		/** Define either resolve or (serialize, parseValue, parseLiteral) */
 		graphql: 'scalar';
-		values: valuesType;
+		values: ValuesType;
 		/**
 		 * resolve (required/optional): Already defined graphql scalar you can resolve it with
 		 * if resolve is not given then, serialize, parseValue, parseLiteral must be given
@@ -172,7 +172,7 @@ declare module 'gqutils' {
 	interface GQUtilsScalarSchemaAlternate extends GQUtilsBaseSchema {
 		/** Define either resolve or (serialize, parseValue, parseLiteral) */
 		graphql: 'scalar';
-		values: valuesType;
+		values: ValuesType;
 
 		/** serialize (optional, default=identity function): send value to client */
 		serialize?: (value: any) => any,
@@ -198,9 +198,9 @@ declare module 'gqutils' {
 		args?: GQUtilsArgs;
 	}
 
-	type fragmentField = string | Array<string | fragmentFieldObj>
+	type fragmentField = string | Array<string | FragmentFieldObj>
 
-	interface fragmentFieldObj {
+	interface FragmentFieldObj {
 		name: string;
 		/** If you want to alias the field, like: `name: fullName` */
 		alias?: string;
@@ -219,7 +219,7 @@ declare module 'gqutils' {
 
 	type GQUtilsSchema<I = string> = GQUtilsTypeSchema<I> | GQUtilsInputSchema | GQUTilsUnionSchema | GQUtilsInterfaceSchema<I> | GQUtilsEnumSchema | GQUtilsScalarSchema | GQUtilsScalarSchemaAlternate | GQUtilsQuerySchema | GQUtilsFragmentSchema;
 
-	interface commonOptions {
+	interface CommonOptions {
 		/** default is `default` */
 		defaultSchemaName?: string;
 		schema?: string[];
@@ -240,7 +240,7 @@ declare module 'gqutils' {
 		enums: {[enumName: string]: GqlEnum};
 	};
 
-	interface gqlSchemas {
+	interface GqlSchemas {
 		schema: schemaMap;
 		schemas: schemaMap;
 		defaultSchema: GraphQLSchema;
@@ -249,7 +249,7 @@ declare module 'gqutils' {
 	}
 	type schemaMap = {[key: string]: GraphQLSchema};
 
-	type gqlConfig = commonOptions & {
+	type gqlConfig = CommonOptions & {
 		baseFolder?: string;
 		contextType?: string,
 		generateTypeOptions?: GenerateTypescriptOptions,
@@ -259,7 +259,7 @@ declare module 'gqutils' {
 	/**
 	 * @param modules if path, it is required relative to the basefolder
 	 */
-	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?: commonOptions & {baseFolder?: string;}): gqlSchemas;
+	function makeSchemaFromModules(modules: (string | {schema: any, resolvers: any})[], opts?: CommonOptions & {baseFolder?: string;}): GqlSchemas;
 	/**
 	 * make a graphql schema from a directory by reading all schema & resolvers from it
 	 * Only supports exports of type:
@@ -269,13 +269,13 @@ declare module 'gqutils' {
 	 * - exports.schema =
 	 * - Object.defineProperty(exports, "schema",
 	 */
-	function makeSchemaFromDirectory(directory: string, opts?: commonOptions): gqlSchemas;
+	function makeSchemaFromDirectory(directory: string, opts?: CommonOptions): GqlSchemas;
 	/**
 	 * If `schemaDirectory` is provided this uses `makeSchemaFromDirectory`
 	 * If `modules` then `makeSchemaFromModules`
 	 * @param opts Override default config read from config files (gqutils, sm-config, or package)
 	 */
-	function makeSchemaFromConfig(opts?: Partial<gqlConfig>): gqlSchemas;
+	function makeSchemaFromConfig(opts?: Partial<gqlConfig>): GqlSchemas;
 	/**
 	 * Get config from config files
 	 * @param opts Overwrite some options
@@ -298,7 +298,7 @@ declare module 'gqutils' {
 
 	function toGqlArg(arg: any, opts?: string[] | {pick?: string[], curlyBrackets?: boolean, roundBrackets?: boolean}): string;
 
-	interface connectionResolvers<M> {
+	interface ConnectionResolvers<M> {
 		nodes: () => Promise<M[]>,
 		edges: () => Promise<{cursor: string, node: M}[]>,
 		totalCount: () => Promise<number>,
@@ -311,7 +311,7 @@ declare module 'gqutils' {
 		}>,
 	}
 
-	interface pagingParams {
+	interface PagingParams {
 		first?: number;
 		last?: number;
 		before?: number;
@@ -322,8 +322,8 @@ declare module 'gqutils' {
 	 * @param args
 	 * @param opts defaultLimit is 20 by default
 	 */
-	function getPagingParams(args: pagingParams, opts?: {defaultLimit?: number}): {limit: number, offset: number};
-	function getConnectionResolver<M, T extends connectionResolvers<M>>(query: Promise<M>, args: pagingParams, options?: {resolvers?: Partial<T>}): T;
+	function getPagingParams(args: PagingParams, opts?: {defaultLimit?: number}): {limit: number, offset: number};
+	function getConnectionResolver<M, T extends ConnectionResolvers<M>>(query: Promise<M[]>, args: PagingParams, options?: {resolvers?: Partial<T>}): T;
 	function getIdFromCursor(cursor: number | string): number;
 	function getCursorFromId(id: number | string): string;
 	const getFieldNames: typeof graphqlListFields;
@@ -333,47 +333,15 @@ declare module 'gqutils' {
 	 */
 	function includesField(field: string, fields: string[]): boolean;
 
-	function makeSchemas(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions): {[key:string]: GraphQLSchema};
+	function makeSchemas(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: CommonOptions): {[key:string]: GraphQLSchema};
 
 	class Schema {
-		constructor(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: commonOptions)
+		constructor(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: CommonOptions)
 
 		static parseFragmentFields(fields: fragmentField): string;
 
 		parseGraphqlSchemas(): schemaMap;
 		parseGraphqlSchema(schema: string): GraphQLSchema;
-	}
-
-	interface schemaConfigInput {
-		validateGraphql?: boolean;
-		/** Default is defaultSchemaName value */
-		schemaName?: string;
-		/**
-		 * By default it uses `formatError` from `gqutils`.
-		 * @param error Error object
-		 * @param context The context passed to exec
-		 */
-		formatError?: (error: Error, context: any) => any;
-	}
-
-	type gqlFragmentMap = {[key: string]: GqlFragment};
-	type gqlEnumMap = {[key: string]: GqlEnum}
-
-	interface apiInput {
-		endpoint: string;
-		token?: string;
-		fragments?: gqlFragmentMap;
-		enums?: gqlEnumMap;
-		headers?: {[key: string]: string};
-		cookies?: {[key: string]: string};
-	}
-
-	interface execOptions {
-		context?: any;
-		cache?: {key: string, ttl?: number, forceUpdate?: boolean};
-		variables?: {[key: string]: any};
-		schemaName?: string;
-		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
 	}
 
 	class GqlEnum<V = any> {
@@ -393,21 +361,54 @@ declare module 'gqutils' {
 		getDefinition(): string;
 	}
 
-	interface _cacheOpts {
-		cache?: Cache;
+	type gqlFragmentMap = {[key: string]: GqlFragment};
+	type gqlEnumMap = {[key: string]: GqlEnum}
+
+	interface SchemaConfigInput {
+		validateGraphql?: boolean;
+		/** Default is defaultSchemaName value */
+		schemaName?: string;
+		/**
+		 * By default it uses `formatError` from `gqutils`.
+		 * @param error Error object
+		 * @param context The context passed to exec
+		 */
+		formatError?: (error: Error, context: any) => any;
 	}
+
+
+	interface ApiInput {
+		endpoint: string;
+		token?: string;
+		fragments?: gqlFragmentMap;
+		enums?: gqlEnumMap;
+		headers?: {[key: string]: string};
+		cookies?: {[key: string]: string};
+	}
+
+	interface ExecOptions {
+		context?: any;
+		cache?: {key: string, ttl?: number, forceUpdate?: boolean};
+		variables?: {[key: string]: any};
+		schemaName?: string;
+		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
+	}
+
+	type _cacheOpts = {
+		cache?: Cache;
+	};
 
 	class Gql<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> {
 		/** Provide either one of `api`, `config` or `schemas` */
 		constructor(opts: _cacheOpts & {
-			api?: apiInput;
-			config?: schemaConfigInput & commonOptions;
-			schemas?: schemaConfigInput & gqlSchemas;
+			api?: ApiInput;
+			config?: SchemaConfigInput & CommonOptions;
+			schemas?: SchemaConfigInput & GqlSchemas;
 		});
 
-		static fromApi(opts: apiInput & _cacheOpts): Gql;
-		static fromConfig(opts: schemaConfigInput & commonOptions & _cacheOpts): Gql;
-		static fromSchemas(opts: schemaConfigInput & gqlSchemas & _cacheOpts): Gql;
+		static fromApi(opts: ApiInput & _cacheOpts): Gql;
+		static fromConfig(opts: SchemaConfigInput & CommonOptions & _cacheOpts): Gql;
+		static fromSchemas(opts: SchemaConfigInput & GqlSchemas & _cacheOpts): Gql;
 
 		/**
 		 * This just calls the constructor of GqlEnul
@@ -428,9 +429,9 @@ declare module 'gqutils' {
 		/** Will throw if api options are passed */
 		getData(): {[schemaName: string]: GQUtilsData};
 
-		exec(query: string, opts?: execOptions): Promise<any>;
-		getAll(query: string, opts?: execOptions): Promise<any>;
-		get(query: string, opts: execOptions): Promise<any>;
+		exec(query: string, opts?: ExecOptions): Promise<any>;
+		getAll(query: string, opts?: ExecOptions): Promise<any>;
+		get(query: string, opts: ExecOptions): Promise<any>;
 		/**
 		 * **NOTE:** Does not work if fragments are not present in schema/passed in constructor
 		 *
