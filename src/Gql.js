@@ -233,8 +233,9 @@ class Gql {
 		return new GqlEnum(name, val);
 	}
 
-	enum(val) {
-		return this.constructor.enum(val);
+
+	enum(name, val) {
+		return this.constructor.enum(name, val);
 	}
 
 	get enums() {
