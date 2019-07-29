@@ -411,7 +411,7 @@ declare module 'gqutils' {
 		static fromSchemas(opts: SchemaConfigInput & GqlSchemas & _cacheOpts): Gql;
 
 		/**
-		 * This just calls the constructor of GqlEnul
+		 * This just calls the constructor of GqlEnum
 		 */
 		static enum<V extends any>(name: string, value?: V): GqlEnum<V>;
 		/**
