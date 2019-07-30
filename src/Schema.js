@@ -664,7 +664,7 @@ class Schema {
 		return parsedFields;
 	}
 
-	parseFragmentFields(fields) {
+	static parseFragmentFields(fields) {
 		const fieldsString = _.castArray(fields).map((field) => {
 			if (typeof field === 'string') return field;
 			let str = '';
@@ -681,7 +681,7 @@ class Schema {
 			return str;
 		}).join('\n');
 
-		return `${fieldsString}`;
+		return fieldsString;
 	}
 
 	parseGraphqlEnumValue(schema, value, name) {
@@ -740,7 +740,7 @@ class Schema {
 			description: schemaItem.description,
 			values,
 		});
-		return _.mapValues(values, (v, name) => new GqlEnum(name));
+		return _.mapValues(values, (val, name) => new GqlEnum(name, val));
 	}
 
 	parseGraphqlInterface(schema, schemaItem) {
@@ -765,6 +765,7 @@ class Schema {
 			fields: () => this.parseGraphqlFields(schema, fields, schemaItem.name),
 			resolveType: resolveType || schemaItem.resolveType,
 		});
+		return dependencies;
 	}
 
 	parseGraphqlInputType(schema, inputType) {
@@ -838,7 +839,7 @@ class Schema {
 		return new GqlFragment({
 			name: fragment.name,
 			type,
-			fields: this.parseFragmentFields(fragment.fields),
+			fields: Schema.parseFragmentFields(fragment.fields),
 		});
 	}
 
@@ -855,7 +856,7 @@ class Schema {
 	}
 
 	parseGraphqlInterfaces(schema, interfaces) {
-		_.forEach(interfaces, schemaItem => this.parseGraphqlInterface(schema, schemaItem));
+		return _.mapValues(interfaces, schemaItem => this.parseGraphqlInterface(schema, schemaItem));
 	}
 
 	parseGraphqlInputTypes(schema, inputTypes) {
@@ -885,7 +886,7 @@ class Schema {
 
 		this.parseGraphqlScalars(schema, schema.scalars);
 		const enums = this.parseGraphqlEnums(schema, schema.enums);
-		this.parseGraphqlInterfaces(schema, schema.interfaces);
+		const interfaces = this.parseGraphqlInterfaces(schema, schema.interfaces);
 		this.parseGraphqlInputTypes(schema, schema.inputTypes);
 		this.parseGraphqlTypes(schema, schema.types);
 		this.parseGraphqlUnions(schema, schema.unions);
@@ -898,8 +899,9 @@ class Schema {
 		});
 
 		graphqlSchema._data = {
-			fragments,
 			enums,
+			fragments,
+			interfaces,
 		};
 
 		if (this.options.resolverValidationOptions) {
