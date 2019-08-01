@@ -60,8 +60,8 @@ class Gql {
 				headers: {},
 				cookies: {},
 			});
-			this._fragments = opts.fragments;
-			this._enums = opts.enums;
+			this._fragments = opts.api.fragments || opts.fragments;
+			this._enums = opts.api.enums || opts.enums;
 		}
 		else if (opts.config || opts.schemas) {
 			let config;
