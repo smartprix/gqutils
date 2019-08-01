@@ -362,7 +362,8 @@ declare module 'gqutils' {
 	}
 
 	type gqlFragmentMap = {[key: string]: GqlFragment};
-	type gqlEnumMap = {[key: string]: GqlEnum}
+	type EnumMap = {[key: string]: GqlEnum}
+	type gqlEnumMap = {[key: string]: EnumMap}
 
 	interface SchemaConfigInput {
 		validateGraphql?: boolean;
