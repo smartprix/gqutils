@@ -203,7 +203,10 @@ function toGqlArg(arg, opts = {}) {
  */
 function includesField(field, fields) {
 	for (const queryField of fields) {
-		if (queryField.includes(field)) return true;
+		if (queryField.includes(`.${field}.`) || // eg.: `{nodes {parent {id }}}` and checking for parent
+			queryField.endsWith(`.${field}`) || // eg.: `{nodes {parentId }}` and checking for parentId
+			queryField === field // eg.: `{count}` and checking for count
+		) return true;
 	}
 	return false;
 }
