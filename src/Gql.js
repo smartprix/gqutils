@@ -52,7 +52,7 @@ class Gql {
 		});
 	}
 
-	static toGqlArg = toGqlArg;
+	static toGqlArg(...args) { return toGqlArg(...args) }
 
 	static tag(strings, ...args) {
 		let out = strings[0];
@@ -148,7 +148,8 @@ class Gql {
 		return this._fragments;
 	}
 
-	toGqlArg = toGqlArg;
+	// eslint-disable-next-line class-methods-use-this
+	toGqlArg(...args) { return toGqlArg(...args) }
 
 	arg(arg, opts = {}) {
 		let pick;
