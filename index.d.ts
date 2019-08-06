@@ -451,7 +451,7 @@ declare module 'gqutils' {
 	class GqlApi<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> extends Gql<gqlFragmentMap, gqlEnumMap> {
 		constructor(api: _cacheOpts & ApiInput);
 
-		/** Override this method to use your own http client */
+		/** **NOTE**: Override this method to use your own http client */
 		static postRequest(url: string, opts: {body: any} & Omit<RequestOptions, 'endpoint'>): Promise<response>;
 	}
 
