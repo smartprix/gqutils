@@ -3,7 +3,7 @@ import {GraphQLSchema} from 'graphql';
 import {IResolverValidationOptions} from 'graphql-tools';
 import {GenerateTypescriptOptions} from 'graphql-schema-typescript';
 import graphqlListFields = require('graphql-list-fields');
-import {Cache} from 'sm-utils';
+import {Cache, response} from 'sm-utils';
 
 declare module 'gqutils' {
 	type schemaType = string[] | string;
@@ -378,38 +378,35 @@ declare module 'gqutils' {
 	}
 
 
-	interface ApiInput {
+	interface RequestOptions {
 		endpoint: string;
 		token?: string;
-		fragments?: gqlFragmentMap;
-		enums?: gqlEnumMap;
 		headers?: {[key: string]: string};
 		cookies?: {[key: string]: string};
+	}
+
+	interface ApiInput extends RequestOptions {
+		fragments?: gqlFragmentMap;
+		enums?: gqlEnumMap;
 	}
 
 	interface ExecOptions {
 		context?: any;
 		cache?: {key: string, ttl?: number, forceUpdate?: boolean};
 		variables?: {[key: string]: any};
-		schemaName?: string;
-		requestOptions?: {headers?: {[key: string]: string}, cookies?: {[key: string]: string}};
+		requestOptions?: Pick<RequestOptions, 'headers' | 'cookies'>;
 	}
 
 	type _cacheOpts = {
 		cache?: Cache;
 	};
 
-	class Gql<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> {
-		/** Provide either one of `api`, `config` or `schemas` */
-		constructor(opts: _cacheOpts & {
-			api?: ApiInput;
-			config?: SchemaConfigInput & CommonOptions;
-			schemas?: SchemaConfigInput & GqlSchemas;
-		});
+	abstract class Gql<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> {
+		constructor(opts: _cacheOpts);
 
-		static fromApi(opts: ApiInput & _cacheOpts): Gql;
-		static fromConfig(opts: SchemaConfigInput & CommonOptions & _cacheOpts): Gql;
-		static fromSchemas(opts: SchemaConfigInput & GqlSchemas & _cacheOpts): Gql;
+		static fromApi(opts: ApiInput & _cacheOpts): GqlApi;
+		static fromConfig(opts: SchemaConfigInput & CommonOptions & _cacheOpts): GqlSchema;
+		static fromSchemas(opts: SchemaConfigInput & GqlSchemas & _cacheOpts): GqlSchema;
 
 		/**
 		 * This just calls the constructor of GqlEnum
@@ -422,13 +419,6 @@ declare module 'gqutils' {
 		static fragment(fragment:  Pick<GQUtilsFragmentSchema, 'name' | 'fields' | 'type'>): GqlFragment;
 		static tag(strings: TemplateStringsArray, ...args: any[]): string;
 		static toGqlArg: typeof toGqlArg;
-
-		/** Will throw if api options are passed */
-		getSchemas(): schemaMap;
-		/** Will throw if api options are passed */
-		getPubSub(): PubSub;
-		/** Will throw if api options are passed */
-		getData(): {[schemaName: string]: GQUtilsData};
 
 		exec(query: string, opts?: ExecOptions): Promise<any>;
 		getAll(query: string, opts?: ExecOptions): Promise<any>;
@@ -456,5 +446,24 @@ declare module 'gqutils' {
 		/** Calls toGqlArg with roundBrackets true */
 		arg: (arg: any, opts?: string[] | {pick?: string[]}) => string;
 		toGqlArg: typeof toGqlArg;
+	}
+
+	class GqlApi<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> extends Gql<gqlFragmentMap, gqlEnumMap> {
+		constructor(api: _cacheOpts & ApiInput);
+
+		/** Override this method to use your own http client */
+		static postRequest(url: string, opts: {body: any} & Omit<RequestOptions, 'endpoint'>): Promise<response>;
+	}
+
+	class GqlSchema<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> extends Gql<gqlFragmentMap, gqlEnumMap> {
+		/** Provide either one of `config` or `schemas` */
+		constructor(opts: _cacheOpts & {
+			config?: SchemaConfigInput & CommonOptions;
+			schemas?: SchemaConfigInput & GqlSchemas;
+		});
+
+		getSchemas(): schemaMap;
+		getPubSub(): PubSub;
+		getData(): {[schemaName: string]: GQUtilsData};
 	}
 }
