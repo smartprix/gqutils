@@ -22,24 +22,6 @@ class Gql {
 		this._cache = opts.cache;
 	}
 
-	static fromApi(opts) {
-		// eslint-disable-next-line global-require
-		const GqlApi = require('./GqlApi').default;
-		return new GqlApi(opts);
-	}
-
-	static fromConfig(opts) {
-		// eslint-disable-next-line global-require
-		const GqlSchema = require('./GqlSchema').default;
-		return new GqlSchema({config: opts, cache: opts.cache});
-	}
-
-	static fromSchemas(opts) {
-		// eslint-disable-next-line global-require
-		const GqlSchema = require('./GqlSchema').default;
-		return new GqlSchema({schemas: opts, cache: opts.cache});
-	}
-
 	static enum(name, val) {
 		return new GqlEnum(name, val);
 	}
@@ -166,7 +148,6 @@ class Gql {
 
 export default Gql;
 export {
-	Gql,
 	GqlApiError,
 	GqlSchemaError,
 };

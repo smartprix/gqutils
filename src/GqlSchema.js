@@ -1,6 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 import {parse, validate, execute} from 'graphql';
-import {Gql, GqlSchemaError} from './Gql';
+import Gql, {GqlSchemaError} from './Gql';
 import {formatError} from './helpers';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
 
