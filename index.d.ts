@@ -394,7 +394,7 @@ declare module 'gqutils' {
 		context?: any;
 		cache?: {key: string, ttl?: number, forceUpdate?: boolean};
 		variables?: {[key: string]: any};
-		requestOptions?: Pick<RequestOptions, 'headers' | 'cookies'>;
+		requestOptions?: Pick<RequestOptions, 'headers' | 'cookies'> & {[key: string]: string};
 	}
 
 	type _cacheOpts = {
