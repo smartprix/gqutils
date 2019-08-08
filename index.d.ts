@@ -448,14 +448,14 @@ declare module 'gqutils' {
 		toGqlArg: typeof toGqlArg;
 	}
 
-	class GqlApi<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> extends Gql<gqlFragmentMap, gqlEnumMap> {
+	class GqlApi<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> extends Gql<FragmentsMap, EnumsMap> {
 		constructor(api: _cacheOpts & ApiInput);
 
 		/** **NOTE**: Override this method to use your own http client */
 		static postRequest(url: string, opts: {body: any} & Omit<RequestOptions, 'endpoint'>): Promise<response>;
 	}
 
-	class GqlSchema<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> extends Gql<gqlFragmentMap, gqlEnumMap> {
+	class GqlSchema<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> extends Gql<FragmentsMap, EnumsMap> {
 		/** Provide either one of `config` or `schemas` */
 		constructor(opts: _cacheOpts & {
 			config?: SchemaConfigInput & CommonOptions;
