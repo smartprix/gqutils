@@ -99,7 +99,7 @@ class Gql {
 		if (keys.length !== 1) return result;
 
 		const newResult = result[keys[0]];
-		if (newResult && 'nodes' in newResult && Object.keys(newResult).length === 1) {
+		if (newResult && typeof newResult === 'object' && 'nodes' in newResult && Object.keys(newResult).length === 1) {
 			return newResult.nodes;
 		}
 		return newResult;
