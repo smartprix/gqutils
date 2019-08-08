@@ -9,9 +9,6 @@ import {
 
 const ONE_DAY = 24 * 3600 * 1000;
 
-class GqlApiError extends Error {}
-class GqlSchemaError extends Error {}
-
 class Gql {
 	constructor(opts = {}) {
 		if (new.target === Gql) throw new Error('Cannot instantiate abstract class Gql');
@@ -147,7 +144,3 @@ class Gql {
 }
 
 export default Gql;
-export {
-	GqlApiError,
-	GqlSchemaError,
-};

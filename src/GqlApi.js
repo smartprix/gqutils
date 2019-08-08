@@ -1,4 +1,6 @@
-import Gql, {GqlApiError} from './Gql';
+import Gql from './Gql';
+
+class GqlApiError extends Error {}
 
 class GqlApi extends Gql {
 	constructor(api = {}) {
@@ -31,3 +33,4 @@ class GqlApi extends Gql {
 }
 
 export default GqlApi;
+export {GqlApiError};

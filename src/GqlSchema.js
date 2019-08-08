@@ -1,6 +1,6 @@
 import isEmpty from 'lodash/isEmpty';
 import {parse, validate, execute} from 'graphql';
-import Gql, {GqlSchemaError} from './Gql';
+import Gql from './Gql';
 import {formatError} from './helpers';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
 
@@ -38,6 +38,8 @@ function graphql({
 		variables,
 	);
 }
+
+class GqlSchemaError extends Error {}
 
 class GqlSchema extends Gql {
 	constructor(opts = {}) {
@@ -114,3 +116,4 @@ class GqlSchema extends Gql {
 }
 
 export default GqlSchema;
+export {GqlSchemaError};

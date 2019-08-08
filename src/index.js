@@ -1,8 +1,8 @@
 import {isEmpty} from 'lodash';
 import getFieldNames from 'graphql-list-fields';
-import Gql, {GqlApiError} from './Gql';
-import GqlApi from './GqlApi';
-import GqlSchema from './GqlSchema';
+import Gql from './Gql';
+import GqlApi, {GqlApiError} from './GqlApi';
+import GqlSchema, {GqlSchemaError} from './GqlSchema';
 
 async function postRequest(url, {headers, cookies, body, token} = {}) {
 	// eslint-disable-next-line global-require
@@ -56,10 +56,11 @@ export * from './helpers';
 export * from './connection';
 export * from './Schema';
 export * from './makeSchemaFrom';
-export * from './Gql'; // Exports Error Classes Only
 export * from './generateTypes';
 
 export {
 	Gql,
+	GqlApiError,
+	GqlSchemaError,
 	getFieldNames,
 };
