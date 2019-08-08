@@ -420,6 +420,8 @@ declare module 'gqutils' {
 		static tag(strings: TemplateStringsArray, ...args: any[]): string;
 		static toGqlArg: typeof toGqlArg;
 
+		abstract _getQueryResult(query: string, opts: Omit<ExecOptions, 'cache'>): Promise<any>;
+
 		exec(query: string, opts?: ExecOptions): Promise<any>;
 		getAll(query: string, opts?: ExecOptions): Promise<any>;
 		get(query: string, opts: ExecOptions): Promise<any>;
@@ -453,6 +455,8 @@ declare module 'gqutils' {
 
 		/** **NOTE**: Override this method to use your own http client */
 		static postRequest(url: string, opts: {body: any, [key: string]: string} & Omit<RequestOptions, 'endpoint'>): Promise<any>;
+		
+		_getQueryResult(query: string, opts: Omit<ExecOptions, 'context' | 'cache'>): Promise<any>;
 	}
 
 	class GqlSchema<FragmentsMap = gqlFragmentMap, EnumsMap = gqlEnumMap> extends Gql<FragmentsMap, EnumsMap> {
@@ -465,5 +469,7 @@ declare module 'gqutils' {
 		getSchemas(): schemaMap;
 		getPubSub(): PubSub;
 		getData(): {[schemaName: string]: GQUtilsData};
+
+		_getQueryResult(query: string, opts: Omit<ExecOptions, 'cache' | 'requestOptions'>): Promise<any>;
 	}
 }
