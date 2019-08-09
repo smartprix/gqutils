@@ -245,10 +245,6 @@ const {schemas} = makeSchemaFromConfig();
 
 ## Gql Class
 
-```js
-const gql = new Gql(opts);
-```
-
 The Gql class provides a way to execute the schema and to construct queries.
 
 ### Executable Schemas
@@ -258,12 +254,10 @@ There are two ways you can use Gql to get an executable schema:
 #### Config:
 
 ```js
-const gql = new Gql({
-	config: {
-		schema: ['admin', 'public'],
-		schemaName: 'admin',
-		...
-	},
+const gql = Gql.fromConfig({
+	schema: ['admin', 'public'],
+	schemaName: 'admin',
+	...
 });
 ```
 
@@ -277,17 +271,13 @@ If you have multiple schemas and would like to have multiple Gql instances each 
 
 ```js
 const output = makeSchemaFromConfig();
-const adminGql = new Gql({
-	schemas: {
-		...output,
-		schemaName: 'admin',
-	},
+const adminGql = Gql.fromSchemas({
+	...output,
+	schemaName: 'admin',
 });
-const publicGql = new Gql({
-	schemas: {
-		...output,
-		schemaName: 'public',
-	},
+const publicGql = Gql.fromSchemas({
+	...output,
+	schemaName: 'public',
 })
 ```
 
@@ -296,12 +286,21 @@ const publicGql = new Gql({
 If you would like to use Gql against a GraphQL API:
 
 ```js
-const apiGql = new Gql({
-	api: {
-		endpoint: 'https://example.com/api',
-		headers: {},
-		cookies: {},
-	}
+const apiGql = Gql.fromApi({
+	endpoint: 'https://example.com/api',
+	headers: {},
+	cookies: {},
+});
+```
+
+**NOTE**: If you are using Gql against Api from client side then import `GqlApi` directly.
+
+```js
+import GqlApi from 'gqutils/dist/GqlApi';
+const apiGql = new GqlApi({
+	endpoint: 'https://example.com/api',
+	headers: {},
+	cookies: {},
 });
 ```
 
