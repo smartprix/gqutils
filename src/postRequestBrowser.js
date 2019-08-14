@@ -45,7 +45,7 @@ async function defaultPostRequest(url, {headers, body, token}) {
 		throw err;
 	}
 
-	return {data: result};
+	return result.data;
 }
 
 export default defaultPostRequest;
