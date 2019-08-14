@@ -293,10 +293,37 @@ const apiGql = Gql.fromApi({
 });
 ```
 
-**NOTE**: If you are using Gql against Api from client side then import `GqlApi` directly.
+#### Client Side Use
+
+**Browser**:
+
+If you are using Gql against Api from browser then use it like:
+
+```js
+import {GqlApi} from 'gqutils';
+// A default implementation of post request using `fetch`
+import postRequest from 'gqutils/dist/postRequestBrowser'
+
+GqlApi.postRequest = postRequest.bind(GqlApi);
+
+const apiGql = new GqlApi({
+	endpoint: 'https://example.com/api',
+	headers: {},
+	cookies: {},
+});
+```
+
+**Server Side Client**:
+
+If you want to use the client without adding `graphql` and `graphql-tools` peer dependencies then import GqlApi directly from it's file like:
 
 ```js
 import GqlApi from 'gqutils/dist/GqlApi';
+// A default implementation of post request using `Connect` from `sm-utils`
+import postRequest from 'gqutils/dist/postRequestNode'
+
+GqlApi.postRequest = postRequest.bind(GqlApi);
+
 const apiGql = new GqlApi({
 	endpoint: 'https://example.com/api',
 	headers: {},
@@ -305,7 +332,6 @@ const apiGql = new GqlApi({
 ```
 
 ### Query Building And Execution
-
 
 #### gql.tag
 
