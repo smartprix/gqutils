@@ -10,6 +10,9 @@ async function defaultPostRequest(url, {headers, body, token}) {
 	if (token) {
 		headers['x-api-token'] = token;
 	}
+	if (!headers['Content-Type']) {
+		headers['Content-Type'] = 'application/json';
+	}
 
 	const response = await fetch(url, {
 		method: 'POST',
@@ -19,23 +22,21 @@ async function defaultPostRequest(url, {headers, body, token}) {
 		body: JSON.stringify(body),
 	});
 
-	const responseBody = await response.text();
-
 	let result;
-	try { result = JSON.parse(responseBody) }
+	try { result = await response.json() }
 	catch (e) { result = null }
 
 	if (response.status !== 200) {
 		const err = new GqlApiError(`${response.status}, Invalid status code`);
 		err.errors = result && result.errors;
-		err.body = responseBody;
+		err.body = await response.text();
 		err.statusCode = response.status;
 		throw err;
 	}
 
 	if (!result) {
 		const err = new GqlApiError('Invalid result from api');
-		err.body = responseBody;
+		err.body = await response.text();
 		throw err;
 	}
 
