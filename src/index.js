@@ -2,7 +2,7 @@ import getFieldNames from 'graphql-list-fields';
 import Gql from './Gql';
 import GqlApi, {GqlApiError} from './GqlApi';
 import GqlSchema, {GqlSchemaError} from './GqlSchema';
-import defaultPostRequest from './defaultPostRequest';
+import defaultPostRequest from './postRequestNode';
 
 // Set default Connect client for API requests.
 // NOTE: Not done in class so it can also be imported in frontend clients with own impelentation
