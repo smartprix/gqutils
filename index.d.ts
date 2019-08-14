@@ -455,7 +455,7 @@ declare module 'gqutils' {
 
 		/** **NOTE**: Override this method to use your own http client */
 		static postRequest(url: string, opts: {body: any, [key: string]: string} & Omit<RequestOptions, 'endpoint'>): Promise<any>;
-		
+
 		_getQueryResult(query: string, opts: Omit<ExecOptions, 'context' | 'cache'>): Promise<any>;
 	}
 

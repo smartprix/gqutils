@@ -27,3 +27,5 @@ export {
 	GqlSchemaError,
 	getFieldNames,
 };
+
+export default Gql;

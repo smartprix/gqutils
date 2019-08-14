@@ -3,6 +3,7 @@
   "version": "1.7.3",
   "description": "Utilities For GraphQL",
   "main": "dist/index.js",
+  "browser": "dist/browser.js",
   "repository": "smartprix/gqutils",
   "directories": {
     "test": "test"
@@ -80,6 +81,10 @@
     "extends": "smartprix",
     "rules": {
       "vue/script-indent": 0
+    },
+    "env": {
+      "browser": false,
+      "node": true
     }
   }
 }
