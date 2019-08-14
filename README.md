@@ -304,7 +304,7 @@ import {GqlApi} from 'gqutils';
 // A default implementation of post request using `fetch`
 import postRequest from 'gqutils/dist/postRequestBrowser'
 
-GqlApi.postRequest = postRequest.bind(GqlApi);
+GqlApi.postRequest = postRequest;
 
 const apiGql = new GqlApi({
 	endpoint: 'https://example.com/api',
@@ -322,7 +322,7 @@ import GqlApi from 'gqutils/dist/GqlApi';
 // A default implementation of post request using `Connect` from `sm-utils`
 import postRequest from 'gqutils/dist/postRequestNode'
 
-GqlApi.postRequest = postRequest.bind(GqlApi);
+GqlApi.postRequest = postRequest;
 
 const apiGql = new GqlApi({
 	endpoint: 'https://example.com/api',

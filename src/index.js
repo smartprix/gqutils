@@ -6,7 +6,7 @@ import defaultPostRequest from './postRequestNode';
 
 // Set default Connect client for API requests.
 // NOTE: Not done in class so it can also be imported in frontend clients with own impelentation
-GqlApi.postRequest = defaultPostRequest.bind(GqlApi);
+GqlApi.postRequest = defaultPostRequest;
 
 Gql.fromApi = opts => new GqlApi(opts);
 
