@@ -1,20 +1,20 @@
 import {isEmpty} from 'lodash';
-import {Connect} from 'sm-utils';
+import {Connect, Str} from 'sm-utils';
 import {GqlApiError} from './GqlApi';
 
 /** Default post request method to be used for `GqlApi` */
 async function defaultPostRequest(url, {headers, cookies, body, token} = {}) {
-	const response = Connect
+	const request = Connect
 		.url(url)
 		.headers(headers)
 		.cookies(cookies)
 		.body(body)
 		.post();
-	if (token) response.apiToken(token);
+	if (token) request.apiToken(token);
 
-	let result;
-	try { result = JSON.parse(response.body) }
-	catch (e) { result = null }
+	const response = await request;
+
+	const result = Str.tryParseJson(response.body);
 
 	if (response.statusCode !== 200) {
 		const err = new GqlApiError(`${response.statusCode}, Invalid status code`);
