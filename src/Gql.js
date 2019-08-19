@@ -1,105 +1,22 @@
-import _ from 'lodash';
-import {parse, validate, execute} from 'graphql';
-import {Connect, Str} from 'sm-utils';
+import isEmpty from 'lodash/isEmpty';
 
 import {
-	formatError,
 	toGqlArg,
 	GqlEnum,
 	GqlFragment,
+	parseFragmentFields,
 } from './helpers';
-import {makeSchemaFromConfig} from './makeSchemaFrom';
-import {Schema} from './Schema';
 
 const ONE_DAY = 24 * 3600 * 1000;
 
-class ApiError extends Error {}
-class GraphqlError extends Error {}
-
-/**
- * we are not using the inbuilt graphql function because it validates
- * the graphql, which is an expensive operation
- * return graphql(schema, query, rootValue, context, variables);
- * taken from:
- * @see https://github.com/graphql/graphql-js/blob/master/src/graphql.js
- */
-function graphql({
-	schema, query, context, variables, rootValue = null, validateGraphql = false,
-}) {
-	// parse
-	let document;
-	try {
-		document = parse(query);
-	}
-	catch (syntaxError) {
-		return Promise.resolve({errors: [syntaxError]});
-	}
-
-	if (validateGraphql) {
-		const validationErrors = validate(schema, document);
-		if (validationErrors.length > 0) {
-			return Promise.resolve({errors: validationErrors});
-		}
-	}
-
-	return execute(
-		schema,
-		document,
-		rootValue,
-		context,
-		variables,
-	);
-}
-
 class Gql {
 	constructor(opts = {}) {
-		if (opts.api) {
-			if (!opts.api.endpoint) throw new ApiError('Api endpoint is not provided');
-
-			this._api = _.defaults(opts.api, {
-				headers: {},
-				cookies: {},
-			});
-			this._fragments = opts.api.fragments || opts.fragments;
-			this._enums = opts.api.enums || opts.enums;
+		if (new.target === Gql) throw new Error('Cannot instantiate abstract class Gql');
+		if (typeof this._getQueryResult !== 'function') {
+			throw new Error(`Method ${this.constructor.name}._getQueryResult() must be implemented`);
 		}
-		else if (opts.config || opts.schemas) {
-			let config;
-			if (opts.config) {
-				config = opts.config;
-				const makeResult = makeSchemaFromConfig(config);
-				this._makeResult = makeResult;
-			}
-			else {
-				config = opts.schemas;
-				this._makeResult = opts.schemas;
-			}
-			const schemaName = config.schemaName !== undefined ?
-				config.schemaName : (config.defaultSchemaName || 'default');
-			const {schema, data} = this._makeResult;
-
-			this._schemaName = schemaName;
-			this._schema = schema[schemaName];
-			this._fragments = data[schemaName].fragments;
-			this._enums = data[schemaName].enums;
-			this._validateGraphql = config.validateGraphql || false;
-			this._formatError = config.formatError || formatError;
-		}
-		else throw new Error('Invalid options for Gql');
 
 		this._cache = opts.cache;
-	}
-
-	static fromApi(opts) {
-		return new Gql({api: opts, cache: opts.cache});
-	}
-
-	static fromConfig(opts) {
-		return new Gql({config: opts, cache: opts.cache});
-	}
-
-	static fromSchemas(opts) {
-		return new Gql({schemas: opts, cache: opts.cache});
 	}
 
 	static enum(name, val) {
@@ -110,11 +27,11 @@ class Gql {
 		return new GqlFragment({
 			name: schema.name,
 			type: schema.type,
-			fields: Schema.parseFragmentFields(schema.fields),
+			fields: parseFragmentFields(schema.fields),
 		});
 	}
 
-	static toGqlArg = toGqlArg;
+	static toGqlArg(...args) { return toGqlArg(...args) }
 
 	static tag(strings, ...args) {
 		let out = strings[0];
@@ -143,99 +60,10 @@ class Gql {
 
 			out += strings[i];
 		}
-		if (_.isEmpty(fragments)) return out;
+		if (isEmpty(fragments)) return out;
 
 		out += `\n${Object.values(fragments).join('\n')}`;
 		return out;
-	}
-
-	getSchemas() {
-		if (this._api) throw new Error('Invalid Method');
-		return this._makeResult.schemas;
-	}
-
-	getData() {
-		if (this._api) throw new Error('Invalid Method');
-		return this._makeResult.data;
-	}
-
-	getPubSub() {
-		if (this._api) throw new Error('Invalid Method');
-		return this._makeResult.pubsub;
-	}
-
-	async _execApi(query, {variables = {}, requestOptions = {}} = {}) {
-		let response = Connect
-			.url(this._api.endpoint)
-			.headers(this._api.headers)
-			.cookies(this._api.cookies)
-			.headers(requestOptions.headers)
-			.cookies(requestOptions.cookies)
-			.body({query, variables})
-			.post();
-
-		if (this._api.token) response.apiToken(this._api.token);
-
-		response = await response;
-
-		const result = Str.tryParseJson(response.body);
-
-		if (response.statusCode !== 200) {
-			const err = new ApiError(`${response.statusCode}, Invalid status code`);
-			err.errors = result && result.errors;
-			err.body = response.body;
-			err.statusCode = response.statusCode;
-			throw err;
-		}
-
-		if (!result) {
-			const err = new ApiError('Invalid result from api');
-			err.body = response.body;
-			throw err;
-		}
-
-		if (!_.isEmpty(result.errors)) {
-			const err = new ApiError('Errors in api response');
-			err.errors = result.errors;
-			throw err;
-		}
-
-		return result.data;
-	}
-
-	async _execGraphql(query, {context, variables = {}} = {}) {
-		const result = await graphql({
-			schema: this._schema,
-			query,
-			context,
-			variables,
-			validateGraphql: this._validateGraphql,
-		});
-
-		if (_.isEmpty(result.errors)) return result.data;
-
-		let fields = {};
-		const errors = result.errors;
-
-		errors.forEach((error) => {
-			error = this._formatError(error, context);
-			Object.assign(fields, error.fields);
-		});
-
-		// no user errors sent by server
-		if (!Object.keys(fields).length) {
-			fields = {
-				global: {
-					message: 'Unknown Error',
-					keyword: 'unknown',
-				},
-			};
-		}
-
-		const err = new GraphqlError(`[schema:${this._schemaName}] Error in graphQL api`);
-		err.errors = errors;
-		err.fields = fields;
-		throw err;
 	}
 
 	async exec(query, {
@@ -253,9 +81,7 @@ class Gql {
 			query = `query { ${query} }`;
 		}
 
-		const result = this._api ?
-			await this._execApi(query, {variables, requestOptions}) :
-			await this._execGraphql(query, {context, variables});
+		const result = await this._getQueryResult(query, {context, variables, requestOptions});
 
 		if (cacheKey && this._cache) await this._cache.set(cacheKey, result, {ttl});
 		return result;
@@ -273,7 +99,7 @@ class Gql {
 		if (keys.length !== 1) return result;
 
 		const newResult = result[keys[0]];
-		if (newResult && 'nodes' in newResult && Object.keys(newResult).length === 1) {
+		if (newResult && typeof newResult === 'object' && 'nodes' in newResult && Object.keys(newResult).length === 1) {
 			return newResult.nodes;
 		}
 		return newResult;
@@ -301,11 +127,12 @@ class Gql {
 		return this._fragments;
 	}
 
-	toGqlArg = toGqlArg;
+	// eslint-disable-next-line class-methods-use-this
+	toGqlArg(...args) { return toGqlArg(...args) }
 
 	arg(arg, opts = {}) {
 		let pick;
-		if (_.isArray(opts)) pick = opts;
+		if (Array.isArray(opts)) pick = opts;
 		else ({pick} = opts);
 
 		return this.toGqlArg(arg, {roundBrackets: true, pick});
@@ -317,9 +144,3 @@ class Gql {
 }
 
 export default Gql;
-
-export {
-	Gql,
-	ApiError,
-	GraphqlError,
-};

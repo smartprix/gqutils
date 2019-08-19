@@ -1,5 +1,7 @@
-import _ from 'lodash';
-import getFieldNames from 'graphql-list-fields';
+import castArray from 'lodash/castArray';
+import forEach from 'lodash/forEach';
+import isPlainObject from 'lodash/isPlainObject';
+import pick from 'lodash/pick';
 
 function humanizeError(field, error) {
 	let message = error.message;
@@ -53,17 +55,17 @@ function formatError(error) {
 	}
 
 	if (errorType === 'ValidationError' || errorType === 'UserError') {
-		if (_.isString(message)) {
+		if (typeof message === 'string') {
 			error.fields.global = {message};
 		}
-		else if (_.isPlainObject(message)) {
-			_.forEach(message, (value, key) => {
-				if (_.isString(value)) {
+		else if (isPlainObject(message)) {
+			forEach(message, (value, key) => {
+				if (typeof value === 'string') {
 					error.fields[key] = {
 						message: value,
 					};
 				}
-				else if (_.isArray(value)) {
+				else if (Array.isArray(value)) {
 					error.fields[key] = humanizeError(key, value[0]);
 				}
 				else {
@@ -79,7 +81,7 @@ function formatError(error) {
 
 		error.message = 'Your query has errors';
 	}
-	else if (errorType === 'GraphQLError' && _.isString(message)) {
+	else if (errorType === 'GraphQLError' && typeof message === 'string') {
 		let matches;
 		matches = message.match(/Unknown argument "([a-zA-Z0-9_$.-]+)"/);
 		if (matches) {
@@ -155,7 +157,7 @@ class GqlFragment {
 
 function convertObjToGqlArg(obj) {
 	const gqlArg = [];
-	_.forEach(obj, (value, key) => {
+	forEach(obj, (value, key) => {
 		if (value === undefined) return;
 		// eslint-disable-next-line no-use-before-define
 		gqlArg.push(`${key}: ${convertToGqlArg(value)}`);
@@ -168,8 +170,8 @@ function convertToGqlArg(value) {
 
 	if (typeof value === 'number') return String(value);
 	if (value instanceof GqlEnum) return value.toString();
-	if (_.isPlainObject(value)) return `{${convertObjToGqlArg(value)}}`;
-	if (_.isArray(value) && value[0] instanceof GqlEnum) {
+	if (isPlainObject(value)) return `{${convertObjToGqlArg(value)}}`;
+	if (Array.isArray(value) && value[0] instanceof GqlEnum) {
 		return `[${value.map(v => v.toString()).join(', ')}]`;
 	}
 
@@ -178,9 +180,9 @@ function convertToGqlArg(value) {
 
 function toGqlArg(arg, opts = {}) {
 	let gqlArg = '';
-	if (_.isPlainObject(arg)) {
+	if (isPlainObject(arg)) {
 		if (Array.isArray(opts)) opts = {pick: opts};
-		if (opts.pick) arg = _.pick(arg, opts.pick);
+		if (opts.pick) arg = pick(arg, opts.pick);
 
 		gqlArg = convertObjToGqlArg(arg);
 
@@ -211,6 +213,26 @@ function includesField(field, fields) {
 	return false;
 }
 
+function parseFragmentFields(fields) {
+	const fieldsString = castArray(fields).map((field) => {
+		if (typeof field === 'string') return field;
+		let str = '';
+		if (field.alias) { str += `${field.alias} : ` }
+		str += field.name;
+
+		if (field.args) {
+			str += toGqlArg(field.args, {roundBrackets: true});
+		}
+
+		if (field.fields) {
+			str += `{ ${parseFragmentFields(field.fields)} }`;
+		}
+		return str;
+	}).join('\n');
+
+	return `${fieldsString}`;
+}
+
 export {
 	formatError,
 	humanizeError,
@@ -219,6 +241,6 @@ export {
 	toGqlArg,
 	GqlEnum,
 	GqlFragment,
-	getFieldNames,
 	includesField,
+	parseFragmentFields,
 };

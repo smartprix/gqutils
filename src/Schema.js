@@ -23,7 +23,7 @@ import {withFilter} from 'graphql-subscriptions';
 import defaultScalars from './defaultScalars';
 import defaultTypes from './defaultTypes';
 import defaultArgs from './defaultArgs';
-import {toGqlArg, GqlEnum, GqlFragment} from './helpers';
+import {parseFragmentFields, GqlEnum, GqlFragment} from './helpers';
 
 function identity(value) {
 	return value;
@@ -664,26 +664,6 @@ class Schema {
 		return parsedFields;
 	}
 
-	static parseFragmentFields(fields) {
-		const fieldsString = _.castArray(fields).map((field) => {
-			if (typeof field === 'string') return field;
-			let str = '';
-			if (field.alias) { str += `${field.alias} : ` }
-			str += field.name;
-
-			if (field.args) {
-				str += toGqlArg(field.args, {roundBrackets: true});
-			}
-
-			if (field.fields) {
-				str += `{ ${this.parseFragmentFields(field.fields)} }`;
-			}
-			return str;
-		}).join('\n');
-
-		return fieldsString;
-	}
-
 	parseGraphqlEnumValue(schema, value, name) {
 		const schemaContainsField = this.shouldSchemaContain(schema, value, {includeByDefault: true});
 		if (!schemaContainsField) return null;
@@ -839,7 +819,7 @@ class Schema {
 		return new GqlFragment({
 			name: fragment.name,
 			type,
-			fields: Schema.parseFragmentFields(fragment.fields),
+			fields: parseFragmentFields(fragment.fields),
 		});
 	}
 
