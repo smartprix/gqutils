@@ -1,6 +1,6 @@
 {
   "name": "gqutils",
-  "version": "1.7.4",
+  "version": "1.7.5",
   "description": "Utilities For GraphQL",
   "main": "dist/index.js",
   "browser": "dist/browser.js",
