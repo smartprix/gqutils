@@ -332,13 +332,12 @@ declare module 'gqutils' {
 	 * false otherwise
 	 */
 	function includesField(field: string, fields: string[]): boolean;
+	function parseFragmentFields(fields: fragmentField): string;
 
 	function makeSchemas(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: CommonOptions): {[key:string]: GraphQLSchema};
 
 	class Schema {
 		constructor(schemas: {[key: string]: GQUtilsSchema}[], resolvers: {[key: string]: resolveType}[], options?: CommonOptions)
-
-		static parseFragmentFields(fields: fragmentField): string;
 
 		parseGraphqlSchemas(): schemaMap;
 		parseGraphqlSchema(schema: string): GraphQLSchema;
