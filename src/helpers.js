@@ -207,6 +207,7 @@ function includesField(field, fields) {
 	for (const queryField of fields) {
 		if (queryField.includes(`.${field}.`) || // eg.: `{nodes {parent {id }}}` and checking for parent
 			queryField.endsWith(`.${field}`) || // eg.: `{nodes {parentId }}` and checking for parentId
+			queryField.startsWith(`${field}.`) || // eg. `{ parent {id}}` and checking for `parent`
 			queryField === field // eg.: `{count}` and checking for count
 		) return true;
 	}
