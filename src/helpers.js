@@ -198,18 +198,20 @@ function toGqlArg(arg, opts = {}) {
 }
 
 /**
+ * Handles these cases:
+ * 	- `{nodes {parent {id }}}` and checking for `parent`
+ * 	- `{nodes {parentId }}` and checking for `parentId`
+ * 	- `{ parent {id}}` and checking for `parent`
+ * 	- `{count}` and checking for `count`
  * @param {string} field The field to be found
  * @param {string[]} fields An array of fields in which to look for field
+ * 		Result of `getFieldNames`
  * @returns {boolean} true if field is a substring of any item in the fields array,
  * false otherwise
  */
 function includesField(field, fields) {
 	for (const queryField of fields) {
-		if (queryField.includes(`.${field}.`) || // eg.: `{nodes {parent {id }}}` and checking for parent
-			queryField.endsWith(`.${field}`) || // eg.: `{nodes {parentId }}` and checking for parentId
-			queryField.startsWith(`${field}.`) || // eg. `{ parent {id}}` and checking for `parent`
-			queryField === field // eg.: `{count}` and checking for count
-		) return true;
+		if (`.${queryField}.`.includes(`.${field}.`)) return true;
 	}
 	return false;
 }
