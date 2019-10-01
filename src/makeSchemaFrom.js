@@ -6,18 +6,12 @@ import {PubSub} from 'graphql-subscriptions';
 import {makeSchemas} from './Schema';
 
 function makeSchemaFromObjects(schemas, resolvers, opts = {}) {
-	const logger = {
-		log(e) {
-			console.log(e);
-		},
-	};
-
 	const defaultSchemaName = opts.defaultSchemaName || 'default';
 
 	const graphqlSchemas = makeSchemas(schemas, resolvers, {
 		schema: opts.schema || opts.schemas || [],
 		defaultSchemaName,
-		logger: opts.logger || logger,
+		logger: opts.logger || console,
 		allowUndefinedInResolve: opts.allowUndefinedInResolve || false,
 		resolverValidationOptions: opts.resolverValidationOptions || {},
 	});
