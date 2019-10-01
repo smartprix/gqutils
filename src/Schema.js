@@ -102,6 +102,10 @@ class Schema {
 		this.separateSchemaItems();
 	}
 
+	get logger() {
+		return (this.options && this.options.logger) || console;
+	}
+
 	preprocess() {
 		let schemaNames = this.options.schemas || this.options.schema;
 		if (!schemaNames) schemaNames = [];
@@ -475,7 +479,7 @@ class Schema {
 		return _.uniq(dependencies);
 	}
 
-	parseGraphqlField(schema, field, resolve) {
+	parseGraphqlField(schema, field, resolve, fieldPath) {
 		const schemaContainsField = this.shouldSchemaContain(schema, field, {includeByDefault: true});
 		if (!schemaContainsField) return false;
 
@@ -550,13 +554,13 @@ class Schema {
 
 		if (field.args) {
 			const typeName = this.getTypeName(field.type);
-			graphqlField.args = this.parseGraphqlArgs(schema, field.args, typeName);
+			graphqlField.args = this.parseGraphqlArgs(schema, field.args, typeName, fieldPath);
 		}
 
 		return graphqlField;
 	}
 
-	parseGraphqlArgs(schema, args, typeName) {
+	parseGraphqlArgs(schema, args, typeName, fieldPath) {
 		if (args.$default) {
 			// since we are modifying args, clone it first
 			args = _.cloneDeep(args);
@@ -597,13 +601,19 @@ class Schema {
 					return;
 				}
 
-				if (!type || !typeFields) return;
+				if (!type || !typeFields) {
+					this.logger.warn(`[${schema.name}] Invalid type, \`${typeName}\` for $default value \`${argName}\` in field \`${fieldPath}\``);
+					return;
+				}
 
 				const isRequired = argName.includes('!');
 				argName = argName.replace('!', '');
 
 				if (argName in args) return;
-				if (!(argName in typeFields)) return;
+				if (!(argName in typeFields)) {
+					this.logger.warn(`[${schema.name}] Field not found in type \`${typeName}\` for $default value \`${argName}\` in field \`${fieldPath}\``);
+					return;
+				}
 
 				let field = typeFields[argName];
 				if (typeof field === 'string') {
@@ -654,10 +664,10 @@ class Schema {
 				this.resolvers[parentName] &&
 				this.resolvers[parentName][fieldName]
 			);
-			const parsedField = this.parseGraphqlField(schema, field, resolve);
+			fieldName = field.name || fieldName;
+			const parsedField = this.parseGraphqlField(schema, field, resolve, `${parentName}.${fieldName}`);
 			if (!parsedField) return;
 
-			fieldName = field.name || fieldName;
 			parsedFields[fieldName] = parsedField;
 		});
 
