@@ -171,8 +171,8 @@ function convertToGqlArg(value) {
 	if (typeof value === 'number') return String(value);
 	if (value instanceof GqlEnum) return value.toString();
 	if (isPlainObject(value)) return `{${convertObjToGqlArg(value)}}`;
-	if (Array.isArray(value) && value[0] instanceof GqlEnum) {
-		return `[${value.map(v => v.toString()).join(', ')}]`;
+	if (Array.isArray(value)) {
+		return `[${value.map(convertToGqlArg).join(', ')}]`;
 	}
 
 	return JSON.stringify(value);
