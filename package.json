@@ -23,7 +23,6 @@
   "author": "Hitesh Khandelwal <hitesh@smartprix.com> (http://www.smartprix.com/)",
   "license": "ISC",
   "dependencies": {
-    "@types/graphql": "^14.2.0",
     "@types/graphql-list-fields": "^2.0.1",
     "@types/node": "^12.0.7",
     "commander": "^2.20.0",
