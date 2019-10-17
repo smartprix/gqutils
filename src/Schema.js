@@ -825,7 +825,7 @@ class Schema {
 
 	parseGraphqlFragment(schema, fragment) {
 		const type = this.getTypeName(fragment.type);
-		if (!schema.types[type]) throw new Error(`Type for fragment does not exist, ${type}`);
+		if (!schema.types[type] && !schema.interfaces[type]) throw new Error(`Type/Interface for fragment does not exist, ${type}`);
 		return new GqlFragment({
 			name: fragment.name,
 			type,

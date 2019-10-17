@@ -9,6 +9,13 @@ import {
 
 const ONE_DAY = 24 * 3600 * 1000;
 
+function wrapQuery(query) {
+	if (!/^\s*query|mutation|subscription/.test(query) && /^\s*[a-zA-Z0-9]/.test(query)) {
+		query = `query { ${query} }`;
+	}
+	return query;
+}
+
 class Gql {
 	constructor(opts = {}) {
 		if (new.target === Gql) throw new Error('Cannot instantiate abstract class Gql');
@@ -62,6 +69,7 @@ class Gql {
 		}
 		if (isEmpty(fragments)) return out;
 
+		out = wrapQuery(out);
 		out += `\n${Object.values(fragments).join('\n')}`;
 		return out;
 	}
@@ -77,10 +85,7 @@ class Gql {
 			if (cached !== undefined) return cached;
 		}
 
-		if (!/^\s*query|mutation|subscription/.test(query) && /^\s*[a-zA-Z0-9]/.test(query)) {
-			query = `query { ${query} }`;
-		}
-
+		query = wrapQuery(query);
 		const result = await this._getQueryResult(query, {context, variables, requestOptions});
 
 		if (cacheKey && this._cache) await this._cache.set(cacheKey, result, {ttl});
