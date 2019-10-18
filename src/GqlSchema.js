@@ -4,32 +4,6 @@ import Gql from './Gql';
 import {formatError} from './helpers';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
 
-/**
- * we are not using the inbuilt graphql function because it validates
- * the graphql, which is an expensive operation
- * return graphql(schema, query, rootValue, context, variables);
- * taken from:
- * @see https://github.com/graphql/graphql-js/blob/master/src/graphql.js
- */
-function executeGraphql({
-	schema, document, context, variables, rootValue = null, validateGraphql = false,
-}) {
-	if (validateGraphql) {
-		const validationErrors = validate(schema, document);
-		if (validationErrors.length > 0) {
-			return Promise.resolve({errors: validationErrors});
-		}
-	}
-
-	return execute(
-		schema,
-		document,
-		rootValue,
-		context,
-		variables,
-	);
-}
-
 class GqlSchemaError extends Error {}
 
 class GqlSchema extends Gql {
@@ -99,7 +73,7 @@ class GqlSchema extends Gql {
 	 * @param {string} query
 	 * @param {any} [context]
 	 */
-	parse(query, context) {
+	parse(query, {context, validate: validateGraphql = this._validateGraphql} = {}) {
 		let document;
 		try {
 			document = graphqlParse(query);
@@ -107,23 +81,36 @@ class GqlSchema extends Gql {
 		catch (syntaxError) {
 			return this._formatAndThrowErrors([syntaxError], context);
 		}
+
+		if (validateGraphql) {
+			const validationErrors = validate(this._schema, document);
+			if (validationErrors.length > 0) {
+				return this._formatAndThrowErrors(validationErrors, context);
+			}
+		}
 		return document;
 	}
 
 	async execParsed(document, {context, variables}) {
-		const result = await executeGraphql({
-			schema: this._schema,
+		const result = await execute(
+			this._schema,
 			document,
+			null,
 			context,
 			variables,
-			validateGraphql: this._validateGraphql,
-		});
+		);
 
 		if (isEmpty(result.errors)) return result.data;
 
 		return this._formatAndThrowErrors(result.errors, context);
 	}
 
+	/**
+	 * we are not using the inbuilt graphql function because it validates
+	 * the graphql query, which is an expensive operation
+	 * taken from:
+	 * @see https://github.com/graphql/graphql-js/blob/master/src/graphql.js
+	 */
 	async _getQueryResult(query, opts = {}) {
 		const {context} = opts;
 		const document = this.parse(query, context);

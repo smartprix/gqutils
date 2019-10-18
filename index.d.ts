@@ -475,7 +475,7 @@ declare module 'gqutils' {
 		getPubSub(): PubSub;
 		getData(): {[schemaName: string]: GQUtilsData};
 
-		parse(query: string): DocumentNode;
+		parse(query: string, opts?: {validate?: boolean}): DocumentNode;
 
 		/**
 		 * Returns the `data` key if no errors, else throws a formatted error instance
