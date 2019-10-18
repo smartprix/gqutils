@@ -1,5 +1,5 @@
 import isEmpty from 'lodash/isEmpty';
-import {parse, validate, execute} from 'graphql';
+import {parse as graphqlParse, validate, execute} from 'graphql';
 import Gql from './Gql';
 import {formatError} from './helpers';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
@@ -11,18 +11,9 @@ import {makeSchemaFromConfig} from './makeSchemaFrom';
  * taken from:
  * @see https://github.com/graphql/graphql-js/blob/master/src/graphql.js
  */
-function graphql({
-	schema, query, context, variables, rootValue = null, validateGraphql = false,
+function executeGraphql({
+	schema, document, context, variables, rootValue = null, validateGraphql = false,
 }) {
-	// parse
-	let document;
-	try {
-		document = parse(query);
-	}
-	catch (syntaxError) {
-		return Promise.resolve({errors: [syntaxError]});
-	}
-
 	if (validateGraphql) {
 		const validationErrors = validate(schema, document);
 		if (validationErrors.length > 0) {
@@ -79,19 +70,8 @@ class GqlSchema extends Gql {
 		return this._makeResult.pubsub;
 	}
 
-	async _getQueryResult(query, {context, variables} = {}) {
-		const result = await graphql({
-			schema: this._schema,
-			query,
-			context,
-			variables,
-			validateGraphql: this._validateGraphql,
-		});
-
-		if (isEmpty(result.errors)) return result.data;
-
+	_formatAndThrowErrors(errors, context) {
 		let fields = {};
-		const errors = result.errors;
 
 		errors.forEach((error) => {
 			error = this._formatError(error, context);
@@ -112,6 +92,42 @@ class GqlSchema extends Gql {
 		err.errors = errors;
 		err.fields = fields;
 		throw err;
+	}
+
+	/**
+	 * Pre parse queries that don;t have any static data and use variables
+	 * @param {string} query
+	 * @param {any} [context]
+	 */
+	parse(query, context) {
+		let document;
+		try {
+			document = graphqlParse(query);
+		}
+		catch (syntaxError) {
+			return this._formatAndThrowErrors([syntaxError], context);
+		}
+		return document;
+	}
+
+	async execParsed(document, {context, variables}) {
+		const result = await executeGraphql({
+			schema: this._schema,
+			document,
+			context,
+			variables,
+			validateGraphql: this._validateGraphql,
+		});
+
+		if (isEmpty(result.errors)) return result.data;
+
+		return this._formatAndThrowErrors(result.errors, context);
+	}
+
+	async _getQueryResult(query, opts = {}) {
+		const {context} = opts;
+		const document = this.parse(query, context);
+		return this.execParsed(document, opts);
 	}
 }
 

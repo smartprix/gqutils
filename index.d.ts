@@ -1,5 +1,5 @@
 import {PubSub} from 'graphql-subscriptions';
-import {GraphQLSchema} from 'graphql';
+import {GraphQLSchema, DocumentNode} from 'graphql';
 import {IResolverValidationOptions} from 'graphql-tools';
 import {GenerateTypescriptOptions} from 'graphql-schema-typescript';
 import graphqlListFields = require('graphql-list-fields');
@@ -376,7 +376,7 @@ declare module 'gqutils' {
 		 * @param error Error object
 		 * @param context The context passed to exec
 		 */
-		formatError?: (error: Error, context: any) => any;
+		formatError?: (error: Error, context?: any) => any;
 	}
 
 
@@ -424,6 +424,9 @@ declare module 'gqutils' {
 
 		abstract _getQueryResult(query: string, opts: Omit<ExecOptions, 'cache'>): Promise<any>;
 
+		/**
+		 * Returns the `data` key if no errors, else throws a formatted error instance
+		 */
 		exec(query: string, opts?: ExecOptions): Promise<any>;
 		getAll(query: string, opts?: ExecOptions): Promise<any>;
 		get(query: string, opts: ExecOptions): Promise<any>;
@@ -471,6 +474,13 @@ declare module 'gqutils' {
 		getSchemas(): schemaMap;
 		getPubSub(): PubSub;
 		getData(): {[schemaName: string]: GQUtilsData};
+
+		parse(query: string): DocumentNode;
+
+		/**
+		 * Returns the `data` key if no errors, else throws a formatted error instance
+		 */
+		execParsed(document: DocumentNode, opts: Omit<ExecOptions, 'cache' | 'requestOptions'>): Promise<any>;
 
 		_getQueryResult(query: string, opts: Omit<ExecOptions, 'cache' | 'requestOptions'>): Promise<any>;
 	}
