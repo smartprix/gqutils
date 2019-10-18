@@ -475,12 +475,17 @@ declare module 'gqutils' {
 		getPubSub(): PubSub;
 		getData(): {[schemaName: string]: GQUtilsData};
 
-		parse(query: string, opts?: {validate?: boolean}): DocumentNode;
+		/**
+		 * Pre parse a query and cache it for faster executions
+		 * @param query Query string
+		 * @param opts Provide meta option to tag the result so it can be identified later
+		 */
+		parse<T extends string>(query: string, opts?: {validate?: boolean, meta?: T}): DocumentNode & {__meta: T};
 
 		/**
 		 * Returns the `data` key if no errors, else throws a formatted error instance
 		 */
-		execParsed(document: DocumentNode, opts: Omit<ExecOptions, 'cache' | 'requestOptions'>): Promise<any>;
+		execParsed(document: DocumentNode & {__meta?: string}, opts: Omit<ExecOptions, 'cache' | 'requestOptions'>): Promise<any>;
 
 		_getQueryResult(query: string, opts: Omit<ExecOptions, 'cache' | 'requestOptions'>): Promise<any>;
 	}

@@ -71,9 +71,9 @@ class GqlSchema extends Gql {
 	/**
 	 * Pre parse queries that don;t have any static data and use variables
 	 * @param {string} query
-	 * @param {any} [context]
+	 * @param {{context: any, validate?: boolean, meta?: string}} opts
 	 */
-	parse(query, {context, validate: validateGraphql = this._validateGraphql} = {}) {
+	parse(query, {context, validate: validateGraphql = this._validateGraphql, meta} = {}) {
 		let document;
 		try {
 			document = graphqlParse(query);
@@ -87,6 +87,9 @@ class GqlSchema extends Gql {
 			if (validationErrors.length > 0) {
 				return this._formatAndThrowErrors(validationErrors, context);
 			}
+		}
+		if (meta) {
+			document.__meta = meta;
 		}
 		return document;
 	}
