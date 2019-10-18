@@ -201,6 +201,7 @@ declare module 'gqutils' {
 	type fragmentField = string | Array<string | FragmentFieldObj>
 
 	interface FragmentFieldObj {
+		/** This is the `type` if `inline` is true */
 		name: string;
 		/** If you want to alias the field, like: `name: fullName` */
 		alias?: string;
@@ -208,6 +209,8 @@ declare module 'gqutils' {
 		args?: {[arg: string]: any};
 		/** If field type is itself aan object type */
 		fields?: fragmentField;
+		/** If this is an inline fragment, in that case `name` is considered the type of the inline fragment */
+		inline?:  boolean;
 	}
 
 	interface GQUtilsFragmentSchema extends GQUtilsBaseSchema {

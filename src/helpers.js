@@ -220,8 +220,11 @@ function parseFragmentFields(fields) {
 	const fieldsString = castArray(fields).map((field) => {
 		if (typeof field === 'string') return field;
 		let str = '';
-		if (field.alias) { str += `${field.alias} : ` }
-		str += field.name;
+		if (field.inline) { str += `... on ${field.name} ` }
+		else {
+			if (field.alias) { str += `${field.alias} : ` }
+			str += field.name;
+		}
 
 		if (field.args) {
 			str += toGqlArg(field.args, {roundBrackets: true});
