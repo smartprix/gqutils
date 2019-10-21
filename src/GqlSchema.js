@@ -1,43 +1,8 @@
 import isEmpty from 'lodash/isEmpty';
-import {parse, validate, execute} from 'graphql';
+import {parse as graphqlParse, validate, execute} from 'graphql';
 import Gql from './Gql';
 import {formatError} from './helpers';
 import {makeSchemaFromConfig} from './makeSchemaFrom';
-
-/**
- * we are not using the inbuilt graphql function because it validates
- * the graphql, which is an expensive operation
- * return graphql(schema, query, rootValue, context, variables);
- * taken from:
- * @see https://github.com/graphql/graphql-js/blob/master/src/graphql.js
- */
-function graphql({
-	schema, query, context, variables, rootValue = null, validateGraphql = false,
-}) {
-	// parse
-	let document;
-	try {
-		document = parse(query);
-	}
-	catch (syntaxError) {
-		return Promise.resolve({errors: [syntaxError]});
-	}
-
-	if (validateGraphql) {
-		const validationErrors = validate(schema, document);
-		if (validationErrors.length > 0) {
-			return Promise.resolve({errors: validationErrors});
-		}
-	}
-
-	return execute(
-		schema,
-		document,
-		rootValue,
-		context,
-		variables,
-	);
-}
 
 class GqlSchemaError extends Error {}
 
@@ -79,19 +44,8 @@ class GqlSchema extends Gql {
 		return this._makeResult.pubsub;
 	}
 
-	async _getQueryResult(query, {context, variables} = {}) {
-		const result = await graphql({
-			schema: this._schema,
-			query,
-			context,
-			variables,
-			validateGraphql: this._validateGraphql,
-		});
-
-		if (isEmpty(result.errors)) return result.data;
-
+	_formatAndThrowErrors(errors, context) {
 		let fields = {};
-		const errors = result.errors;
 
 		errors.forEach((error) => {
 			error = this._formatError(error, context);
@@ -112,6 +66,58 @@ class GqlSchema extends Gql {
 		err.errors = errors;
 		err.fields = fields;
 		throw err;
+	}
+
+	/**
+	 * Pre parse queries that don;t have any static data and use variables
+	 * @param {string} query
+	 * @param {{context: any, validate?: boolean, meta?: string}} opts
+	 */
+	parse(query, {context, validate: validateGraphql = this._validateGraphql, meta} = {}) {
+		let document;
+		try {
+			document = graphqlParse(query);
+		}
+		catch (syntaxError) {
+			return this._formatAndThrowErrors([syntaxError], context);
+		}
+
+		if (validateGraphql) {
+			const validationErrors = validate(this._schema, document);
+			if (validationErrors.length > 0) {
+				return this._formatAndThrowErrors(validationErrors, context);
+			}
+		}
+		if (meta) {
+			document.__meta = meta;
+		}
+		return document;
+	}
+
+	async execParsed(document, {context, variables}) {
+		const result = await execute(
+			this._schema,
+			document,
+			null,
+			context,
+			variables,
+		);
+
+		if (isEmpty(result.errors)) return result.data;
+
+		return this._formatAndThrowErrors(result.errors, context);
+	}
+
+	/**
+	 * we are not using the inbuilt graphql function because it validates
+	 * the graphql query, which is an expensive operation
+	 * taken from:
+	 * @see https://github.com/graphql/graphql-js/blob/master/src/graphql.js
+	 */
+	async _getQueryResult(query, opts = {}) {
+		const {context} = opts;
+		const document = this.parse(query, context);
+		return this.execParsed(document, opts);
 	}
 }
 

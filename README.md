@@ -1,14 +1,14 @@
+# gqutils
+
 <a href="https://www.npmjs.com/package/gqutils"><img src="https://img.shields.io/npm/v/gqutils.svg" alt="Version"></a>
 <a href="https://www.npmjs.com/package/gqutils"><img src="https://img.shields.io/npm/dm/gqutils.svg" alt="Downloads"></a>
 <a href="https://www.npmjs.com/package/gqutils"><img src="https://img.shields.io/npm/l/gqutils.svg" alt="License"></a>
 <a href="https://david-dm.org/smartprix/gqutils"><img src="https://david-dm.org/smartprix/gqutils/status.svg" alt="Dependencies"></a>
 <a href="https://david-dm.org/smartprix/gqutils?type=dev"><img src="https://david-dm.org/smartprix/gqutils/dev-status.svg" alt="Dev Dependencies"></a>
 
-# gqutils
-
 Utilities for GraphQL
 
-## Extra Types
+## Extra GraphQL Types
 
 * `Int`
 * `Float`
@@ -251,7 +251,7 @@ The Gql class provides a way to execute the schema and to construct queries.
 
 There are two ways you can use Gql to get an executable schema:
 
-#### Config:
+#### Config
 
 ```js
 const gql = Gql.fromConfig({
@@ -265,7 +265,7 @@ Provide the same options you would provide to [makeSchemaFromConfig](#makeschema
 
 Select the schema you want to execute against using the schemaName option (default is the `default` schema)
 
-#### Schemas:
+#### Schemas
 
 If you have multiple schemas and would like to have multiple Gql instances each executing different schemas then use it this way. It takes the output of one of the `makeSchema` functions plus some options as input.
 
@@ -487,6 +487,62 @@ async function getEmployeeByName(name) {
 }
 ```
 
+#### Extra Methods Executing Against Schema
+
+These methods are specific to `GqlSchema` class instances. `GqlSchema` is the result of [`Gql.fromConfig` and `Gql.fromSchemas` methods](#Executable-Schemas).
+
+##### gql.parse & gql.execParsed
+
+This allows us to pre parse and validate a query to generate a GraphQL `DocumentNode` which can be cached.
+
+This is only useful if your query is not dependent on any input that can't be moved to variables. This also allows you to validate the queries at build time or in your tests.
+
+```js
+let _parsedQuery;
+const getQuery = () => {
+	if (_parsedQuery) return _parsedQuery;
+	const query = gql.tag`
+	query($name: String) {
+		employee(name: $name) {
+			id
+			name
+			email
+			phone
+		}
+	}`;
+	// Validate's default value is the one provided in config/constructor
+	_parsedQuery = gql.parse(query, {validate: true});
+	return _parsedQuery;
+};
+
+const getResult = async () => gql.execParsed(
+	getQuery(),
+	{
+		context,
+		variables: {
+			name: 'abc',
+		}
+	});
+```
+
+A more complex example of a query with [directives](https://www.apollographql.com/docs/graphql-tools/schema-directives/) being used with variables to move dynamic logic to the query itself:
+
+```gql
+query($name: String, $getDetails: Boolean!) {
+	employee(name: $name) {
+		id
+		... EmployeeDetails @include(if: $getDetails)
+	}
+}
+fragment EmployeeDetails on Employee {
+	smartprixId
+	name
+	email
+	phone
+	createdAt
+	updatedAt
+}
+```
 
 ## Language Reference
 
@@ -549,9 +605,11 @@ const Employee = {
 ```
 
 ### Input Types
+
 Defined with `graphql: input`
 
 Its denition is mostly same as type.
+
 ```js
 const EmployeeInput = {
 	// graphql = input means it's a graphql input type
@@ -579,7 +637,9 @@ const EmployeeInput = {
 ```
 
 ### Unions
+
 Defined with `graphql: union`
+
 ```js
 const User = {
 	// graphql = union means it's a graphql union
@@ -882,8 +942,45 @@ const EmployeeFragment = {
 				'phone',
 			]
 		},
-	]
+		{
+			name: 'transport',
+			fields: [
+				'id',
+				{
+					name: 'Vehicle',
+					// this is converted to inline fragment
+					inline: true,
+					// Can also nest fields
+					fields: [
+						'number',
+						'model',
+					],
+				},
+			],
+		},
+	],
 };
+```
+
+Output:
+
+```gql
+fragment EmployeeFragment on Employee {
+	id
+	contact: email
+	teams(status: "active") {
+		id
+		phone
+	}
+	transport {
+		id
+		... on Vehicle {
+			number
+			model
+		}
+	}
+}
+
 ```
 
 ### `getConnectionResolver(query, args, options = {})`
@@ -961,7 +1058,7 @@ Options:
   -h, --help           output usage information
 ```
 
-### Config
+### Config File
 
 Have a file 'gqutils.js' in the projects root directory which exports the following options:
 

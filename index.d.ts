@@ -1,5 +1,5 @@
 import {PubSub} from 'graphql-subscriptions';
-import {GraphQLSchema} from 'graphql';
+import {GraphQLSchema, DocumentNode} from 'graphql';
 import {IResolverValidationOptions} from 'graphql-tools';
 import {GenerateTypescriptOptions} from 'graphql-schema-typescript';
 import graphqlListFields = require('graphql-list-fields');
@@ -201,6 +201,7 @@ declare module 'gqutils' {
 	type fragmentField = string | Array<string | FragmentFieldObj>
 
 	interface FragmentFieldObj {
+		/** This is the `type` if `inline` is true */
 		name: string;
 		/** If you want to alias the field, like: `name: fullName` */
 		alias?: string;
@@ -208,6 +209,8 @@ declare module 'gqutils' {
 		args?: {[arg: string]: any};
 		/** If field type is itself aan object type */
 		fields?: fragmentField;
+		/** If this is an inline fragment, in that case `name` is considered the type of the inline fragment */
+		inline?:  boolean;
 	}
 
 	interface GQUtilsFragmentSchema extends GQUtilsBaseSchema {
@@ -373,7 +376,7 @@ declare module 'gqutils' {
 		 * @param error Error object
 		 * @param context The context passed to exec
 		 */
-		formatError?: (error: Error, context: any) => any;
+		formatError?: (error: Error, context?: any) => any;
 	}
 
 
@@ -421,6 +424,9 @@ declare module 'gqutils' {
 
 		abstract _getQueryResult(query: string, opts: Omit<ExecOptions, 'cache'>): Promise<any>;
 
+		/**
+		 * Returns the `data` key if no errors, else throws a formatted error instance
+		 */
 		exec(query: string, opts?: ExecOptions): Promise<any>;
 		getAll(query: string, opts?: ExecOptions): Promise<any>;
 		get(query: string, opts: ExecOptions): Promise<any>;
@@ -468,6 +474,18 @@ declare module 'gqutils' {
 		getSchemas(): schemaMap;
 		getPubSub(): PubSub;
 		getData(): {[schemaName: string]: GQUtilsData};
+
+		/**
+		 * Pre parse a query and cache it for faster executions
+		 * @param query Query string
+		 * @param opts Provide meta option to tag the result so it can be identified later
+		 */
+		parse<T extends string>(query: string, opts?: {validate?: boolean, meta?: T}): DocumentNode & {__meta: T};
+
+		/**
+		 * Returns the `data` key if no errors, else throws a formatted error instance
+		 */
+		execParsed(document: DocumentNode & {__meta?: string}, opts: Omit<ExecOptions, 'cache' | 'requestOptions'>): Promise<any>;
 
 		_getQueryResult(query: string, opts: Omit<ExecOptions, 'cache' | 'requestOptions'>): Promise<any>;
 	}
