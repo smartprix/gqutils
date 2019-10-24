@@ -16,6 +16,8 @@ import {
 
 import {GraphQLJSON, GraphQLJSONObject} from 'graphql-type-json';
 
+// NOTE: If you add any scalars add them to generateTypes.js too
+
 // http://dev.apollodata.com/tools/graphql-tools/scalars.html#Own-GraphQLScalarType-instance
 const GraphQLStringTrimmed = new GraphQLScalarType({
 	name: 'String',

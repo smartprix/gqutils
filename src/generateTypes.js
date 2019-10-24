@@ -67,6 +67,22 @@ declare global {
 	return typeString;
 }
 
+/** @type {import('graphql-schema-typescript').GenerateTypescriptOptions} */
+const defaultOptions = {
+	global: true,
+	tabSpaces: 4,
+	customScalarType: {
+		JSON: 'any',
+		JSONObject: 'any',
+		StringOrInt: 'string | number',
+		IntID: 'number',
+		DateTime: 'string',
+		URL: 'string',
+		StringOriginal: 'string',
+	},
+	// https://github.com/dangcuuson/graphql-schema-typescript/issues/17
+	// asyncResult: true
+};
 
 async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', outputPath, schema, options = {}} = {}) {
 	/** @type {import('graphql-schema-typescript').generateTypeScriptTypes} */
@@ -86,13 +102,6 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 	return Promise.all(Object.keys(graphqlSchemas).map(async (schemaName) => {
 		if (schema.length && !schema.includes(schemaName)) return;
 
-		/** @type {import('graphql-schema-typescript').GenerateTypescriptOptions} */
-		const defaultOptions = {
-			global: true,
-			tabSpaces: 4,
-			// https://github.com/dangcuuson/graphql-schema-typescript/issues/17
-			// asyncResult: true
-		};
 		const graphqlSchema = graphqlSchemas[schemaName];
 		const data = graphqlSchema._data || {};
 
@@ -101,10 +110,10 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 		await generateTypeScriptTypes(
 			graphqlSchema,
 			typesFile.path,
-			_.merge(defaultOptions, options, {
+			_.defaultsDeep({
 				namespace: `GraphQl.${schemaName}`,
 				contextType,
-			}),
+			}, options, defaultOptions),
 		);
 
 		let isEmpty = true;
