@@ -13,18 +13,33 @@ async function defaultPostRequest(url, {headers, body, token}) {
 	if (!headers['Content-Type']) {
 		headers['Content-Type'] = 'application/json';
 	}
+	if (!headers['x-requested-with']) {
+		headers['x-requested-with'] = 'fetch';
+	}
 
-	const response = await fetch(url, {
-		method: 'POST',
-		cache: 'no-cache',
-		credentials: 'include',
-		headers,
-		body: JSON.stringify(body),
-	});
+	let response;
+	try {
+		response = await fetch(url, {
+			method: 'POST',
+			cache: 'no-cache',
+			credentials: 'include',
+			headers,
+			body: JSON.stringify(body),
+		});
+	}
+	catch (e) {
+		e.err_code = 'FETCH_ERROR';
+		e.statusCode = 600;
+		throw e;
+	}
 
 	let result;
-	try { result = await response.json() }
-	catch (e) { result = null }
+	try {
+		result = await response.json();
+	}
+	catch (e) {
+		result = null;
+	}
 
 	if (response.status !== 200) {
 		const err = new GqlApiError(`${response.status}, Invalid status code`);
@@ -35,7 +50,7 @@ async function defaultPostRequest(url, {headers, body, token}) {
 	}
 
 	if (!result) {
-		const err = new GqlApiError('Invalid result from api');
+		const err = new GqlApiError('Malformed json response');
 		err.body = await response.text();
 		throw err;
 	}

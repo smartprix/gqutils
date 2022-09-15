@@ -1,5 +1,4 @@
-import {isEmpty} from 'lodash';
-import {Connect, Str} from 'sm-utils';
+import {Connect} from 'sm-utils';
 import {GqlApiError} from './GqlApi';
 
 /** Default post request method to be used for `GqlApi` */
@@ -9,12 +8,27 @@ async function defaultPostRequest(url, {headers, cookies, body, token} = {}) {
 		.headers(headers)
 		.cookies(cookies)
 		.body(body)
-		.post();
+		.keepalive()
+		.timeoutMs(15000);
 	if (token) request.apiToken(token);
 
-	const response = await request;
+	let response;
+	try {
+		response = await request.post();
+	}
+	catch (e) {
+		e.err_code = 'FETCH_ERROR';
+		e.statusCode = 600;
+		throw e;
+	}
 
-	const result = Str.tryParseJson(response.body);
+	let result;
+	try {
+		result = JSON.parse(response.body);
+	}
+	catch (e) {
+		result = null;
+	}
 
 	if (response.statusCode !== 200) {
 		const err = new GqlApiError(`${response.statusCode}, Invalid status code`);
@@ -23,14 +37,12 @@ async function defaultPostRequest(url, {headers, cookies, body, token} = {}) {
 		err.statusCode = response.statusCode;
 		throw err;
 	}
-
 	if (!result) {
-		const err = new GqlApiError('Invalid result from api');
+		const err = new GqlApiError('Malformed json response');
 		err.body = response.body;
 		throw err;
 	}
-
-	if (!isEmpty(result.errors)) {
+	if (result.errors && result.errors.length) {
 		const err = new GqlApiError('Errors in api response');
 		err.errors = result.errors;
 		throw err;
