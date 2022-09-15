@@ -809,6 +809,17 @@ class Schema {
 		}
 
 		type._graphql = new GraphQLObjectType(graphqlType);
+		type._graphql.extra = _.omit(type, [
+			'graphql',
+			'name',
+			'description',
+			'fields',
+			'isTypeOf',
+			'interfaces',
+			'implements',
+			'_graphql',
+			'relayConnection',
+		]);
 	}
 
 	parseGraphqlUnion(schema, union) {
