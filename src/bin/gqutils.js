@@ -1,15 +1,17 @@
 #! /usr/bin/env node
+import {createRequire} from 'module';
 import _ from 'lodash';
 import program from 'commander';
+import packageJson from '../../package.json' with {type: 'json'};
+import {getConfig, generateTypesFromSchema, makeSchemaFromConfig} from '../index.js';
 
-import {version} from '../../package.json';
-import {getConfig, generateTypesFromSchema, makeSchemaFromConfig} from '../index';
+const require = createRequire(import.meta.url);
+const {version} = packageJson;
 
 let logger;
 function getLogger() {
 	if (logger) return logger;
 	try {
-		// eslint-disable-next-line global-require
 		const {Oak} = require('@smpx/oak');
 		logger = new Oak('gqutils');
 	}

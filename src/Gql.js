@@ -5,7 +5,7 @@ import {
 	GqlEnum,
 	GqlFragment,
 	parseFragmentFields,
-} from './helpers';
+} from './helpers.js';
 
 const ONE_DAY = 24 * 3600 * 1000;
 

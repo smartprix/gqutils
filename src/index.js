@@ -1,8 +1,8 @@
 import getFieldNames from 'graphql-list-fields';
-import Gql from './Gql';
-import GqlApi, {GqlApiError} from './GqlApi';
-import GqlSchema, {GqlSchemaError} from './GqlSchema';
-import defaultPostRequest from './postRequestNode';
+import Gql from './Gql.js';
+import GqlApi, {GqlApiError} from './GqlApi.js';
+import GqlSchema, {GqlSchemaError} from './GqlSchema.js';
+import defaultPostRequest from './postRequestBrowser.js';
 
 // Set default Connect client for API requests.
 // NOTE: Not done in class so it can also be imported in frontend clients with own impelentation
@@ -15,11 +15,11 @@ Gql.fromConfig = opts => new GqlSchema({config: opts, cache: opts.cache});
 Gql.fromSchemas = opts => new GqlSchema({schemas: opts, cache: opts.cache});
 
 
-export * from './helpers';
-export * from './connection';
-export * from './Schema';
-export * from './makeSchemaFrom';
-export * from './generateTypes';
+export * from './helpers.js';
+export * from './connection.js';
+export * from './Schema.js';
+export * from './makeSchemaFrom.js';
+export * from './generateTypes.js';
 
 export {
 	Gql,

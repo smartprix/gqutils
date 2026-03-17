@@ -1,5 +1,5 @@
 /* eslint-env browser */
-import {GqlApiError} from './GqlApi';
+import {GqlApiError} from './GqlApi.js';
 
 /**
  * Default post request method to be used for `GqlApi` in browsers
@@ -55,7 +55,7 @@ async function defaultPostRequest(url, {headers, body, token}) {
 		throw err;
 	}
 
-	if (Object.keys(result.errors || {}).length) {
+	if (result.errors && Object.keys(result.errors).length) {
 		const err = new GqlApiError('Errors in api response');
 		err.errors = result.errors;
 		throw err;

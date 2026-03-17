@@ -20,10 +20,10 @@ import {
 
 import {withFilter} from 'graphql-subscriptions';
 
-import defaultScalars from './defaultScalars';
-import defaultTypes from './defaultTypes';
-import defaultArgs from './defaultArgs';
-import {parseFragmentFields, GqlEnum, GqlFragment} from './helpers';
+import defaultScalars from './defaultScalars.js';
+import defaultTypes from './defaultTypes.js';
+import defaultArgs from './defaultArgs.js';
+import {parseFragmentFields, GqlEnum, GqlFragment} from './helpers.js';
 
 function identity(value) {
 	return value;

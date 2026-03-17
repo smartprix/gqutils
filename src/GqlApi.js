@@ -1,4 +1,4 @@
-import Gql from './Gql';
+import Gql from './Gql.js';
 
 class GqlApiError extends Error {}
 

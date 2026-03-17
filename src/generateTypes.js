@@ -1,6 +1,9 @@
+import {createRequire} from 'module';
 import path from 'path';
+import fs from 'fs/promises';
 import _ from 'lodash';
-import {File} from 'sm-utils';
+
+const require = createRequire(import.meta.url);
 
 function getTypeStringForCustomAdditions({fragments, enums, interfaces}, schemaName) {
 	let typeString = `\
@@ -105,11 +108,12 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 		const graphqlSchema = graphqlSchemas[schemaName];
 		const data = graphqlSchema._data || {};
 
-		const typesFile = new File(path.join(folder, `${schemaName}.d.ts`));
+		const typesFilePath = path.join(folder, `${schemaName}.d.ts`);
 
+		await fs.mkdir(path.dirname(typesFilePath), {recursive: true});
 		await generateTypeScriptTypes(
 			graphqlSchema,
-			typesFile.path,
+			typesFilePath,
 			_.defaultsDeep({
 				namespace: `GraphQl.${schemaName}`,
 				contextType,
@@ -120,7 +124,7 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 		_.forEach(data, (val) => { isEmpty = _.isEmpty(val) && isEmpty });
 		if (isEmpty) return;
 
-		await typesFile.append(getTypeStringForCustomAdditions(data, schemaName));
+		await fs.appendFile(typesFilePath, getTypeStringForCustomAdditions(data, schemaName));
 	}));
 }
 

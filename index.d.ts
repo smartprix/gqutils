@@ -2,8 +2,7 @@ import {PubSub} from 'graphql-subscriptions';
 import {GraphQLSchema, DocumentNode} from 'graphql';
 import {IResolverValidationOptions} from 'graphql-tools';
 import {GenerateTypescriptOptions} from 'graphql-schema-typescript';
-import graphqlListFields = require('graphql-list-fields');
-import {Cache, response} from 'sm-utils';
+import graphqlListFields from 'graphql-list-fields';
 
 declare module 'gqutils' {
 	type schemaType = string[] | string;
@@ -397,6 +396,11 @@ declare module 'gqutils' {
 		cache?: {key: string, ttl?: number, forceUpdate?: boolean};
 		variables?: {[key: string]: any};
 		requestOptions?: Pick<RequestOptions, 'headers' | 'cookies'> & {[key: string]: string};
+	}
+
+	interface Cache {
+		get(key: string): Promise<any>;
+		set(key: string, value: any, opts?: {ttl?: number}): Promise<any>;
 	}
 
 	type _cacheOpts = {

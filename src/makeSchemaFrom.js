@@ -1,9 +1,12 @@
 
+import {createRequire} from 'module';
 import path from 'path';
 import fs from 'fs';
 import _ from 'lodash';
 import {PubSub} from 'graphql-subscriptions';
-import {makeSchemas} from './Schema';
+import {makeSchemas} from './Schema.js';
+
+const require = createRequire(import.meta.url);
 
 function makeSchemaFromObjects(schemas, resolvers, opts = {}) {
 	const defaultSchemaName = opts.defaultSchemaName || 'default';

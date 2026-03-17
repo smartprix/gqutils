@@ -2,21 +2,32 @@
   "name": "gqutils",
   "version": "1.8.2",
   "description": "Utilities For GraphQL",
-  "main": "dist/index.js",
-  "browser": "dist/browser.js",
+  "main": "dist/index.cjs",
+  "module": "src/index.js",
+  "browser": "src/browser.js",
   "repository": "smartprix/gqutils",
   "directories": {
     "test": "test"
   },
-  "bin": "dist/bin/gqutils.js",
+  "bin": "src/bin/gqutils.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./browser": {
+      "import": "./src/browser.js",
+      "require": "./dist/browser.cjs"
+    }
+  },
   "scripts": {
     "test": "npm run lint && npm run test-only",
     "check-coverage": "true",
     "lint": "eslint src",
     "lint:fix": "npm run lint -- --fix",
     "test-only": "mocha test/*.test.js",
-    "build": "rm -rf dist && babel src --out-dir dist",
-    "-precommit": "npm run build && npm test && npm run check-coverage",
+    "build": "esbuild src/index.js src/browser.js --bundle --packages=external --format=cjs --platform=node --outdir=dist --out-extension:.js=.cjs \"--define:import.meta.url=__filename\"",
+    "-precommit": "npm test && npm run check-coverage",
     "prepublishOnly": "npm run build"
   },
   "types": "index.d.ts",
@@ -35,47 +46,19 @@
   "peerDependencies": {
     "graphql": "*",
     "graphql-subscriptions": "*",
-    "graphql-tools": "*",
-    "sm-utils": "^2.21.1"
+    "graphql-tools": "*"
   },
   "devDependencies": {
-    "@babel/cli": "^7.4.4",
-    "@babel/core": "^7.4.5",
-    "@babel/plugin-proposal-class-properties": "^7.4.4",
-    "@babel/preset-env": "^7.4.5",
-    "@babel/register": "^7.4.4",
     "chai": "^4.2.0",
+    "esbuild": "^0.25.0",
     "eslint": "^5.16.0",
     "eslint-config-smartprix": "^3.5.4",
     "graphql": "^14.1.1",
     "graphql-subscriptions": "^1.0.0",
     "graphql-tools": "^4.0.4",
-    "mocha": "^6.1.4",
-    "sm-utils": "^2.21.1"
+    "mocha": "^6.1.4"
   },
-  "babel": {
-    "presets": [
-      [
-        "@babel/preset-env",
-        {
-          "targets": {
-            "node": "current"
-          },
-          "modules": "commonjs",
-          "shippedProposals": true
-        }
-      ]
-    ],
-    "plugins": [
-      [
-        "@babel/plugin-proposal-class-properties",
-        {
-          "loose": true
-        }
-      ]
-    ],
-    "sourceMaps": true
-  },
+  "type": "module",
   "eslintConfig": {
     "extends": "smartprix",
     "rules": {
