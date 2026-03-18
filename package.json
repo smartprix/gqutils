@@ -1,6 +1,6 @@
 {
   "name": "gqutils",
-  "version": "1.8.2",
+  "version": "2.0.0",
   "description": "Utilities For GraphQL",
   "main": "dist/index.cjs",
   "module": "src/index.js",
