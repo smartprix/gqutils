@@ -1,5 +1,3 @@
-import isEmpty from 'lodash/isEmpty';
-
 import {
 	toGqlArg,
 	GqlEnum,
@@ -67,7 +65,7 @@ class Gql {
 
 			out += strings[i];
 		}
-		if (isEmpty(fragments)) return out;
+		if (Object.keys(fragments).length === 0) return out;
 
 		out = wrapQuery(out);
 		out += `\n${Object.values(fragments).join('\n')}`;

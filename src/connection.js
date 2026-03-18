@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import {mapValues} from './lodash.js';
 
 function getIdFromCursor(cursor) {
 	const num = Number(cursor);
@@ -103,12 +103,12 @@ function getConnectionResolver(query, args, options = {}) {
 				const edgeResolver = Object.assign({
 					node: (node => node),
 					cursor: ((node, i, info) => getCursorFromId(info.offset + i)),
-				}, _.mapValues(resolvers.edges, item => wrapInFunc(item)));
+				}, mapValues(resolvers.edges, item => wrapInFunc(item)));
 
 				let i = 0;
 				return items.map((item) => {
 					i++;
-					return _.mapValues(edgeResolver, key => key(item, i, {offset}));
+					return mapValues(edgeResolver, key => key(item, i, {offset}));
 				});
 			};
 		}
@@ -182,11 +182,11 @@ function getConnectionResolver(query, args, options = {}) {
 	};
 
 	// extra resolvers
-	_.forEach(resolvers, (resolver, key) => {
+	for (const [key, resolver] of Object.entries(resolvers)) {
 		if (!['nodes', 'edges', 'totalCount', 'pageInfo'].includes(key)) {
 			connectionResolver[key] = resolver;
 		}
-	});
+	}
 
 	return connectionResolver;
 }

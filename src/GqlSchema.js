@@ -1,8 +1,8 @@
-import isEmpty from 'lodash/isEmpty';
 import {parse as graphqlParse, validate, execute} from 'graphql';
 import Gql from './Gql.js';
 import {formatError} from './helpers.js';
 import {makeSchemaFromConfig} from './makeSchemaFrom.js';
+import {isEmpty} from './lodash.js';
 
 class GqlSchemaError extends Error {}
 

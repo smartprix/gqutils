@@ -2,9 +2,15 @@
 import {createRequire} from 'module';
 import path from 'path';
 import fs from 'fs';
-import _ from 'lodash';
 import {PubSub} from 'graphql-subscriptions';
 import {makeSchemas} from './Schema.js';
+
+import {
+	mapValues,
+	merge,
+	castArray,
+	isEmpty,
+} from './lodash.js';
 
 const require = createRequire(import.meta.url);
 
@@ -30,7 +36,7 @@ function makeSchemaFromObjects(schemas, resolvers, opts = {}) {
 		schema: graphqlSchemas,
 		defaultSchema: graphqlSchemas[defaultSchemaName],
 		pubsub,
-		data: _.mapValues(graphqlSchemas, schema => schema._data),
+		data: mapValues(graphqlSchemas, schema => schema._data),
 	};
 }
 
@@ -50,7 +56,7 @@ function makeSchemaFromModules(modules, opts = {}) {
 		}
 
 		if (mod.schema) schemas.push(mod.schema);
-		if (mod.resolvers) _.merge(resolvers, mod.resolvers);
+		if (mod.resolvers) merge(resolvers, mod.resolvers);
 	});
 
 	return makeSchemaFromObjects(schemas, resolvers, opts);
@@ -112,7 +118,7 @@ function makeSchemaFromDirectory(directory, opts = {}) {
 		// eslint-disable-next-line global-require, import/no-dynamic-require
 		const mod = require(file);
 		if (mod.schema) schemas.push(mod.schema);
-		if (mod.resolvers) _.merge(resolvers, mod.resolvers);
+		if (mod.resolvers) merge(resolvers, mod.resolvers);
 	};
 
 	const files = fs.readdirSync(directory);
@@ -148,7 +154,7 @@ function getConfig() {
 	}
 	catch (e) {
 		conf = require(packageFile)['gqutils']; // eslint-disable-line
-		if (!conf || _.isEmpty(conf)) throw new Error('No config in package.json');
+		if (!conf || isEmpty(conf)) throw new Error('No config in package.json');
 	}
 
 	return conf;
@@ -156,8 +162,8 @@ function getConfig() {
 
 function makeSchemaFromConfig(opts = {}) {
 	const conf = getConfig();
-	const finalOpts = _.merge({}, conf, opts);
-	finalOpts.schemas = _.castArray(opts.schema || opts.schemas || conf.schema || conf.schemas);
+	const finalOpts = merge({}, conf, opts);
+	finalOpts.schemas = castArray(opts.schema || opts.schemas || conf.schema || conf.schemas);
 
 	// convert relative path to absolute
 	if (finalOpts.schemaDirectory && !finalOpts.schemaDirectory.startsWith('/')) {

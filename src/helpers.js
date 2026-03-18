@@ -1,7 +1,4 @@
-import castArray from 'lodash/castArray';
-import forEach from 'lodash/forEach';
-import isPlainObject from 'lodash/isPlainObject';
-import pick from 'lodash/pick';
+import {castArray, isPlainObject, pick} from './lodash.js';
 
 function humanizeError(field, error) {
 	let message = error.message;
@@ -59,7 +56,7 @@ function formatError(error) {
 			error.fields.global = {message};
 		}
 		else if (isPlainObject(message)) {
-			forEach(message, (value, key) => {
+			for (const [key, value] of Object.entries(message)) {
 				if (typeof value === 'string') {
 					error.fields[key] = {
 						message: value,
@@ -71,7 +68,7 @@ function formatError(error) {
 				else {
 					error.fields[key] = value;
 				}
-			});
+			}
 		}
 
 		if (isDev) {
@@ -157,11 +154,11 @@ class GqlFragment {
 
 function convertObjToGqlArg(obj) {
 	const gqlArg = [];
-	forEach(obj, (value, key) => {
-		if (value === undefined) return;
+	for (const [key, value] of Object.entries(obj)) {
+		if (value === undefined) continue;
 		// eslint-disable-next-line no-use-before-define
 		gqlArg.push(`${key}: ${convertToGqlArg(value)}`);
-	});
+	}
 	return `${gqlArg.join(', ')}`;
 }
 

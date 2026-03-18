@@ -1,4 +1,5 @@
-import _ from 'lodash';
+/* eslint-disable max-lines */
+/* globals structuredClone */
 import {
 	GraphQLSchema,
 	GraphQLObjectType,
@@ -24,6 +25,15 @@ import defaultScalars from './defaultScalars.js';
 import defaultTypes from './defaultTypes.js';
 import defaultArgs from './defaultArgs.js';
 import {parseFragmentFields, GqlEnum, GqlFragment} from './helpers.js';
+import {
+	castArray,
+	forEach,
+	mapValues,
+	defaults,
+	isPlainObject,
+	isEmpty,
+	omit,
+} from './lodash.js';
 
 function identity(value) {
 	return value;
@@ -46,17 +56,21 @@ function getMergedTypeFieldsWithInterfaces(schema, type) {
 	if (!interfaces) {
 		return type.fields;
 	}
-	const defaultFields = {};
+	const fields = {};
 
-	_.castArray(interfaces)
+	castArray(interfaces)
 		.map(name => schema.interfaces[name] && schema.interfaces[name].fields)
 		.filter(Boolean)
 		.forEach((interfaceFields) => {
 			// Assuming interfaces don't have conflicting fields
-			Object.assign(defaultFields, interfaceFields);
+			Object.assign(fields, interfaceFields);
 		});
 
-	return _.mergeWith(defaultFields, type.fields, mergeFields);
+	const typeFields = type.fields;
+	for (const key of Object.keys(typeFields)) {
+		fields[key] = mergeFields(fields[key], typeFields[key]);
+	}
+	return fields;
 }
 
 function collectDependenciesUtil(schema, allInterfaces, interfaceName, state = {}) {
@@ -78,7 +92,7 @@ function collectDependenciesUtil(schema, allInterfaces, interfaceName, state = {
 
 	state[interfaceName] = 1; // Processing
 
-	_.forEach(_interface.extends, (name) => {
+	forEach(_interface.extends, (name) => {
 		dependencies.push(...collectDependenciesUtil(schema, allInterfaces, name, state));
 	});
 
@@ -92,7 +106,7 @@ class Schema {
 			throw new Error('No schema provided');
 		}
 
-		this.originalSchema = _.castArray(schema);
+		this.originalSchema = castArray(schema);
 		this.schemas = {};
 		this.options = options;
 		this.defaultSchemaName = options.defaultSchemaName || 'default';
@@ -109,7 +123,7 @@ class Schema {
 	preprocess() {
 		let schemaNames = this.options.schemas || this.options.schema;
 		if (!schemaNames) schemaNames = [];
-		schemaNames = _.castArray(schemaNames);
+		schemaNames = castArray(schemaNames);
 
 		if (!schemaNames.includes(this.defaultSchemaName)) {
 			schemaNames.push(this.defaultSchemaName);
@@ -151,7 +165,7 @@ class Schema {
 	}
 
 	handleSchemaItem(schemaItem, itemName = null) {
-		if (!_.isPlainObject(schemaItem)) {
+		if (!isPlainObject(schemaItem)) {
 			throw new Error('Schema must be an object (or maybe you forgot to define graphql property on some schema)');
 		}
 
@@ -329,22 +343,22 @@ class Schema {
 	}
 
 	parseTypes(schema, types) {
-		return _.filter(_.map(types, type => this.parseType(schema, type)));
+		return types.map(type => this.parseType(schema, type)).filter(Boolean);
 	}
 
 	handleSchemaEntry(schemaEntry) {
-		if (_.isPlainObject(schemaEntry)) {
+		if (isPlainObject(schemaEntry)) {
 			if (schemaEntry.graphql) {
 				this.handleSchemaItem(schemaEntry);
 				return;
 			}
 
-			_.forEach(schemaEntry, (schemaItem, itemName) => {
+			forEach(schemaEntry, (schemaItem, itemName) => {
 				this.handleSchemaItem(schemaItem, itemName);
 			});
 		}
-		else if (_.isArray(schemaEntry)) {
-			_.forEach(schemaEntry, (schemaItem) => {
+		else if (Array.isArray(schemaEntry)) {
+			schemaEntry.forEach((schemaItem) => {
 				this.handleSchemaItem(schemaItem);
 			});
 		}
@@ -374,7 +388,7 @@ class Schema {
 			return options.includeByDefault || false;
 		}
 
-		schemaNames = _.castArray(schemaNames);
+		schemaNames = castArray(schemaNames);
 
 		if (!schemaNames.includes(schemaName)) {
 			return false;
@@ -385,7 +399,7 @@ class Schema {
 			schemaItem.implements ||
 			schemaItem.type;
 
-		if (_.isArray(types)) {
+		if (Array.isArray(types)) {
 			for (const type of types) {
 				if (!this.schemaHasType(schema, type)) return false;
 			}
@@ -415,7 +429,7 @@ class Schema {
 		// in case we want to add extra fields to the edge schema
 		// eg. to add extra field to edge => relayConnection: {edgeFields: {title: 'String!'}}
 		if (relayConnection.edgeFields) {
-			_.merge(edgeFields, schemaItem.relayConnection.edgeFields);
+			Object.assign(edgeFields, schemaItem.relayConnection.edgeFields);
 		}
 
 		if (!(edgeName in schema.types)) {
@@ -437,7 +451,7 @@ class Schema {
 		// in case we want to add extra fields to the edge schema
 		// eg. to add extra field to edge => relayConnection: {fields: {timeTaken: 'Int'}}
 		if (relayConnection.fields) {
-			_.merge(connectionFields, schemaItem.relayConnection.fields);
+			Object.assign(connectionFields, schemaItem.relayConnection.fields);
 		}
 
 		if (!(connectionName in schema.types)) {
@@ -452,7 +466,7 @@ class Schema {
 	collectGraphqlTypeInSchema(schema, name) {
 		const schemaItems = this.schemas[this.defaultSchemaName][name];
 
-		_.forEach(schemaItems, (schemaItem) => {
+		forEach(schemaItems, (schemaItem) => {
 			if (this.shouldSchemaContain(schema, schemaItem)) {
 				schema[name][schemaItem.name] = schemaItem;
 
@@ -465,18 +479,17 @@ class Schema {
 
 	collectSingleInterfaceDependencies(schema, interfaceName) {
 		let allInterfaces = this.schemas[this.defaultSchemaName].interfaces;
-		allInterfaces = _.map(allInterfaces, i => i.name);
+		allInterfaces = Object.values(allInterfaces).map(i => i.name);
 
 		return collectDependenciesUtil(schema, allInterfaces, interfaceName);
 	}
 
 	collectInterfaceDependencies(schema, interfaces) {
 		const dependencies = [];
-		interfaces = _.castArray(interfaces);
-		interfaces.forEach((name) => {
+		castArray(interfaces).forEach((name) => {
 			dependencies.push(...this.collectSingleInterfaceDependencies(schema, name));
 		});
-		return _.uniq(dependencies);
+		return [...new Set(dependencies)];
 	}
 
 	parseGraphqlField(schema, field, resolve, fieldPath) {
@@ -496,7 +509,7 @@ class Schema {
 			// handle filter in case of subscriptions
 			if (fieldResolve.subscribe && fieldResolve.filter) {
 				// since we are changing fieldResolve, we need to clone it
-				fieldResolve = _.clone(fieldResolve);
+				fieldResolve = {...fieldResolve};
 
 				fieldResolve.subscribe = withFilter(
 					fieldResolve.subscribe,
@@ -536,7 +549,7 @@ class Schema {
 		}
 
 		if (field.default !== undefined) {
-			if (_.isFunction(field.default)) {
+			if (typeof field.default === 'function') {
 				graphqlField.defaultValue = field.default();
 			}
 			else {
@@ -563,7 +576,7 @@ class Schema {
 	parseGraphqlArgs(schema, args, typeName, fieldPath) {
 		if (args.$default) {
 			// since we are modifying args, clone it first
-			args = _.cloneDeep(args);
+			args = structuredClone(args);
 			let typeFields;
 			const type = schema.types[typeName] || schema.interfaces[typeName];
 
@@ -580,24 +593,24 @@ class Schema {
 					const connectionFields = getMergedTypeFieldsWithInterfaces(schema, connectionType);
 
 					if (connectionType) {
-						typeFields = _.assign({}, typeFields, connectionFields);
+						typeFields = Object.assign({}, typeFields, connectionFields);
 					}
 				}
 			}
-			_.forEach(args.$default, (argName) => {
+			castArray(args.$default).forEach((argName) => {
 				// handle paging args
 				if (argName === '$paging') {
-					_.defaults(args, defaultArgs.pagingArgs);
+					defaults(args, defaultArgs.pagingArgs);
 					return;
 				}
 
 				// handle order args
 				if (argName === '$order') {
-					_.defaults(args, defaultArgs.orderArgs);
+					defaults(args, defaultArgs.orderArgs);
 					return;
 				}
 				if (argName === '$sort') {
-					_.defaults(args, defaultArgs.sortArgs);
+					defaults(args, defaultArgs.sortArgs);
 					return;
 				}
 
@@ -629,7 +642,7 @@ class Schema {
 					}
 				}
 				else {
-					field = _.clone(field);
+					field = {...field};
 
 					// remove required
 					if (typeof field.type === 'string') {
@@ -658,7 +671,7 @@ class Schema {
 	parseGraphqlFields(schema, fields, parentName) {
 		const parsedFields = {};
 
-		_.forEach(fields, (field, fieldName) => {
+		forEach(fields, (field, fieldName) => {
 			const resolve = (
 				parentName &&
 				this.resolvers[parentName] &&
@@ -694,7 +707,7 @@ class Schema {
 	parseGraphqlEnumValues(schema, values) {
 		const parsedValues = {};
 
-		_.forEach(values, (value, name) => {
+		forEach(values, (value, name) => {
 			const parsedField = this.parseGraphqlEnumValue(schema, value, name);
 			if (!parsedField) return;
 
@@ -730,7 +743,7 @@ class Schema {
 			description: schemaItem.description,
 			values,
 		});
-		return _.mapValues(values, (val, name) => new GqlEnum(name, val));
+		return mapValues(values, (val, name) => new GqlEnum(name, val));
 	}
 
 	parseGraphqlInterface(schema, schemaItem) {
@@ -789,7 +802,7 @@ class Schema {
 					type.name
 				);
 
-				if (_.isEmpty(fields)) {
+				if (isEmpty(fields)) {
 					return {
 						noop: {
 							type: GraphQLString,
@@ -809,7 +822,7 @@ class Schema {
 		}
 
 		type._graphql = new GraphQLObjectType(graphqlType);
-		type._graphql.extra = _.omit(type, [
+		type._graphql.extra = omit(type, [
 			'graphql',
 			'name',
 			'description',
@@ -845,35 +858,35 @@ class Schema {
 	}
 
 	parseGraphqlScalars(schema, scalars) {
-		_.forEach(scalars, scalar => this.parseGraphqlScalar(schema, scalar));
+		forEach(scalars, scalar => this.parseGraphqlScalar(schema, scalar));
 	}
 
 	parseGraphqlEnums(schema, enums) {
 		const gqlEnumMap = {};
-		_.forEach(enums, (schemaItem) => {
+		forEach(enums, (schemaItem) => {
 			gqlEnumMap[schemaItem.name] = this.parseGraphqlEnum(schema, schemaItem);
 		});
 		return gqlEnumMap;
 	}
 
 	parseGraphqlInterfaces(schema, interfaces) {
-		return _.mapValues(interfaces, schemaItem => this.parseGraphqlInterface(schema, schemaItem));
+		return mapValues(interfaces, schemaItem => this.parseGraphqlInterface(schema, schemaItem));
 	}
 
 	parseGraphqlInputTypes(schema, inputTypes) {
-		_.forEach(inputTypes, inputType => this.parseGraphqlInputType(schema, inputType));
+		forEach(inputTypes, inputType => this.parseGraphqlInputType(schema, inputType));
 	}
 
 	parseGraphqlTypes(schema, types) {
-		_.forEach(types, type => this.parseGraphqlType(schema, type));
+		forEach(types, type => this.parseGraphqlType(schema, type));
 	}
 
 	parseGraphqlUnions(schema, unions) {
-		_.forEach(unions, union => this.parseGraphqlUnion(schema, union));
+		forEach(unions, union => this.parseGraphqlUnion(schema, union));
 	}
 
 	parseGraphqlFragments(schema, fragments) {
-		return _.mapValues(fragments, fragment => this.parseGraphqlFragment(schema, fragment));
+		return mapValues(fragments, fragment => this.parseGraphqlFragment(schema, fragment));
 	}
 
 	parseGraphqlSchema(schema) {
@@ -923,7 +936,7 @@ class Schema {
 	parseGraphqlSchemas() {
 		const finalSchemas = {};
 
-		_.forEach(this.schemas, (schema, schemaName) => {
+		forEach(this.schemas, (schema, schemaName) => {
 			finalSchemas[schemaName] = this.parseGraphqlSchema(schema);
 		});
 

@@ -1,7 +1,8 @@
 import {createRequire} from 'module';
 import path from 'path';
 import fs from 'fs/promises';
-import _ from 'lodash';
+
+import {isEmpty, merge} from './lodash.js';
 
 const require = createRequire(import.meta.url);
 
@@ -16,7 +17,7 @@ declare global {
 
 
 	/** ************************** Fragment Map ************************** */
-	if (!_.isEmpty(fragments)) {
+	if (!isEmpty(fragments)) {
 		typeString += `\
 
 		type fragments = {
@@ -28,17 +29,17 @@ declare global {
 
 
 	/** **************************** Enum Map **************************** */
-	if (!_.isEmpty(enums)) {
+	if (!isEmpty(enums)) {
 		const notFound = Symbol('val not found');
 		typeString += `\
 
 		type enums = {
-			${_.map(Object.entries(enums),
+			${Object.entries(enums).map(
 		([enumName, values]) => `${enumName}: { ${
 			Object
 				.keys(values)
 				.map((key) => {
-					const val = _.get(values, key + '.value.value', notFound);
+					const val = values[key]?.value?.value ?? notFound;
 					const type = val === notFound ? 'any' : typeof val;
 
 					return `${key}: GqlEnum<${type}>;`;
@@ -53,7 +54,7 @@ declare global {
 
 
 	/** ********************* Interface Types string enum ********************* */
-	if (!_.isEmpty(interfaces)) {
+	if (!isEmpty(interfaces)) {
 		typeString += `\
 
 		type interfaces = '${Object.keys(interfaces).join('\' | \'')}';
@@ -100,7 +101,7 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 	}
 	const folder = outputPath || `${process.cwd()}/typings/graphql`;
 
-	schema = _.castArray(schema);
+	schema = Array.isArray(schema) ? schema : [schema];
 
 	return Promise.all(Object.keys(graphqlSchemas).map(async (schemaName) => {
 		if (schema.length && !schema.includes(schemaName)) return;
@@ -114,15 +115,11 @@ async function generateTypesFromSchema(graphqlSchemas, {contextType = 'any', out
 		await generateTypeScriptTypes(
 			graphqlSchema,
 			typesFilePath,
-			_.defaultsDeep({
-				namespace: `GraphQl.${schemaName}`,
-				contextType,
-			}, options, defaultOptions),
+			merge({}, defaultOptions, options, {namespace: `GraphQl.${schemaName}`, contextType}),
 		);
 
-		let isEmpty = true;
-		_.forEach(data, (val) => { isEmpty = _.isEmpty(val) && isEmpty });
-		if (isEmpty) return;
+		const isDataEmpty = Object.values(data).every(isEmpty);
+		if (isDataEmpty) return;
 
 		await fs.appendFile(typesFilePath, getTypeStringForCustomAdditions(data, schemaName));
 	}));
@@ -132,4 +129,3 @@ export {
 	// eslint-disable-next-line import/prefer-default-export
 	generateTypesFromSchema,
 };
-

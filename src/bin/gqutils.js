@@ -1,9 +1,9 @@
 #! /usr/bin/env node
 import {createRequire} from 'module';
-import _ from 'lodash';
 import program from 'commander';
 import packageJson from '../../package.json' with {type: 'json'};
 import {getConfig, generateTypesFromSchema, makeSchemaFromConfig} from '../index.js';
+import {castArray} from '../lodash.js';
 
 const require = createRequire(import.meta.url);
 const {version} = packageJson;
@@ -52,7 +52,7 @@ async function runAndExit() {
 		process.exit(1);
 	}
 
-	const schema = _.castArray(schemaInput || conf.schema || conf.schemas);
+	const schema = castArray(schemaInput || conf.schema || conf.schemas);
 	try {
 		const {schemas} = makeSchemaFromConfig({
 			schema,
